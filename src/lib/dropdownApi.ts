@@ -48,6 +48,11 @@ export interface CustomerOption {
     value: string;
     label: string;
   }
+  export interface PeriodOption {
+    periodName: string;
+    startDate: string;
+    endDate: string;
+  }
   
 // Fetch companies
 export const fetchCompanies = async (token: string): Promise<CompanyOption[]> => {
@@ -225,4 +230,11 @@ export const fetchLocationSupplier = async (
         label: l.label,
       }))
     : [];
+};
+
+export const fetchPeriods = async (token: string): Promise<PeriodOption[]> => {
+  const res = await axios.get(`${API_BASE}/api/Dropdown/periods`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(res.data) ? res.data : [];
 };

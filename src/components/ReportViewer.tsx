@@ -10,31 +10,13 @@ import ReportSubtitle from "./ReportSubtitle";
 import { useTableSorting } from "../hooks/useTableSorting";
 import CustomerInfo, { CustomerApiResponse } from "./CustomerInfo";
 import ItemDetailsBulkTable from "./ItemDetailsBulkTable"; 
-import { REPORT_COLUMN_MAP,FOOTER_TOTAL_CONFIG } from "../config/reportColumns";
+import { REPORT_COLUMN_MAP,FOOTER_TOTAL_CONFIG,DRILL_DOWN_LINKS } from "../config/reportColumns";
 import ScheduleModal from "./ScheduleModal";
 
-import {
-  fetchCompanies,
-  fetchVendors,
-  fetchSalesReps,
-  fetchSuppliers,
-  fetchSuppliersop, 
-  fetchCustomers,
-  validateCustomer,
-  CompanyOption,
-  VendorOption,
-  SalesRepOption,
-  CustomerOption,
-  SupplierOption, 
-  SupplierOpOption,
-  fetchShows,
-  fetchPromos,
-  fetchLocations,
-  fetchLocationSupplier,
-  ShowOption,
-  PromoOption,
-  LocationOption,
-  LocationSupplierOption
+import {fetchCompanies,fetchVendors,fetchSalesReps,fetchSuppliers,fetchSuppliersop, fetchCustomers,
+validateCustomer,CompanyOption,VendorOption,SalesRepOption,CustomerOption,SupplierOption, SupplierOpOption,
+fetchShows,fetchPromos,fetchLocations,fetchLocationSupplier,ShowOption,PromoOption,LocationOption,
+LocationSupplierOption,fetchPeriods,PeriodOption
 } from "../lib/dropdownApi";
 
 interface ReportViewerProps {
@@ -47,14 +29,13 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
   const location = useLocation();
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
-  const [data, setData] = useState<any[]>([]); // any to handle both array and object
-  const [customerData, setCustomerData] = useState<CustomerApiResponse | null>(null); // ✅ Error 2304 Fix
+  const [data, setData] = useState<any[]>([]);
+  const [customerData, setCustomerData] = useState<CustomerApiResponse | null>(null); 
   const [loading, setLoading] = useState(false);
-  // 🔥 PAGINATION STATES
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 100;
-  const isFetchingRef = useRef(false); // Double trigger rokne ke liye
+  const isFetchingRef = useRef(false); 
   const [showSchedule, setShowSchedule] = useState(false);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [selectedVendor, setSelectedVendor] = useState<VendorOption | null>(null);
@@ -74,11 +55,11 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
   const [selectedLocation, setSelectedLocation] = useState<LocationOption | null>(null);
   const [locationSuppliers, setLocationSuppliers] = useState<LocationSupplierOption[]>([]);
   const [selectedLocationSupplier, setSelectedLocationSupplier] = useState<LocationSupplierOption | null>(null);
+  const [periodOptions, setPeriodOptions] = useState<PeriodOption[]>([]);
   const [months, setMonths] = useState<any[]>([]);
   const [autoRun, setAutoRun] = useState(false); 
   const [downloading, setDownloading] = useState(false);
   
-  // ✅ Company filter config nikal rahe hain
 const companyFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "company"
 );
@@ -91,16 +72,10 @@ const getVisibleColumns = (columns: any[], filters: any) => {
     );
   });
 };
-// ✅ FINAL FILTER LOGIC (AUTO ALL)
+
 const companyOptions = companies.filter((c) => {
-  // agar show define nahi hai → ALL
   if (!companyFilter?.show) return true;
-
-  // agar explicitly ALL hai
   if (companyFilter.show === "ALL") return true;
-
-  // warna specific (ECN / IVD / ADV / XG)
-  // return c.value === companyFilter.show;
   const allowed = companyFilter.show
   .split(",")
   .map((x: string) => x.trim().toUpperCase());
@@ -108,7 +83,6 @@ const companyOptions = companies.filter((c) => {
 return allowed.includes(c.value.toUpperCase());
 });
 
-    /* CELL VALUE FORMATTER - With Dollar Sign & 2 Decimal Places */
 const formatCellValue = (value: any, type: string) => {
   if (value === undefined || value === null || value === "") return "—";
   if (type === "text") {
@@ -129,8 +103,10 @@ const formatCellValue = (value: any, type: string) => {
     }).format(Math.abs(num));
     return num < 0 ? `(${formatted})` : formatted;
   }
-
-  if (type === "number") {
+  if (type === "large_number" || type === "large_integer") {
+    return new Intl.NumberFormat("en-US").format(Math.round(num));
+  }
+  if (type === "number" || type === "integer") {
     return String(Math.round(num));
   }
   if (type === "date") {
@@ -152,19 +128,15 @@ const formatCellValue = (value: any, type: string) => {
       });
   }
   if (type === "percentage") {
-    return num.toFixed(2) + "%";
+    return num.toFixed(1) + "%";
   }
 
   return String(value);
 };
-
   const reportKey = report.key || report.name?.toLowerCase().trim();
   const isThirteenMonthReport = report.api_endpoint?.toLowerCase().includes("thirteenmonthcustomersalesforvendor");
-  let columns =
-    REPORT_COLUMN_MAP[reportKey] ||
-    report?.columns ||
-    [];
-  // ✅ NEW FIXED CODE - Replace with this:
+  let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
+ 
   if (isThirteenMonthReport && months.length > 0) {
     columns = columns.map((col) => {
       if (col.key.startsWith("mon")) {
@@ -176,8 +148,8 @@ const formatCellValue = (value: any, type: string) => {
           cleanLabel = monthInfo.month
             .toString()
             .trim()
-            .replace(/\s+\d+$/, '')     // "MAR-25 5" se "MAR-25" banayega
-            .replace(/\s+/g, '-')       // spaces ko - se replace
+            .replace(/\s+\d+$/, '')   
+            .replace(/\s+/g, '-')       
             .toUpperCase();
         }
 
@@ -186,78 +158,166 @@ const formatCellValue = (value: any, type: string) => {
       return col;
     });
   }
-  
-  // ✅ CLICK FUNCTION (React version of Link())
-  const handleVendorClick = (row: any) => {
-    const Comp_id = filters.company || "";
 
-    // navigate(`/apdetails?Comp_id=${Comp_id}&vendorid=${row.vendorId}`);
+  const handleRowDrillDown = (row: any,targetUrl: string, queryParam: string, keyFields: string[],idField?: string) => {
+    const Comp_id = filters.company || "";
+    //const targetIdField = keyFields.find(field => row[field] !== undefined && row[field] !== null);
+    //const targetVal = targetIdField ? row[targetIdField] : null;
+    const targetVal = idField 
+        ? row[idField] 
+        : keyFields.map(f => row[f]).find(v => v !== undefined && v !== null);
+
+    if (targetVal) {
+      const separator = targetUrl.includes("?") ? "&" : "?";
+    const finalUrl = `${targetUrl}${separator}Comp_id=${Comp_id}&${queryParam}=${targetVal}`;
     window.open(
-      `/report/apdetails?Comp_id=${Comp_id}&vendorid=${row.vendorId}`,
+      finalUrl,
       "_blank",
       "noopener,noreferrer"
     );
+  }
   };
-  // ✅ MODIFY COLUMNS (ADD THIS BLOCK HERE)
-const modifiedColumns = columns.map((col) => {
-  if (report.api_endpoint?.toLowerCase().includes("apsummary") &&
-  col.key === "vendorId") {
+  
+  const modifiedColumns = columns.map((col) => {
+    const colKeyLower = col.key.toLowerCase();
+
+  // ✅ A. UPS TRACKING LOGIC (Saari reports ke liye universal)
+  if (colKeyLower === "tracking_no") {
     return {
       ...col,
-      render: (row: any) => (
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            handleVendorClick(row);
-          }}
-          className="text-blue-600 underline cursor-pointer"
-        >
-          {row.vendorId}
-        </a>
-      )
+      render: (row: any) => {
+        const tNo = row[col.key];
+        if (!tNo || tNo === "—" || tNo === "") return "—";
+        
+        return (
+          <a
+            href={`https://wwwapps.ups.com/etracking/tracking.cgi?InquiryNumber1=${tNo.toString().trim()}&TypeOfInquiryNumber=T&AcceptUPSLicenseAgreement=yes&submit=Track`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+          >
+            {tNo}
+          </a>
+        );
+      }
     };
   }
-  return col;
-});
+    const apiEndpointLower = report.api_endpoint?.toLowerCase() || "";
+    //const colKeyLower = col.key.toLowerCase();
+
+    // 1. Check karenge ki kya active report ke liye koi route mapping config file me hai
+    const activeReportConfigKey = Object.keys(DRILL_DOWN_LINKS).find(key => apiEndpointLower.includes(key));
+
+    if (activeReportConfigKey) {
+      const linkConfig = DRILL_DOWN_LINKS[activeReportConfigKey];
+
+      // 2. Check karenge ki kya is active column par click trigger lagana hai
+      const isLinkableColumn = linkConfig.keyFields.some(field => field.toLowerCase() === colKeyLower);
+
+      if (isLinkableColumn) {
+        return {
+          ...col,
+          render: (row: any) => {
+            const targetKey = linkConfig.keyFields.find(f => row[f] !== undefined);
+            const displayValue = targetKey ? row[targetKey] : "—";
+
+            return (
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleRowDrillDown(row, linkConfig.targetUrl, linkConfig.queryParam, linkConfig.keyFields,linkConfig.idField);
+                }}
+                className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+              >
+                {displayValue}
+              </a>
+            );
+          }
+        };
+      }
+    }
+    return col;
+  });
+
   const isCustomerInfo = report.api_endpoint?.toLowerCase().includes("customerinfo");
   const isItemDetailsReport =report.api_endpoint?.toLowerCase().includes("itemdetails"); 
   
   const tableData = isCustomerInfo ? [] : (Array.isArray(data) ? data : []);
   const visibleColumns = getVisibleColumns(modifiedColumns, filters);
-  //const { sortedData, sortConfig, handleSort } = useTableSorting(tableData, modifiedColumns);
   const { sortedData, sortConfig, handleSort } = useTableSorting(tableData, visibleColumns);
-  /* INIT FILTERS */
+
+  useEffect(() => {
+    if (!token) return;
+    fetchPeriods(token).then(setPeriodOptions).catch(() => setPeriodOptions([]));
+  }, [token]);
+  
   useEffect(() => {
     if (!report?.filter_config?.filters) return;
+    if (Object.keys(filters).length > 0 && filters.company) return; 
+  
     const init: Record<string, string> = {};
-    report.filter_config.filters.forEach((f) => (init[f.name] = ""));
+    report.filter_config.filters.forEach((f) => {
+      // 🔥 Agar config me defaultValue (jaise 'ALL') di hai, toh blank ke bajaye wahi assign karein
+      if (f.type === "checkbox") {
+        init[f.name] = "false";
+      } else {
+        init[f.name] = f.defaultValue || ""; 
+      }
+    });
     setFilters(init);
-  }, [report]);
+  }, [report.key]);
 
-  // ✅ AUTO LOAD FROM URL (ADD HERE)
+// 📂 Path: src/components/ReportViewer.tsx
+
 useEffect(() => {
   const params = new URLSearchParams(location.search);
+  
+  if (params.size > 0) {
+    const newFilters: Record<string, string> = {};
+    let hasValidParams = false;
 
-  const compId = params.get("Comp_id");
-  const vendorId = params.get("vendorid");
+    // 1. Dynamic Parameter Mapping Dictionary
+    // URL me kuch bhi aaye (Left side), wo hamare state key (Right side) par bind ho jayega
+    const keyMap: Record<string, string> = {
+      comp_id: "company", compid: "company",company: "company",
+      vendorid: "vendor", vendor_id: "vendor",
+      custid: "customer", customerid: "customer", customer_id: "customer",
+      repid: "salesrep", salesrepid: "salesrep", salesrep_id: "salesrep",
+      payment_no: "payment_no", paymentno: "payment_no",
+    };
 
-  if (compId || vendorId) {
-    //filtersset
-    setFilters((prev) => ({
-      ...prev,
-      company: compId || "",
-      vendor: vendorId || "",
-    }));
+    // 2. Loop through all URL parameters
+    params.forEach((value, urlKey) => {
+      const cleanUrlKey = urlKey.toLowerCase().trim();
+      
+      // Check karenge ki kya ye key hamare map me defined hai
+      const stateKey = keyMap[cleanUrlKey];
+      
+      if (stateKey && value) {
+        newFilters[stateKey] = value;
+        hasValidParams = true;
 
-    // dropdown bind (important for AsyncSelect)
-    if (vendorId) {
-      setSelectedVendor({
-        value: vendorId,
-        label: vendorId,
-      });
+        // 3. Dropdowns ko bhi automatically state parameters ke sath update karo
+        if (stateKey === "vendor") {
+          setSelectedVendor({ value, label: value });
+        } else if (stateKey === "customer") {
+          setSelectedCustomer({ value, label: value });
+        } else if (stateKey === "salesrep") {
+          setSelectedSalesRep({ value, label: value });
+        }
+      }
+    });
+
+    // 4. Agar koi valid parameters mile, toh state set karke auto-run execute karo
+    if (hasValidParams) {
+      setFilters((prev) => ({
+        ...prev,
+        ...newFilters
+      }));
+      
+      setAutoRun(true);
     }
-    setAutoRun(true);
   }
 }, [location.search]);
 
@@ -268,7 +328,6 @@ useEffect(() => {
   }
 }, [autoRun]);
 
-  /* LOAD COMPANIES */
   useEffect(() => {
     if (!token) return;
     const needsCompany = report?.filter_config?.filters.some((f) => f.name === "company");
@@ -276,8 +335,6 @@ useEffect(() => {
     fetchCompanies(token).then(setCompanies).catch(() => setCompanies([]));
   }, [report, token]);
 
-  // ✅ Load all sales reps when company changes (no search)
-  // Line 274 ke paas change karein:
 useEffect(() => {
   if (!filters.company || !token) {
     setSalesReps([]);
@@ -289,39 +346,42 @@ useEffect(() => {
     return;
   }
 
-  // 🔥 Naya Code: Check karo report me kaunse filters mangi hain
   const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
 
-  // ✅ Sirf tab call hoga agar "salesrep" filter report config me hai
   if (activeFilters.includes("salesrep")) {
     fetchSalesReps(token, filters.company, "")
       .then(setSalesReps)
       .catch(() => setSalesReps([]));
   }
-
-  // ✅ Sirf tab call hoga agar "show" filter report config me hai
   if (activeFilters.includes("show")) {
     fetchShows(token, filters.company).then(setShows);
   }
-
-  // ✅ Sirf tab call hoga agar "promo" filter report config me hai
   if (activeFilters.includes("promo")) {
     fetchPromos(token, filters.company).then(setPromos);
   }
-
-  // ✅ Sirf tab call hoga agar "location" filter report config me hai
+  // if (activeFilters.includes("location")) {
+  //   fetchLocations(token, filters.company).then(setLocations);
+  // }
   if (activeFilters.includes("location")) {
-    fetchLocations(token, filters.company).then(setLocations);
-  }
+    fetchLocations(token, filters.company).then((data) => {
+      setLocations(data);
 
-  // ✅ Sirf tab call hoga agar "locationsupplier" filter report config me hai
+      // 🔥 YE CHAR LINE ADD KARNI HAI (Line 268-275 ke beech):
+      const conf = report?.filter_config?.filters.find((f: any) => f.name === "location");
+      if (conf?.defaultSelect) {
+        const defLoc = data.find((l: any) => l.value === conf.defaultSelect);
+        if (defLoc) {
+          setSelectedLocation(defLoc); // UI par dropdown mein dikhega
+          setFilters(prev => ({ ...prev, location: defLoc.value })); // API ke liye value set hogi
+        }
+      }
+    });
+  }
   if (activeFilters.includes("locationsupplier")) {
     fetchLocationSupplier(token, filters.company).then(setLocationSuppliers);
   }
-  
-}, [filters.company, token, report]); // report dependency add kardi
-  // ✅ Load all suppliers when company changes
-// Line 301 ke paas change karein:
+}, [filters.company, token, report]); 
+
 useEffect(() => {
   if (!filters.company || !token) {
     setSuppliers([]);
@@ -331,7 +391,6 @@ useEffect(() => {
 
   const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
 
-  // 🔥 Check if supplier is needed
   if (activeFilters.includes("supplier")) {
     fetchSuppliers(token, filters.company, "")
       .then(setSuppliers)
@@ -339,7 +398,6 @@ useEffect(() => {
   }
 }, [filters.company, token, report]);
 
-// Line 312 ke paas change karein:
 useEffect(() => {
   if (!filters.company || !token) {
     setSuppliersOp([]);
@@ -349,40 +407,30 @@ useEffect(() => {
 
   const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
 
-  // 🔥 Check if supplierop is needed
   if (activeFilters.includes("supplierop")) {
     fetchSuppliersop(token, filters.company, "")
       .then(setSuppliersOp)
       .catch(() => setSuppliersOp([]));
   }
 }, [filters.company, token, report]);
-// ✅ NEW: allowAll control per report
 
 const salesRepFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "salesrep"
 );
-
 const supplierFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "supplier"
 );
 const supplierOpFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "supplierop"
 );
-
 const allowSalesRepAll = salesRepFilter?.allowAll === true;
 const allowSupplierAll = supplierFilter?.allowAll === true;
 const allowSupplierOPAll = supplierOpFilter?.allowAll === true;
 
 // ✅ NEW: options with ALL conditionally
-const salesRepOptions = allowSalesRepAll
-  ? [{ value: "ALL", label: "ALL" }, ...salesReps]
-  : salesReps;
-
-const supplierOptions = allowSupplierAll
-  ? [{ value: "ALL", label: "ALL" }, ...suppliers]
-  : suppliers;
-  const supplierOpOptions = allowSupplierOPAll
-  ? [{ value: "ALL", label: "ALL" }, ...suppliersOp]
+const salesRepOptions = allowSalesRepAll? [{ value: "ALL", label: "ALL" }, ...salesReps]: salesReps;
+const supplierOptions = allowSupplierAll? [{ value: "ALL", label: "ALL" }, ...suppliers]: suppliers;
+const supplierOpOptions = allowSupplierOPAll? [{ value: "ALL", label: "ALL" }, ...suppliersOp]
   : suppliersOp;
   /* UPDATE FILTER */
   const updateFilter = (name: string, value: string) => {
@@ -408,93 +456,11 @@ const supplierOptions = allowSupplierAll
       }));
     }
   };
-  
-  // ✅ Fix 7006: pageNum ko 'number' type diya
-  
-  // const fetchData = async (pageNum: number, isInitial = false) => {
-  //   if (!report?.api_endpoint) {
-  //     if (isInitial) alert("Report API not configured");
-  //     return;
-  //   }
-
-  //   if (isFetchingRef.current) return; 
-  //   isFetchingRef.current = true;
-
-  //   if (isInitial) {
-  //     setLoading(true);
-  //     setData([]); 
-  //   }
-
-  //   try {
-  //     const url = new URL(buildApiUrl(report.api_endpoint));
-  //     Object.entries(filters).forEach(([k, v]) => {
-  //       if (!v) return;
-  //       let paramName = k;
-  //       if (k === "company") paramName = "compId";
-  //       if (k === "vendor") paramName = "vendorId";
-  //       if (k === "salesrep") paramName = "repId";
-  //       if (k === "customer") paramName = "custId";
-  //       if (k === "supplier") paramName = "supplierId"; 
-  //       if (k === "supplierop") paramName = "supplierId";
-  //       if (k === "show") paramName = "showId";
-  //       if (k === "promo") paramName = "promoId";
-  //       if (k === "location") paramName = "locationId";
-  //       if (k === "locationsupplier") paramName = "supplierId";
-  //       url.searchParams.append(paramName, v);
-  //     });
-
-  //     url.searchParams.append("pageNumber", pageNum.toString());
-  //     url.searchParams.append("pageSize", PAGE_SIZE.toString());
-
-  //     const res = await axios.get(url.toString(), {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     // ✅ Fix 7034 & 7005: processedData ko 'any' type declare kiya
-  //     let processedData: any; 
-  //     if (isCustomerInfo) {
-  //       const original = res.data || {};
-  //       processedData = {
-  //         basic: original.Basic || original.basic || [],
-  //         groupCode: original.GroupCode || original.groupCode || [],
-  //         totalDue: original.TotalDue || original.totalDue || [],
-  //         salesSummary: original.SalesSummary || original.salesSummary || [],
-  //         salesDetails: original.SalesDetails || original.salesDetails || [],
-  //       };
-  //     } else if (isThirteenMonthReport) {
-  //       processedData = res.data?.data || [];
-  //       if (isInitial) setMonths(res.data?.months || []);
-  //     } else {
-  //       const raw = res.data;
-  //       if (Array.isArray(raw)) processedData = raw;
-  //       else if (raw && Array.isArray(raw.data)) processedData = raw.data;
-  //       else if (raw && Array.isArray(raw.records)) processedData = raw.records;
-  //       else processedData = [];
-  //     }
-
-  //     if (isInitial) {
-  //       setData(processedData);
-  //       setCustomerData(isCustomerInfo ? processedData : null);
-  //     } else {
-  //       setData((prev: any[]) => [...prev, ...processedData]);
-  //     }
-
-  //     setHasMore(!isCustomerInfo && processedData.length === PAGE_SIZE);
-  //     setAppliedFilters({ ...filters });
-
-  //   } catch (err: any) { // ✅ Fix 18046: err ko 'any' type diya
-  //     console.error("Report error:", err);
-  //     if (isInitial) alert(err.response?.data?.message || "Failed to load report");
-  //   } finally {
-  //     setLoading(false);
-  //     isFetchingRef.current = false;
-  //   }
-  // };
   // 🔹 DATA FETCH LOGIC
 const fetchData = async (pageNum: number, isInitial = false) => {
   if (!report) return;
   if (isFetchingRef.current) return;
-  
+  if (isCustomerInfo && !isInitial) return;
   isFetchingRef.current = true;
   if (isInitial) {
     setLoading(true);
@@ -502,10 +468,8 @@ const fetchData = async (pageNum: number, isInitial = false) => {
   }
 
   try {
-    // URL format: /api/MasterReport/apsummary
+  
     const url = new URL(buildApiUrl(`/api/MasterReport/${reportKey}`));
-    
-    // Filters append karein
     Object.entries(filters).forEach(([k, v]) => {
       if (!v) return;
       let paramName = k;
@@ -518,48 +482,42 @@ const fetchData = async (pageNum: number, isInitial = false) => {
       else if (k === "show") paramName = "showId";
       else if (k === "promo") paramName = "promoId";
       else if (k === "location") paramName = "locationId";
-      
+      else if (k === "startperiod") paramName = "startperiod";
+      else if (k === "endperiod") paramName = "endperiod";
       url.searchParams.append(paramName, v);
     });
-
-    url.searchParams.append("pageNumber", pageNum.toString());
-    url.searchParams.append("pageSize", PAGE_SIZE.toString());
-
+    if (!isCustomerInfo) {
+      url.searchParams.append("pageNumber", pageNum.toString());
+      url.searchParams.append("pageSize", PAGE_SIZE.toString());
+    }
     const res = await axios.get(url.toString(), {
       headers: { Authorization: `Bearer ${token}` },
     });
-// 6. 🔥 Special Data Handling
-if (isCustomerInfo) {
-  // CustomerInfo: Returns an object { Basic: [], GroupCode: [], SalesDetails: [] }
-  const apiResponse = res.data;
-  setCustomerData(apiResponse);
-  setData([]); // Generic table hide rahega
-} 
-else if (isThirteenMonthReport) {
-  // 13-Month: Set months state for dynamic headers
-  setData(res.data.data || []);
-  if (isInitial && res.data?.months) {
-    setMonths(res.data.months); // CS6133 Error Fix: setMonths used here
-  }
-} 
-else {
-  // Generic List (APDetails, APSummary, etc.)
-  const processedData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-  if (isInitial) setData(processedData);
-  else setData((prev) => [...prev, ...processedData]);
-}
-
-// 7. Check if there's more data for pagination
-const currentDataLength = Array.isArray(res.data) ? res.data.length : (res.data.data?.length || 0);
-setHasMore(!isCustomerInfo && currentDataLength === PAGE_SIZE);
-setAppliedFilters({ ...filters });
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setLoading(false);
-    isFetchingRef.current = false;
-  }
-};
+    
+    let newItems: any[] = [];
+    if (isCustomerInfo) { 
+      setCustomerData(res.data);
+      setData([]);
+      setHasMore(false);
+    } else if (isThirteenMonthReport) {
+      newItems = res.data.data || [];
+      setData(newItems);
+      setHasMore(false);
+      if (isInitial && res.data?.months) setMonths(res.data.months);
+    } else {
+      newItems = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (isInitial) setData(newItems);
+      else setData((prev) => [...prev, ...newItems]);
+      setHasMore(newItems.length === PAGE_SIZE);
+    }
+    setAppliedFilters({ ...filters });
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setLoading(false);
+        isFetchingRef.current = false;
+    }
+  };
 
 // 🔹 EXCEL EXPORT LOGIC
 const handleExport = async (type: "excel" | "pdf") => {
@@ -570,14 +528,16 @@ const handleExport = async (type: "excel" | "pdf") => {
   setDownloading(true);
   try {
     const exportUrl = buildApiUrl(`/api/MasterReport/${reportKey}/${type}`);
+    
     const footerConfig = FOOTER_TOTAL_CONFIG[reportKey] || { 
       totalColumns: [], 
       labelColumn: undefined 
     };
+    
     const payload = {
       reportName: report.name,
       compId: filters.company,
-      filters: filters,
+      filters: { ...filters, isExport: "true" },
       filterSummary: buildFilterSummary(),
       totalColumns: footerConfig.totalColumns, 
       labelColumn: footerConfig.labelColumn 
@@ -639,119 +599,112 @@ document.body.removeChild(link);
   const handleApplyFilters = () => {
     setPage(1);
     setHasMore(true);
-    fetchData(1, true); // true matlab reset everything
+    fetchData(1, true); 
   };
   useEffect(() => {
-    const handleBodyScroll = () => {
-      if (isCustomerInfo || isItemDetailsReport) return;
+    const handleScroll = (e: any) => {
+      if (isCustomerInfo || isItemDetailsReport|| loading || !hasMore) return;
 
-      // document level height checking
-      const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
-      
-      if (scrollHeight - scrollTop <= clientHeight + 150 && !loading && hasMore) {
-        const nextPage = page + 1;
-        setPage(nextPage);
-        fetchData(nextPage);
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('overflow-auto') || target.tagName === 'DIV') {
+        const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
+        
+        if (scrollHeight - scrollTop <= clientHeight + 100 ) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchData(nextPage);
+        }
       }
     };
 
-    window.addEventListener("scroll", handleBodyScroll);
-    return () => window.removeEventListener("scroll", handleBodyScroll);
-  }, [loading, hasMore, page]);
+    window.addEventListener("scroll", handleScroll,true);
+    return () => window.removeEventListener("scroll", handleScroll , true);
+  }, [loading, hasMore, page,isCustomerInfo]);
   
-  // 🔥 CHANGE 1: GENERIC EXCEL EXPORT (POST)
-  // const handleExport = async (type: "excel" | "pdf") => {
-  //   if (!report?.api_endpoint) return;
-  //   setDownloading(true);
-
-  //   const payload = {
-  //     reportName: report.name,
-  //     compId: filters.company,
-  //     columnNames: modifiedColumns.map(c => 
-  //       c.type === "currency" ? `${c.label} ($)` : c.label
-  //     ),
-  //     columnDataTypes: modifiedColumns.map(c => {
-  //       const key = c.key.toLowerCase();
-      
-  //       // ================= FINANCIAL =================
-  //       if (c.type === "currency") {
-  //         return "SMALL_FINANCIAL_AMT";
-  //       }
-      
-  //       // ================= INTEGER LOGIC =================
-  //       // if (c.type === "number") {
-  //       //   if (key.includes("id")) return "INTEGER_ID";
-      
-  //       //   // 👇 heuristic for large vs small integer
-  //       //   if (key.includes("qty") || key.includes("count")) {
-  //       //     return "LARGE_INTEGER";
-  //       //   }
-      
-  //       //   return "INTEGER";
-  //       // }
-  //       if (c.type === "integer" || c.type === "large_integer") {
-  //         if (key.includes("id")) return "INTEGER_ID";
-        
-  //         if (c.type === "large_integer") return "LARGE_INTEGER";
-        
-  //         return "INTEGER";
-  //       }
-      
-  //       // ================= DATE =================
-  //       if (c.type === "date") return "DATE";
-  //       if (c.type === "datetime") return "DATETIME";
-      
-  //       // ================= PERCENTAGE =================
-  //       if (c.type === "percentage") {
-  //         return "PERCENT_SMALL";
-  //       }
-      
-  //       // ================= TEXT =================
-  //       if (c.type === "text") return "TEXT";
-      
-  //       return "TEXT";
-  //     }),
-  //     totalColumns: footerConfig.totalColumns,
-  //     labelColumn: footerConfig.labelColumn,
-  //     filterSummary: buildFilterSummary(),
-  //     filters: filters // Pass existing filters to backend
-  //   };
-
-  //   try {
-  //     const res = await axios.post(buildApiUrl(`${report.api_endpoint}/${type}`), payload, {
-  //       responseType: "blob",
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     });
-
-  //     const blob = new Blob([res.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  //     const link = document.createElement("a");
-  //     link.href = window.URL.createObjectURL(blob);
-  //     link.download = `${report.name}.xlsx`;
-  //     link.click();
-  //   } catch (err) {
-  //     alert("Export failed");
-  //   } finally {
-  //     setDownloading(false);
-  //   }
-  // };
-
+  
 // ✅ FOOTER CONFIG with column name support
 const footerConfig = FOOTER_TOTAL_CONFIG[reportKey] || { 
   totalColumns: [], 
-  labelColumn: undefined 
+  labelColumn: undefined ,
+  dbTotalKeys: {} // new
 };
 
 const totalColumns = footerConfig.totalColumns || [];
-
-// ✅ CALCULATE TOTALS (same)
+const dbTotalKeys = footerConfig.dbTotalKeys || {};
 const totals: Record<string, number> = {};
-
+const firstRow = sortedData[0] || {};
 totalColumns.forEach((colKey) => {
-  totals[colKey] = sortedData.reduce((sum: number, row: any) => {
-    const val = parseFloat(String(row[colKey] || "0"));
-    return sum + (isNaN(val) ? 0 : val);
-  }, 0);
+  const dbMappedKey = dbTotalKeys[colKey]; 
+  const colKeyLower = colKey.toLowerCase();
+  const isPercentageCol = colKeyLower.includes("percent") || 
+  visibleColumns.find(c => c.key === colKey)?.type === "percentage";
+  if (dbMappedKey && firstRow[dbMappedKey] !== undefined && firstRow[dbMappedKey] !== null) {
+    totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
+  }   else if (!isPercentageCol) {
+    totals[colKey] = sortedData.reduce((sum: number, row: any) => {
+      const val = parseFloat(String(row[colKey] || "0"));
+      return sum + (isNaN(val) ? 0 : val);
+    }, 0);
+  }
 });
+
+
+// 1. FIRST PASS: Saare normal columns aur Gross Profit ka direct SUM
+// (ADS aur Closeout dono ke liye numeric columns yahan sum honge)
+totalColumns.forEach((colKey) => {
+  const colKeyLower = colKey.toLowerCase();
+  const dbMappedKey = dbTotalKeys[colKey];
+
+  // Percentage ko skip karenge kyunki ye aggregate logic se calculate hoga
+  const isPercentageCol = colKeyLower.includes("percent") || 
+                          visibleColumns.find(c => c.key === colKey)?.type === "percentage";
+
+  if (dbMappedKey && firstRow[dbMappedKey] !== undefined) {
+    totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
+  } 
+  else if (!isPercentageCol) {
+    // 🔥 Qty, Sales, Cost, Gross Profit, Total Ship etc. sab yahan sum honge
+    totals[colKey] = sortedData.reduce((sum: number, row: any) => {
+      const val = parseFloat(String(row[colKey] || "0"));
+      return sum + (isNaN(val) ? 0 : val);
+    }, 0);
+  }
+});
+
+// 2. SECOND PASS: Percentage calculation (ADS vs Closeout safe logic)
+visibleColumns.forEach((col) => {
+  const colKeyLower = col.key.toLowerCase();
+
+  if (col.type === "percentage" || colKeyLower.includes("percent")) {
+    
+    // 🔥 ADS ke liye 'total_merch' aur Closeout ke liye 'sales' dhoondna
+    const salesKey = visibleColumns.find(c => 
+      ["total_merch", "sales", "merch", "extended_price"].some(k => c.key.toLowerCase() === k)
+    )?.key;
+    
+    // 🔥 ADS ke liye 'total_cost' aur Closeout ke liye 'cost' dhoondna
+    const costKey = visibleColumns.find(c => 
+      ["total_cost", "cost", "cogs"].some(k => c.key.toLowerCase() === k)
+    )?.key;
+
+    // Gross Profit key (agar column mein direct GP hai toh wo use karo, warna Sales-Cost karo)
+    const profitKey = visibleColumns.find(c => 
+      ["gross_profit", "gross", "profit_amt", "gp"].some(k => c.key.toLowerCase() === k)
+    )?.key;
+
+    const sTotal = salesKey ? (totals[salesKey] || 0) : 0;
+    const cTotal = costKey ? (totals[costKey] || 0) : 0;
+    const pTotal = profitKey ? (totals[profitKey] || 0) : (sTotal - cTotal);
+
+    // Final Percentage Math: (Total Profit / Total Sales) * 100
+    if (sTotal !== 0) {
+      totals[col.key] = (pTotal / sTotal) * 100;
+    } else {
+      totals[col.key] = 0;
+    }
+  }
+});
+
   /* CUSTOMER VALIDATION */
   const handleCustomerBlur = async () => {
     if (!filters.customer || !filters.company) return;
@@ -914,12 +867,23 @@ const buildFilterSummary = (): string => {
               return (
               <div key={f.name}>
                 {/* <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label> */}
-
-                {f.name === "company" ? (
+                {f.type === "select" && f.options && f.options.length > 0 ? (
+                  <select
+                  value={filters[f.name] !== undefined ? filters[f.name] : (f.defaultValue || "")}
+                    onChange={(e) => updateFilter(f.name, e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
+                  >
+                    {f.options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ): f.name === "company" ? (
                   <select
                     value={filters.company || ""}
                     onChange={(e) => updateFilter("company", e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
                   >
                     <option value="">Select Company</option>
                     {/* {companies.map((c) => ( */}
@@ -931,8 +895,9 @@ const buildFilterSummary = (): string => {
                   </select>
                 ) : f.name === "vendor" ? (
                   <AsyncSelect
+                  key={`vendor-${filters.company}`}
                     cacheOptions
-                    defaultOptions
+                    defaultOptions={false}
                     isClearable
                     menuPortalTarget={document.body}
                     styles={{ 
@@ -1010,13 +975,20 @@ const buildFilterSummary = (): string => {
                   ))}
                 </select>
                 ): f.name === "customer" ? (
-                  <>
+                  <div className="flex flex-col w-full">
                     <AsyncSelect
+                    key={`customer-${filters.company}`}
                       cacheOptions
-                      defaultOptions
+                      defaultOptions={false}
                       isClearable
                       isDisabled={!filters.company}
                       value={selectedCustomer}
+                      menuPortalTarget={document.body} 
+                      menuPosition={'fixed'}
+                      styles={{ 
+                        menuPortal: base => ({ ...base, zIndex: 9999 }),
+                        menu: base => ({ ...base, zIndex: 9999 }) 
+                      }}
                       loadOptions={(input) => fetchCustomers(token, filters.company, input)}
                       onChange={(v: CustomerOption | null) => {
                         setSelectedCustomer(v);
@@ -1026,18 +998,26 @@ const buildFilterSummary = (): string => {
                       placeholder="Search customer..."
                     />
                     {customerError && <p className="text-red-500 text-xs mt-1">{customerError}</p>}
-                  </>
-                ) : f.type === "checkbox" ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <input
-                        type="checkbox"
-                        checked={filters[f.name] === "true"}
-                        onChange={(e) =>
-                          updateFilter(f.name, e.target.checked ? "true" : "false")
-                        }
-                      />
-                      <label className="text-sm">{f.label}</label>
                     </div>
+                ) : f.type === "checkbox" ? (
+                  <div key={f.name} className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id={f.name} 
+                      name={f.name}
+                      checked={!!filters[f.name]} 
+                      onChange={(e) => {
+                        setFilters((prev: any) => ({ ...prev, [f.name]: e.target.checked }));
+                      }}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <label
+                      htmlFor={f.name} 
+                      className="cursor-pointer select-none text-sm"
+                    >
+                      {f.label}
+                    </label>
+                  </div>                  
                 ): f.name === "show" ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2"
@@ -1128,13 +1108,41 @@ const buildFilterSummary = (): string => {
                       </option>
                     ))}
                   </select>
-                ) : (
+               ) : f.type === "periodStart" ? (
+                <div className="flex flex-col gap-1">
+                  <select
+                    disabled={isDisabled}
+                    value={filters.startperiod || ""}
+                    onChange={(e) => updateFilter("startperiod", e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white text-sm"
+                  >
+                    <option value="">Select Start Period</option>
+                    {periodOptions.map((p) => (
+                      <option key={`start-${p.startDate}`} value={p.startDate}>{p.periodName}</option>
+                    ))}
+                  </select>
+                </div> 
+                ) : f.type === "periodEnd" ? (
+                  <div className="flex flex-col gap-1">
+                    <select
+                      disabled={isDisabled}
+                      value={filters.endperiod || ""}
+                      onChange={(e) => updateFilter("endperiod", e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 bg-white text-sm"
+                    >
+                      <option value="">Select End Period</option>
+                      {periodOptions.map((p) => (
+                        <option key={`end-${p.endDate}`} value={p.endDate}>{p.periodName}</option>
+                      ))}
+                    </select>
+                  </div>
+                ): (
                   <input
                     type="text"
                     value={filters[f.name] || ""}
                     onChange={(e) => updateFilter(f.name, e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={`Enter ${f.label?.toLowerCase() || f.name}`}
+                    placeholder={f.placeholder ||`Enter ${f.label?.toLowerCase() || f.name}`}
                   />
                 )}
               </div>
@@ -1195,7 +1203,13 @@ const buildFilterSummary = (): string => {
                       key={c.key}
                       style={{ width: c.width }}
                       onClick={() => handleSort(c.key)}
-                      className="px-3 py-3 text-left text-xs  text-gray-700 border-b bg-gray-100"
+                      //className="px-3 py-3 text-left text-xs  text-gray-700 border-b bg-gray-100"
+                      className={`px-3 py-3 text-xs font-semibold text-gray-700 border-b bg-gray-100 cursor-pointer select-none ${
+                        // 🔥 Agar type currency ya percentage hai, toh header right mein hoga, nahi toh left mein
+                        (c.type === "currency" || c.type === "percentage" || c.type === "large_integer") 
+                          ? "text-right" 
+                          : "text-left"
+                      }`}
                     >
                       {c.label}
                       {sortConfig?.key === c.key && (
@@ -1217,7 +1231,7 @@ const buildFilterSummary = (): string => {
                         style={{ width: c.width }}
                         
                         className={`px-3 py-2.5 text-gray-900 border-b  ${
-                          (c.type === "currency" )
+                          (c.type === "currency" || c.type === "percentage" || c.type === "large_integer")
                             ? "text-right font-medium tabular-nums"
                             : "text-left break-words"
                         }`}
@@ -1244,7 +1258,7 @@ const buildFilterSummary = (): string => {
                         <td 
                           key={col.key} 
                           className={`px-3 py-2 font-semibold ${
-                            (col.type === "currency" || col.type === "number") 
+                            (col.type === "currency" || col.type === "number"|| col.type === "percentage" || col.type === "large_integer") 
                               ? "text-right tabular-nums" 
                               : "text-left"
                           }`}
@@ -1252,7 +1266,9 @@ const buildFilterSummary = (): string => {
                           {isLabelColumn ? (
                             <span className="font-bold">Total</span>
                           ) : totals[col.key] !== undefined ? (
-                            col.type === "currency" 
+                            col.type === "percentage" 
+                            ? totals[col.key].toFixed(1) + "%"
+                            : col.type === "currency" 
                               ? new Intl.NumberFormat("en-US", { 
                                   style: "currency", 
                                   currency: "USD", 

@@ -103,23 +103,26 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
   const summary = data.salesSummary?.[0] || {};
   const details = data.salesDetails || [];
 
-  // 🔥 SAFE UPPERCASE FIX (Error solved here)
-  const getSafeUpper = (val: any) => val ? String(val).toUpperCase() : "";
-  const Comp_id_upper = compId ? compId.toUpperCase() : getSafeUpper(basic.corp_address_id);
+  const Comp_id_upper = (compId || "ECN").toString().toUpperCase();
 
   const showPage = (id: number) => {
     const customerid = basic.customer_id || ""; 
     const Comp_id = Comp_id_upper;
+    if (!Comp_id) {
+      alert("Company ID not found!");
+      return;
+  }
 
-    let url = "";
+    let reportKey = "";
     switch (id) {
-      case 1: url = `/Home/collectioncallnotes?id=Collection Call Notes&Comp_id=${Comp_id}&customerid=${customerid}`; break;
-      case 2: url = `/Home/salesnotes?id=Sales Notes&Comp_id=${Comp_id}&customerid=${customerid}`; break;
-      case 3: url = `/Home/customerpayments?id=Customer Payments&Comp_id=${Comp_id}&customerid=${customerid}`; break;
-      case 4: url = `/Home/ECNstatementshipto?id=Statement of Account by Ship To&Comp_id=${Comp_id}&customerid=${customerid}`; break;
-      case 5: url = `/Home/creditamountrma?id=Credit Amount RMA&Comp_id=${Comp_id}&customerid=${customerid}`; break;
-      default: return;
+        case 1: reportKey = "collectioncallnotes"; break;
+        case 2: reportKey = "salesnotes"; break;
+        case 3: reportKey = "customerpayments"; break;
+        case 4: reportKey = "ECNstatementshipto"; break;
+        case 5: reportKey = "creditamountrma"; break;
+        default: return;
     }
+    const url = `/report/${reportKey}?Comp_id=${Comp_id}&custId=${customerid}`;
     window.open(url, "_blank");
   };
 
@@ -160,7 +163,7 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
               <td>
                 {group ? (
                   <a
-                    href={`/Home/groupcodes?id=Group Code Report&groupcode=${group}`}
+                    href={`/repot/groupcodes?groupcode=${group}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600"
@@ -231,10 +234,10 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
           <tbody>
           <tr>
               {dueColumns.map(k =>
-                k === "totalDue" && due[k] ? (
+                k === "TOTALDUE" && due[k] ? (
                   <td key={k}>
                     <a
-                      href={`/Home/ECNstatement?id=STATEMENT OF ACCOUNT&Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                      href={`/report/ecnstatement?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600"
@@ -322,7 +325,7 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
               <td>
                 {summary.ytd_sales ? (
                   <a
-                    href={`/Home/saleshistoryytd?id=Sales History Year Till Date&Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                    href={`/report/saleshistoryytd?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600"
@@ -335,7 +338,7 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
               <td>
                 {summary.ly_sales ? (
                   <a
-                    href={`/Home/saleshistorylastyear?id=Sales History Last Year&Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                    href={`/report/saleshistorylastyear?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600"
@@ -365,7 +368,7 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
               <td>
                 {basic.credit_limit ? (
                   <a
-                    href={`/Home/creditlimithistoryforcustomer?id=Credit Limit History for Customer&Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                    href={`/report/creditlimithistoryforcustomer?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600"

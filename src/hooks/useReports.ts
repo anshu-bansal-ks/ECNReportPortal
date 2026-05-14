@@ -30,8 +30,11 @@ export function useReports(userId: number | null) {
         );
 
         const mappedReports: Report[] = res.data.map((r) => {
-          const key = r.url.toLowerCase();
+          const key = r.url.toLowerCase().trim();
           const config = REPORT_CONFIG[key];
+          const columnMapKey = Object.keys(REPORT_COLUMN_MAP).find(
+            (k) => k.toLowerCase() === key
+          ) || r.url;
 
           return {
             id: r.reportId,
@@ -46,7 +49,7 @@ export function useReports(userId: number | null) {
             //enableSchedule: config?.enableSchedule ?? false,
             ...config, // 🔥 config merge
             filter_config: config?.filter_config || { filters: [] },
-            columns: REPORT_COLUMN_MAP[r.url] || [],
+            columns: REPORT_COLUMN_MAP[columnMapKey] || [],
           };
         });
 
