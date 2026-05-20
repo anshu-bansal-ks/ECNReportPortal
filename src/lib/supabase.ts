@@ -43,6 +43,7 @@ export interface FilterConfig {
   defaultValue?: string;
   Placeholder?: string;
   defaultSelect?: string;
+
 }
 
 export interface Report {

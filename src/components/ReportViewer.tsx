@@ -1,5 +1,8 @@
 
 // src/components/ReportViewer.tsx
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns"; // Date formatting ke liye
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom"; 
 import AsyncSelect from "react-select/async";
@@ -12,6 +15,7 @@ import CustomerInfo, { CustomerApiResponse } from "./CustomerInfo";
 import ItemDetailsBulkTable from "./ItemDetailsBulkTable"; 
 import { REPORT_COLUMN_MAP,FOOTER_TOTAL_CONFIG,DRILL_DOWN_LINKS } from "../config/reportColumns";
 import ScheduleModal from "./ScheduleModal";
+
 
 import {fetchCompanies,fetchVendors,fetchSalesReps,fetchSuppliers,fetchSuppliersop, fetchCustomers,
 validateCustomer,CompanyOption,VendorOption,SalesRepOption,CustomerOption,SupplierOption, SupplierOpOption,
@@ -59,6 +63,47 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
   const [months, setMonths] = useState<any[]>([]);
   const [autoRun, setAutoRun] = useState(false); 
   const [downloading, setDownloading] = useState(false);
+
+  const validateFilters = () => {
+    const missingFields: string[] = [];
+    const configFilters = report?.filter_config?.filters || [];
+  
+    // 1. Pehle normal fields check karein (Company, Customer etc.)
+    configFilters.forEach((f) => {
+      const isDateRelated = ["fromdate", "tilldate", "timeperiod"].includes(f.name);
+      
+      // Agar Date related nahi hai aur required hai, toh normal check
+      if (!isDateRelated && (f.name === "company" || (f as any).required)) {
+        const val = filters[f.name];
+        if (!val || val.toString().trim() === "") {
+          missingFields.push(f.label || f.name);
+        }
+      }
+    });
+  
+    // 2. SMART DATE VALIDATION (Credits Issued jaise reports ke liye)
+    const hasDateConfig = configFilters.some(f => ["fromdate", "tilldate", "timeperiod"].includes(f.name));
+    
+    if (hasDateConfig) {
+      const hasFromDate = !!filters.fromdate;
+      const hasTillDate = !!filters.tilldate;
+      const hasPeriod = !!filters.timeperiod;
+  
+      // Logic: (From aur Till dono hone chahiye) YA (Timeperiod hona chahiye)
+      const isDateRangeComplete = hasFromDate && hasTillDate;
+      const isPeriodSelected = hasPeriod;
+  
+      if (!isDateRangeComplete && !isPeriodSelected) {
+        missingFields.push("Date Range (From & Till) OR Time Period");
+      }
+    }
+  
+    if (missingFields.length > 0) {
+      alert(`Required: Please select ${missingFields.join(" and ")}`);
+      return false;
+    }
+    return true;
+  };
   
 const companyFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "company"
@@ -179,9 +224,7 @@ const formatCellValue = (value: any, type: string) => {
   };
   
   const modifiedColumns = columns.map((col) => {
-    const colKeyLower = col.key.toLowerCase();
-
-  // ✅ A. UPS TRACKING LOGIC (Saari reports ke liye universal)
+  const colKeyLower = col.key.toLowerCase();
   if (colKeyLower === "tracking_no") {
     return {
       ...col,
@@ -203,30 +246,36 @@ const formatCellValue = (value: any, type: string) => {
     };
   }
     const apiEndpointLower = report.api_endpoint?.toLowerCase() || "";
-    //const colKeyLower = col.key.toLowerCase();
-
-    // 1. Check karenge ki kya active report ke liye koi route mapping config file me hai
     const activeReportConfigKey = Object.keys(DRILL_DOWN_LINKS).find(key => apiEndpointLower.includes(key));
 
     if (activeReportConfigKey) {
-      const linkConfig = DRILL_DOWN_LINKS[activeReportConfigKey];
-
-      // 2. Check karenge ki kya is active column par click trigger lagana hai
-      const isLinkableColumn = linkConfig.keyFields.some(field => field.toLowerCase() === colKeyLower);
-
-      if (isLinkableColumn) {
+      const rawConfig = DRILL_DOWN_LINKS[activeReportConfigKey];
+      const linkConfigs: any[] = Array.isArray(rawConfig) ? rawConfig : [rawConfig];
+      const matchedConfig = linkConfigs.find((config: any) => 
+        config.keyFields.some((field: string) => field.toLowerCase() === colKeyLower)
+      );
+      if (matchedConfig) {
         return {
           ...col,
           render: (row: any) => {
-            const targetKey = linkConfig.keyFields.find(f => row[f] !== undefined);
-            const displayValue = targetKey ? row[targetKey] : "—";
+            // const displayValue = row[col.key] !== undefined && row[col.key] !== null ? row[col.key] : "—";
+            let displayValue = colKeyLower === "notes" 
+              ? (col.label || "Notes") 
+              : (row[col.key] !== undefined && row[col.key] !== null ? row[col.key] : "—");
+            if (displayValue === "—" || displayValue === "") return "—";
 
             return (
               <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  handleRowDrillDown(row, linkConfig.targetUrl, linkConfig.queryParam, linkConfig.keyFields,linkConfig.idField);
+                  handleRowDrillDown(
+                    row, 
+                    matchedConfig.targetUrl, 
+                    matchedConfig.queryParam, 
+                    matchedConfig.keyFields, 
+                    matchedConfig.idField
+                  );
                 }}
                 className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
               >
@@ -234,8 +283,29 @@ const formatCellValue = (value: any, type: string) => {
               </a>
             );
           }
-        };
-      }
+        }
+      // if (isLinkableColumn) {
+      //   return {
+      //     ...col,
+      //     render: (row: any) => {
+      //       const targetKey = linkConfig.keyFields.find(f => row[f] !== undefined);
+      //       const displayValue = targetKey ? row[targetKey] : "—";
+
+      //       return (
+      //         <a
+      //           href="#"
+      //           onClick={(e) => {
+      //             e.preventDefault();
+      //             handleRowDrillDown(row, linkConfig.targetUrl, linkConfig.queryParam, linkConfig.keyFields,linkConfig.idField);
+      //           }}
+      //           className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+      //         >
+      //           {displayValue}
+      //         </a>
+      //       );
+      //     }
+      //   };
+     }
     }
     return col;
   });
@@ -470,23 +540,14 @@ const fetchData = async (pageNum: number, isInitial = false) => {
   try {
   
     const url = new URL(buildApiUrl(`/api/MasterReport/${reportKey}`));
+    const isSummary = reportKey.toLowerCase().includes("summary") || reportKey.toLowerCase().includes("totals");
     Object.entries(filters).forEach(([k, v]) => {
       if (!v) return;
-      let paramName = k;
-      
-      if (k === "company") paramName = "compId";
-      else if (k === "vendor") paramName = "vendorId";
-      else if (k === "salesrep") paramName = "repId";
-      else if (k === "customer") paramName = "custId";
-      else if (k === "supplier" || k === "supplierop" || k === "locationsupplier") paramName = "supplierId";
-      else if (k === "show") paramName = "showId";
-      else if (k === "promo") paramName = "promoId";
-      else if (k === "location") paramName = "locationId";
-      else if (k === "startperiod") paramName = "startperiod";
-      else if (k === "endperiod") paramName = "endperiod";
+      const filterDef = report.filter_config.filters.find(f => f.name === k);
+      const paramName = filterDef?.apiParam || k;
       url.searchParams.append(paramName, v);
     });
-    if (!isCustomerInfo) {
+    if (!isCustomerInfo && !isSummary) {
       url.searchParams.append("pageNumber", pageNum.toString());
       url.searchParams.append("pageSize", PAGE_SIZE.toString());
     }
@@ -494,7 +555,7 @@ const fetchData = async (pageNum: number, isInitial = false) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     
-    let newItems: any[] = [];
+    let newItems = Array.isArray(res.data) ? res.data : (res.data?.data || []);
     if (isCustomerInfo) { 
       setCustomerData(res.data);
       setData([]);
@@ -506,9 +567,15 @@ const fetchData = async (pageNum: number, isInitial = false) => {
       if (isInitial && res.data?.months) setMonths(res.data.months);
     } else {
       newItems = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      if (isInitial) setData(newItems);
-      else setData((prev) => [...prev, ...newItems]);
-      setHasMore(newItems.length === PAGE_SIZE);
+      if (isInitial) {
+        setData(newItems);
+        // Agar summary hai toh scroll permanently band
+        setHasMore(!isSummary && newItems.length === PAGE_SIZE);
+      } else {
+        // Sirf scroll hone par append
+        setData((prev) => [...prev, ...newItems]);
+        setHasMore(newItems.length === PAGE_SIZE);
+      }
     }
     setAppliedFilters({ ...filters });
     } catch (err) {
@@ -521,6 +588,7 @@ const fetchData = async (pageNum: number, isInitial = false) => {
 
 // 🔹 EXCEL EXPORT LOGIC
 const handleExport = async (type: "excel" | "pdf") => {
+  if (!validateFilters()) return;
   if (type === "pdf") {
     alert("PDF Export coming soon...");
     return;
@@ -533,11 +601,18 @@ const handleExport = async (type: "excel" | "pdf") => {
       totalColumns: [], 
       labelColumn: undefined 
     };
-    
+    const mappedFilters: Record<string, string> = {};
+      Object.entries(filters).forEach(([k, v]) => {
+        const filterDef = report.filter_config.filters.find(f => f.name === k);
+        const paramName = filterDef?.apiParam || k;
+        mappedFilters[paramName] = v;
+      });
+
     const payload = {
       reportName: report.name,
       compId: filters.company,
-      filters: { ...filters, isExport: "true" },
+      // filters: { ...filters, isExport: "true" },
+      filters: { ...mappedFilters, isExport: "true" },
       filterSummary: buildFilterSummary(),
       totalColumns: footerConfig.totalColumns, 
       labelColumn: footerConfig.labelColumn 
@@ -597,6 +672,7 @@ document.body.removeChild(link);
   }
 };
   const handleApplyFilters = () => {
+    if (!validateFilters()) return;
     setPage(1);
     setHasMore(true);
     fetchData(1, true); 
@@ -1087,13 +1163,35 @@ const buildFilterSummary = (): string => {
                     ))}
                   </select>
                 ) : f.type === "date" ? (
-                  <input
-                    type="date"
+                  // <input
+                  //   type="date"
+                  //   disabled={isDisabled}
+                  //   value={filters[f.name] || ""}
+                  //   onChange={(e) => updateFilter(f.name, e.target.value)}
+                  //   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  // />
+                  <div className="relative w-full custom-datepicker-container">
+                  <DatePicker
+                  portalId="root"
+                    selected={filters[f.name] ? new Date(filters[f.name]) : null}
+                    onChange={(date: Date | null) => {
+                      updateFilter(f.name, date ? format(date, "yyyy-MM-dd") : "");
+                    }}
+                    placeholderText={f.label?.toUpperCase() || (f.name === "fromdate" ? "FROM DATE" : "TILL DATE")}
+                    
+                    // jQuery style Dropdowns ke liye ye add karein:
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select" 
+                    
+                    dateFormat="MM/dd/yyyy"
+                    autoComplete="off"
                     disabled={isDisabled}
-                    value={filters[f.name] || ""}
-                    onChange={(e) => updateFilter(f.name, e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full border border-gray-300 rounded px-3 py-2 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                      isDisabled ? "bg-gray-100 opacity-50 cursor-not-allowed" : ""
+                    }`}
                   />
+                </div>
                 ) : f.type === "period" ? (
                   <select
                   disabled={isDisabled}
