@@ -12,7 +12,7 @@ export type FilterType =
 
 export interface Column {
   key: string;
-  label: string;
+label: string;
   type:
   | "text"
   | "currency"
@@ -22,8 +22,10 @@ export interface Column {
   | "large_integer"
   | "percentage"
   | "date"
-  | "datetime";
+  | "datetime"
+  | "decimal";
     width?: string; // ✅ ADD THIS
+    format?: string;
     render?: (row: any) => React.ReactNode; // ✅ IMPORTANT
     showIf?: Record<string, string>;
     
@@ -43,6 +45,8 @@ export interface FilterConfig {
   defaultValue?: string;
   Placeholder?: string;
   defaultSelect?: string;
+  hideLabel?: boolean;
+  
 
 }
 
@@ -60,6 +64,7 @@ export interface Report {
     filters: FilterConfig[];
   };
   columns?: Column[];
+  locationType?: string;
 }
 
 export const API_BASE_URL = "http://localhost:5278";

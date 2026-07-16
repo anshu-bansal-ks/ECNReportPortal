@@ -200,10 +200,11 @@ export const fetchPromos = async (
 
 export const fetchLocations = async (
   token: string,
-  companyId: string
+  companyId: string,
+  locType: string = "WAREHOUSE"
 ): Promise<LocationOption[]> => {
   const res = await axios.get(`${API_BASE}/api/Dropdown/locations`, {
-    params: { compId: companyId },
+    params: { compId: companyId,locType: locType },
     headers: { Authorization: `Bearer ${token}` },
   });
 

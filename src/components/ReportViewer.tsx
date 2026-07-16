@@ -16,7 +16,6 @@ import ItemDetailsBulkTable from "./ItemDetailsBulkTable";
 import { REPORT_COLUMN_MAP,FOOTER_TOTAL_CONFIG,DRILL_DOWN_LINKS } from "../config/reportColumns";
 import ScheduleModal from "./ScheduleModal";
 
-
 import {fetchCompanies,fetchVendors,fetchSalesReps,fetchSuppliers,fetchSuppliersop, fetchCustomers,
 validateCustomer,CompanyOption,VendorOption,SalesRepOption,CustomerOption,SupplierOption, SupplierOpOption,
 fetchShows,fetchPromos,fetchLocations,fetchLocationSupplier,ShowOption,PromoOption,LocationOption,
@@ -63,6 +62,7 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
   const [months, setMonths] = useState<any[]>([]);
   const [autoRun, setAutoRun] = useState(false); 
   const [downloading, setDownloading] = useState(false);
+  const [grandTotals, setGrandTotals] = useState<Record<string, number>>({});
 
   const validateFilters = () => {
     const missingFields: string[] = [];
@@ -158,7 +158,11 @@ const formatCellValue = (value: any, type: string) => {
     const d = new Date(value);
     if (isNaN(d.getTime())) return String(value);
   
-    return d.toLocaleDateString("en-US");
+    return d.toLocaleDateString("en-US",{
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric"
+    });
   }
   
   if (type === "datetime") {
@@ -174,6 +178,9 @@ const formatCellValue = (value: any, type: string) => {
   }
   if (type === "percentage") {
     return num.toFixed(1) + "%";
+  }
+  if (type === "decimal") {
+    return Number(value).toFixed(2);
   }
 
   return String(value);
@@ -204,24 +211,74 @@ const formatCellValue = (value: any, type: string) => {
     });
   }
 
-  const handleRowDrillDown = (row: any,targetUrl: string, queryParam: string, keyFields: string[],idField?: string) => {
+  const handleRowDrillDown = (
+    row: any,
+    targetUrl: string,
+    queryParam: string,
+    keyFields: string[],
+    idField?: string,
+    extraParams?: Record<string, string>
+  ) => {
+  
     const Comp_id = filters.company || "";
-    //const targetIdField = keyFields.find(field => row[field] !== undefined && row[field] !== null);
-    //const targetVal = targetIdField ? row[targetIdField] : null;
-    const targetVal = idField 
-        ? row[idField] 
-        : keyFields.map(f => row[f]).find(v => v !== undefined && v !== null);
-
-    if (targetVal) {
-      const separator = targetUrl.includes("?") ? "&" : "?";
-    const finalUrl = `${targetUrl}${separator}Comp_id=${Comp_id}&${queryParam}=${targetVal}`;
+  
+    // main clicked value
+    const targetVal = idField
+      ? row[idField]
+      : keyFields
+          .map(f => row[f])
+          .find(v => v !== undefined && v !== null);
+  
+    if (!targetVal) return;
+  
+    const separator = targetUrl.includes("?") ? "&" : "?";
+  
+    // base url
+    let finalUrl =
+      `${targetUrl}${separator}Comp_id=${encodeURIComponent(Comp_id)}` +
+      `&${queryParam}=${encodeURIComponent(targetVal)}`;
+  
+    // extra params add
+    if (extraParams) {
+      Object.entries(extraParams).forEach(([urlParam, rowField]) => {
+  
+        const extraValue = row[rowField];
+  
+        if (
+          extraValue !== undefined &&
+          extraValue !== null &&
+          extraValue !== ""
+        ) {
+          finalUrl +=
+            `&${urlParam}=${encodeURIComponent(extraValue)}`;
+        }
+      });
+    }
+  
+    console.log("FINAL URL:", finalUrl);
+  
     window.open(
       finalUrl,
       "_blank",
       "noopener,noreferrer"
     );
-  }
   };
+  // const handleRowDrillDown = (row: any,targetUrl: string, queryParam: string, keyFields: string[],idField?: string, extraParams?: Record<string, string>) => {
+  //   const Comp_id = filters.company || "";
+  //   const targetVal = idField 
+  //       ? row[idField] 
+  //       : keyFields.map(f => row[f]).find(v => v !== undefined && v !== null);
+
+  //   if (targetVal) {
+  //     const separator = targetUrl.includes("?") ? "&" : "?";
+  //   const finalUrl = `${targetUrl}${separator}Comp_id=${Comp_id}&${queryParam}=${targetVal}`;
+  //   window.open(
+  //     finalUrl,
+  //     "_blank",
+  //     "noopener,noreferrer"
+  //   );
+  // }
+  // };
   
   const modifiedColumns = columns.map((col) => {
   const colKeyLower = col.key.toLowerCase();
@@ -258,7 +315,6 @@ const formatCellValue = (value: any, type: string) => {
         return {
           ...col,
           render: (row: any) => {
-            // const displayValue = row[col.key] !== undefined && row[col.key] !== null ? row[col.key] : "—";
             let displayValue = colKeyLower === "notes" 
               ? (col.label || "Notes") 
               : (row[col.key] !== undefined && row[col.key] !== null ? row[col.key] : "—");
@@ -274,7 +330,8 @@ const formatCellValue = (value: any, type: string) => {
                     matchedConfig.targetUrl, 
                     matchedConfig.queryParam, 
                     matchedConfig.keyFields, 
-                    matchedConfig.idField
+                    matchedConfig.idField,
+                    matchedConfig.extraParams
                   );
                 }}
                 className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
@@ -324,20 +381,21 @@ const formatCellValue = (value: any, type: string) => {
   
   useEffect(() => {
     if (!report?.filter_config?.filters) return;
-    if (Object.keys(filters).length > 0 && filters.company) return; 
   
-    const init: Record<string, string> = {};
+    const init: Record<string, any> = {};
+  
     report.filter_config.filters.forEach((f) => {
-      // 🔥 Agar config me defaultValue (jaise 'ALL') di hai, toh blank ke bajaye wahi assign karein
       if (f.type === "checkbox") {
-        init[f.name] = "false";
+        init[f.name] = f.defaultValue === "true" ;
+  
       } else {
-        init[f.name] = f.defaultValue || ""; 
+        init[f.name] = f.defaultValue || "";
       }
     });
+  
     setFilters(init);
   }, [report.key]);
-
+  
 // 📂 Path: src/components/ReportViewer.tsx
 
 useEffect(() => {
@@ -429,20 +487,16 @@ useEffect(() => {
   if (activeFilters.includes("promo")) {
     fetchPromos(token, filters.company).then(setPromos);
   }
-  // if (activeFilters.includes("location")) {
-  //   fetchLocations(token, filters.company).then(setLocations);
-  // }
   if (activeFilters.includes("location")) {
-    fetchLocations(token, filters.company).then((data) => {
+    const locType = report?.locationType ?? "WAREHOUSE";
+    fetchLocations(token, filters.company,locType).then((data) => {
       setLocations(data);
-
-      // 🔥 YE CHAR LINE ADD KARNI HAI (Line 268-275 ke beech):
       const conf = report?.filter_config?.filters.find((f: any) => f.name === "location");
       if (conf?.defaultSelect) {
         const defLoc = data.find((l: any) => l.value === conf.defaultSelect);
         if (defLoc) {
-          setSelectedLocation(defLoc); // UI par dropdown mein dikhega
-          setFilters(prev => ({ ...prev, location: defLoc.value })); // API ke liye value set hogi
+          setSelectedLocation(defLoc); 
+          setFilters(prev => ({ ...prev, location: defLoc.value })); 
         }
       }
     });
@@ -493,15 +547,18 @@ const supplierFilter = report?.filter_config?.filters?.find(
 const supplierOpFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "supplierop"
 );
+const locationFilter = report?.filter_config?.filters?.find(
+  (f: any) => f.name === "location"
+);
 const allowSalesRepAll = salesRepFilter?.allowAll === true;
 const allowSupplierAll = supplierFilter?.allowAll === true;
 const allowSupplierOPAll = supplierOpFilter?.allowAll === true;
-
+const allowLocationAll = locationFilter?.allowAll === true ;
 // ✅ NEW: options with ALL conditionally
 const salesRepOptions = allowSalesRepAll? [{ value: "ALL", label: "ALL" }, ...salesReps]: salesReps;
 const supplierOptions = allowSupplierAll? [{ value: "ALL", label: "ALL" }, ...suppliers]: suppliers;
-const supplierOpOptions = allowSupplierOPAll? [{ value: "ALL", label: "ALL" }, ...suppliersOp]
-  : suppliersOp;
+const supplierOpOptions = allowSupplierOPAll? [{ value: "ALL", label: "ALL" }, ...suppliersOp]: suppliersOp;
+const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...locations] : locations;
   /* UPDATE FILTER */
   const updateFilter = (name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -569,8 +626,13 @@ const fetchData = async (pageNum: number, isInitial = false) => {
       newItems = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (isInitial) {
         setData(newItems);
+        if (res.data?.totals) {
+          setGrandTotals(res.data.totals);
+          console.log("API Totals:", res.data.totals);
+      }
         // Agar summary hai toh scroll permanently band
         setHasMore(!isSummary && newItems.length === PAGE_SIZE);
+      
       } else {
         // Sirf scroll hone par append
         setData((prev) => [...prev, ...newItems]);
@@ -589,10 +651,10 @@ const fetchData = async (pageNum: number, isInitial = false) => {
 // 🔹 EXCEL EXPORT LOGIC
 const handleExport = async (type: "excel" | "pdf") => {
   if (!validateFilters()) return;
-  if (type === "pdf") {
-    alert("PDF Export coming soon...");
-    return;
-  }
+  // if (type === "pdf") {
+  //   alert("PDF Export coming soon...");
+  //   return;
+  // }
   setDownloading(true);
   try {
     const exportUrl = buildApiUrl(`/api/MasterReport/${reportKey}/${type}`);
@@ -605,11 +667,13 @@ const handleExport = async (type: "excel" | "pdf") => {
       Object.entries(filters).forEach(([k, v]) => {
         const filterDef = report.filter_config.filters.find(f => f.name === k);
         const paramName = filterDef?.apiParam || k;
-        mappedFilters[paramName] = v;
+        mappedFilters[paramName] =
+        typeof v === "boolean" ? String(v) : v;
       });
-
+      const reportTitle = `${report.name} (${buildFilterSummary()})`;
     const payload = {
       reportName: report.name,
+      reportTitle: reportTitle,
       compId: filters.company,
       // filters: { ...filters, isExport: "true" },
       filters: { ...mappedFilters, isExport: "true" },
@@ -621,11 +685,12 @@ const handleExport = async (type: "excel" | "pdf") => {
       responseType: "blob", // Important for downloading binary files
       headers: { Authorization: `Bearer ${token}` }
     });
-
+    const mimeType = type === "excel" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
+    const blob = new Blob( [res.data], { type: mimeType } );
     // 3. Create Download Link
-    const blob = new Blob([res.data], { 
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
-    });
+    // const blob = new Blob([res.data], { 
+    //   type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+    // });
     // 🔹 handleExport ke andar create download link wala part
 const generateFormattedFileName = () => {
   const reportName = report.name;
@@ -635,7 +700,7 @@ const generateFormattedFileName = () => {
   if (filters.company) parts.push(filters.company);
 
   // 2. Phir baaki filters (Vendor, Customer etc.) agar Date ke alawa kuch hai
-  const mainFilter = filters.vendor || filters.customer || filters.salesrep || filters.supplier;
+  const mainFilter = selectedVendor?.label || selectedCustomer?.label ?.replace(" - AR", "") .trim() || selectedSalesRep?.label || selectedSupplier?.label;
   if (mainFilter && mainFilter !== "ALL") parts.push(mainFilter);
 
   // 3. Date Range (From aur Till date ko dash se jodna)
@@ -652,7 +717,8 @@ const generateFormattedFileName = () => {
   // 4. Bracket ke andar saare parts ko join karna
   const filterString = parts.length > 0 ? `(${parts.join("-")})` : "";
 
-  return `${reportName}${filterString}.xlsx`.replace(/\s+/g, " "); // Spaces clean rakhega
+  const extension = type === "excel" ? "xlsx" : "pdf";
+  return `${reportName}${filterString}.${extension}` .replace(/\s+/g, " "); 
 };
 
 const link = document.createElement("a");
@@ -666,7 +732,7 @@ link.click();
 document.body.removeChild(link);
     
   } catch (err) {
-    alert("Export failed");
+    alert(`${type.toUpperCase()} Export failed`);
   } finally {
     setDownloading(false);
   }
@@ -707,31 +773,28 @@ const footerConfig = FOOTER_TOTAL_CONFIG[reportKey] || {
 
 const totalColumns = footerConfig.totalColumns || [];
 const dbTotalKeys = footerConfig.dbTotalKeys || {};
-const totals: Record<string, number> = {};
+ const totals: Record<string, number> = {};
 const firstRow = sortedData[0] || {};
 totalColumns.forEach((colKey) => {
-  const dbMappedKey = dbTotalKeys[colKey]; 
-  const colKeyLower = colKey.toLowerCase();
-  const isPercentageCol = colKeyLower.includes("percent") || 
+  //const dbMappedKey = dbTotalKeys[colKey]; 
+  // colKeyLower = colKey.toLowerCase();
+  //const isPercentageCol = colKeyLower.includes("percent") || 
   visibleColumns.find(c => c.key === colKey)?.type === "percentage";
-  if (dbMappedKey && firstRow[dbMappedKey] !== undefined && firstRow[dbMappedKey] !== null) {
-    totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
-  }   else if (!isPercentageCol) {
-    totals[colKey] = sortedData.reduce((sum: number, row: any) => {
-      const val = parseFloat(String(row[colKey] || "0"));
-      return sum + (isNaN(val) ? 0 : val);
-    }, 0);
-  }
+  // if (dbMappedKey && firstRow[dbMappedKey] !== undefined && firstRow[dbMappedKey] !== null) {
+  //   totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
+  // }   else if (!isPercentageCol) {
+  //   totals[colKey] = sortedData.reduce((sum: number, row: any) => {
+  //     const val = parseFloat(String(row[colKey] || "0"));
+  //     return sum + (isNaN(val) ? 0 : val);
+  //   }, 0);
+  // }
 });
 
 
 // 1. FIRST PASS: Saare normal columns aur Gross Profit ka direct SUM
-// (ADS aur Closeout dono ke liye numeric columns yahan sum honge)
 totalColumns.forEach((colKey) => {
   const colKeyLower = colKey.toLowerCase();
   const dbMappedKey = dbTotalKeys[colKey];
-
-  // Percentage ko skip karenge kyunki ye aggregate logic se calculate hoga
   const isPercentageCol = colKeyLower.includes("percent") || 
                           visibleColumns.find(c => c.key === colKey)?.type === "percentage";
 
@@ -739,7 +802,6 @@ totalColumns.forEach((colKey) => {
     totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
   } 
   else if (!isPercentageCol) {
-    // 🔥 Qty, Sales, Cost, Gross Profit, Total Ship etc. sab yahan sum honge
     totals[colKey] = sortedData.reduce((sum: number, row: any) => {
       const val = parseFloat(String(row[colKey] || "0"));
       return sum + (isNaN(val) ? 0 : val);
@@ -752,18 +814,12 @@ visibleColumns.forEach((col) => {
   const colKeyLower = col.key.toLowerCase();
 
   if (col.type === "percentage" || colKeyLower.includes("percent")) {
-    
-    // 🔥 ADS ke liye 'total_merch' aur Closeout ke liye 'sales' dhoondna
     const salesKey = visibleColumns.find(c => 
       ["total_merch", "sales", "merch", "extended_price"].some(k => c.key.toLowerCase() === k)
     )?.key;
-    
-    // 🔥 ADS ke liye 'total_cost' aur Closeout ke liye 'cost' dhoondna
     const costKey = visibleColumns.find(c => 
       ["total_cost", "cost", "cogs"].some(k => c.key.toLowerCase() === k)
     )?.key;
-
-    // Gross Profit key (agar column mein direct GP hai toh wo use karo, warna Sales-Cost karo)
     const profitKey = visibleColumns.find(c => 
       ["gross_profit", "gross", "profit_amt", "gp"].some(k => c.key.toLowerCase() === k)
     )?.key;
@@ -788,62 +844,126 @@ visibleColumns.forEach((col) => {
     setCustomerError(result ? "" : "Invalid Customer ID");
   };
 // ================== FILTER SUMMARY FOR EXCEL TITLE ==================
+// const buildFilterSummary = (): string => {
+//   const parts: string[] = [];
+
+//   // Company
+//   if (filters.company) {
+//     const companyName = companies.find(c => c.value === filters.company)?.label || filters.company;
+//     parts.push(`Company: ${companyName}`);
+//   }
+
+//   // Vendor
+//   if (filters.vendor && selectedVendor?.label) {
+//     parts.push(`Vendor: ${selectedVendor.label}`);
+//   }
+
+//   // Sales Rep
+//   if (filters.salesrep && selectedSalesRep?.label) {
+//     parts.push(`Sales Rep: ${selectedSalesRep.label}`);
+//   }
+
+//   // Customer
+//   if (filters.customer && selectedCustomer?.label) {
+//     parts.push(`Customer: ${selectedCustomer.label}`);
+//   }
+
+//   // Supplier
+//   if (filters.supplier && selectedSupplier?.label) {
+//     parts.push(`Supplier: ${selectedSupplier.label}`);
+//   }
+
+//   // Supplier OP
+//   if (filters.supplierop && selectedSupplierOp?.label) {
+//     parts.push(`Supplier: ${selectedSupplierOp.label}`);
+//   }
+
+//   // Date Range
+//   if (filters.fromdate && filters.tilldate) {
+//     parts.push(`From: ${filters.fromdate} To: ${filters.tilldate}`);
+//   } 
+//   else if (filters.timeperiod) {
+//     parts.push(`Time Period: ${filters.timeperiod}`);
+//   }
+//   else {
+//     // 🔥 Sabse zaroori: Agar kuch bhi select nahi hai, toh Current Date (YYYY-MM-DD)
+//     const today = new Date().toISOString().split('T')[0]; // Format: 2026-04-23
+//     parts.push(`As of: ${today}`);
+//   }
+
+//   return parts.length > 0 ? parts.join(" | ") : "";
+// };
+
 const buildFilterSummary = (): string => {
+
   const parts: string[] = [];
 
   // Company
   if (filters.company) {
-    const companyName = companies.find(c => c.value === filters.company)?.label || filters.company;
-    parts.push(`Company: ${companyName}`);
-  }
 
-  // Vendor
-  if (filters.vendor && selectedVendor?.label) {
-    parts.push(`Vendor: ${selectedVendor.label}`);
-  }
+    const companyName =
+      companies.find(
+        c => c.value === filters.company
+      )?.label || filters.company;
 
-  // Sales Rep
-  if (filters.salesrep && selectedSalesRep?.label) {
-    parts.push(`Sales Rep: ${selectedSalesRep.label}`);
+    parts.push(companyName.toUpperCase());
   }
 
   // Customer
-  if (filters.customer && selectedCustomer?.label) {
-    parts.push(`Customer: ${selectedCustomer.label}`);
+  if (
+    filters.customer &&
+    selectedCustomer?.label
+  ) {
+
+    parts.push(
+      selectedCustomer.label
+        .replace(" - AR", "")
+        .trim()
+    );
+  }
+
+  // Vendor
+  if (
+    filters.vendor &&
+    selectedVendor?.label
+  ) {
+
+    parts.push(selectedVendor.label);
   }
 
   // Supplier
-  if (filters.supplier && selectedSupplier?.label) {
-    parts.push(`Supplier: ${selectedSupplier.label}`);
+  if (
+    filters.supplier &&
+    selectedSupplier?.label
+  ) {
+
+    parts.push(selectedSupplier.label);
   }
 
-  // Supplier OP
-  if (filters.supplierop && selectedSupplierOp?.label) {
-    parts.push(`Supplier: ${selectedSupplierOp.label}`);
+  // Time Period
+  if (filters.timeperiod) {
+
+    parts.push(filters.timeperiod);
   }
 
   // Date Range
-  if (filters.fromdate && filters.tilldate) {
-    parts.push(`From: ${filters.fromdate} To: ${filters.tilldate}`);
-  } 
-  else if (filters.timeperiod) {
-    parts.push(`Time Period: ${filters.timeperiod}`);
-  }
-  else {
-    // 🔥 Sabse zaroori: Agar kuch bhi select nahi hai, toh Current Date (YYYY-MM-DD)
-    const today = new Date().toISOString().split('T')[0]; // Format: 2026-04-23
-    parts.push(`As of: ${today}`);
+  else if (
+    filters.fromdate &&
+    filters.tilldate
+  ) {
+
+    parts.push(
+      `${filters.fromdate} To ${filters.tilldate}`
+    );
   }
 
-  return parts.length > 0 ? parts.join(" | ") : "";
+  return parts.join(" - ");
 };
+
   if (!report) return null;
 
   return (
-    // <div className="min-h-screen bg-slate-50">
     <div className="max-h-screen overflow-auto flex flex-col">
-      {/* HEADER */}
-      {/* <header className="bg-white border-b shadow sticky top-0 z-50"> */}
       <header className="sticky top-0 z-50 h-[80px] bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <button onClick={onBack} 
@@ -867,7 +987,6 @@ const buildFilterSummary = (): string => {
             {report.supports_excel_export && (
               <button
                 onClick={() => handleExport("excel")}
-                // onClick={handleExport}
                 disabled={downloading}
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 shadow-sm"
               >
@@ -877,8 +996,8 @@ const buildFilterSummary = (): string => {
             )}
             {report.supports_pdf_export && (
               <button
-                // onClick={() => handleExport("pdf")}
-                onClick={() => alert("PDF Export coming soon...")}
+                 onClick={() => handleExport("pdf")}
+                
                 disabled={downloading}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2 shadow-sm"
               >
@@ -907,12 +1026,7 @@ const buildFilterSummary = (): string => {
           </div>
         </div>
       </header>
-
-      {/* MAIN CONTENT */}
-      {/* <main className="max-w-7xl mx-auto"> */}
       <main>
-      {/* <main className="max-w-7xl mx-auto h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden px-6"> */}
-        {/* FILTERS */}
         <div className="bg-white rounded-xl shadow p-3 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-lg">Filters</h2>
@@ -925,13 +1039,12 @@ const buildFilterSummary = (): string => {
               Apply Filters
             </button>
           </div>
-
-          {/* <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"> */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {report.filter_config.filters.map((f) => {
               
               // ================== MUTUAL DISABLE LOGIC ==================
               let isDisabled = false;
+              const shouldShowLabel = f.hideLabel === false ? true : false;
               const fName = f.name.toLowerCase();
 
               if (fName === "fromdate" || fName === "tilldate") {
@@ -941,8 +1054,14 @@ const buildFilterSummary = (): string => {
                 if (filters.fromdate || filters.tilldate) isDisabled = true;
               }
               return (
-              <div key={f.name}>
-                {/* <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label> */}
+              <div key={f.name} className="flex flex-col">
+                <div className="min-h-[24px]">
+                {shouldShowLabel && f.label && (
+                    <label className="block text-xs font-semibold text-gray-600 mb-1 tracking-wider">
+                        {f.label}
+                    </label>
+                )}
+            </div>
                 {f.type === "select" && f.options && f.options.length > 0 ? (
                   <select
                   value={filters[f.name] !== undefined ? filters[f.name] : (f.defaultValue || "")}
@@ -962,7 +1081,6 @@ const buildFilterSummary = (): string => {
                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
                   >
                     <option value="">Select Company</option>
-                    {/* {companies.map((c) => ( */}
                     {companyOptions.map((c) => (
                       <option key={c.value} value={c.value}>
                         { c.value}
@@ -1135,14 +1253,16 @@ const buildFilterSummary = (): string => {
                     value={selectedLocation?.value || ""}
                     onChange={(e) => {
                       const val = e.target.value;
-                      const obj = locations.find(l => l.value === val) || null;
+                      const obj = locationOptions.find(l => l.value === val) || null;
                       setSelectedLocation(obj);
                       updateFilter("location", val);
                     }}
                   >
-                    <option value="">Select Location</option>
-                    {locations.map(l => (
-                      <option key={l.value} value={l.value}>{l.label}</option>
+                   <option value="">Select Location</option>
+                   {locationOptions.map((l) => (
+                      <option key={l.value} value={l.value}>
+                        {l.label}
+                      </option>
                     ))}
                   </select>
                 ): f.name === "locationsupplier" ? (
@@ -1163,23 +1283,20 @@ const buildFilterSummary = (): string => {
                     ))}
                   </select>
                 ) : f.type === "date" ? (
-                  // <input
-                  //   type="date"
-                  //   disabled={isDisabled}
-                  //   value={filters[f.name] || ""}
-                  //   onChange={(e) => updateFilter(f.name, e.target.value)}
-                  //   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  // />
                   <div className="relative w-full custom-datepicker-container">
                   <DatePicker
                   portalId="root"
-                    selected={filters[f.name] ? new Date(filters[f.name]) : null}
+                    selected={
+                      filters[f.name] 
+                        ? new Date(filters[f.name].replace(/-/g, '/')) 
+                        : f.defaultValue 
+                          ? new Date(f.defaultValue.replace(/-/g, '/')) 
+                          : null
+                    }
                     onChange={(date: Date | null) => {
                       updateFilter(f.name, date ? format(date, "yyyy-MM-dd") : "");
                     }}
                     placeholderText={f.label?.toUpperCase() || (f.name === "fromdate" ? "FROM DATE" : "TILL DATE")}
-                    
-                    // jQuery style Dropdowns ke liye ye add karein:
                     showMonthDropdown
                     showYearDropdown
                     dropdownMode="select" 
@@ -1240,7 +1357,7 @@ const buildFilterSummary = (): string => {
                     value={filters[f.name] || ""}
                     onChange={(e) => updateFilter(f.name, e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={f.placeholder ||`Enter ${f.label?.toLowerCase() || f.name}`}
+                    placeholder={shouldShowLabel ? (f.placeholder || "") : (f.label || f.placeholder || "")}
                   />
                 )}
               </div>
@@ -1256,7 +1373,6 @@ const buildFilterSummary = (): string => {
               <div className="p-20 text-center">
                 <RefreshCw className="animate-spin mx-auto text-blue-600" size={32} />
               </div>
-            // ) : !data || (Array.isArray(data) && data.length === 0) ? (
               ) : !customerData ? (
               <div className="p-20 text-center text-gray-500">
                 No customer data available. Please select customer and apply filters.
@@ -1266,8 +1382,6 @@ const buildFilterSummary = (): string => {
             )}
           </div>
         ) : isItemDetailsReport ? (
-
-          // 🔥🔥🔥 HANDSONTABLE HERE (NEW WRAPPER)
           <div className="bg-white rounded-xl shadow p-4 overflow-hidden">
             {!filters.company ? (
               <div className="text-gray-500 text-center p-10">
@@ -1279,9 +1393,7 @@ const buildFilterSummary = (): string => {
           </div>
         
         ) : (
-          // <div className="bg-white rounded-xl shadow border overflow-hidden">
           <div className="bg-white rounded-xl shadow border flex flex-col">
-          {/* <div className="bg-white rounded-xl shadow overflow-x-auto overflow-y-auto max-h-[70vh] border rounded"> */}
             {loading ? (
               <div className="p-20 text-center">
                 <RefreshCw className="animate-spin mx-auto text-blue-600" size={32} />
@@ -1301,10 +1413,8 @@ const buildFilterSummary = (): string => {
                       key={c.key}
                       style={{ width: c.width }}
                       onClick={() => handleSort(c.key)}
-                      //className="px-3 py-3 text-left text-xs  text-gray-700 border-b bg-gray-100"
-                      className={`px-3 py-3 text-xs font-semibold text-gray-700 border-b bg-gray-100 cursor-pointer select-none ${
-                        // 🔥 Agar type currency ya percentage hai, toh header right mein hoga, nahi toh left mein
-                        (c.type === "currency" || c.type === "percentage" || c.type === "large_integer") 
+                      className={`px-3 py-3 text-xs font-semibold text-gray-700 border-b bg-gray-100 cursor-pointer select-none ${                
+                        (c.type === "currency" || c.type === "percentage" || c.type === "large_integer" || c.type === "decimal") 
                           ? "text-right" 
                           : "text-left"
                       }`}
@@ -1329,7 +1439,7 @@ const buildFilterSummary = (): string => {
                         style={{ width: c.width }}
                         
                         className={`px-3 py-2.5 text-gray-900 border-b  ${
-                          (c.type === "currency" || c.type === "percentage" || c.type === "large_integer")
+                          (c.type === "currency" || c.type === "percentage" || c.type === "large_integer" ||  c.type === "decimal")
                             ? "text-right font-medium tabular-nums"
                             : "text-left break-words"
                         }`}
@@ -1344,37 +1454,52 @@ const buildFilterSummary = (): string => {
                   </tr>
                 ))}
               </tbody>
-              {/* ✅ FOOTER TOTAL - Direct Column Name se "Total" label */}
+              {/*  FOOTER TOTAL - Direct Column Name se "Total" label */}
               {totalColumns.length > 0 && (
-                // <tfoot className="bg-gray-100 font-semibold border-t">
                 <tfoot className="bg-gray-100 font-semibold border-t sticky bottom-0 z-10">
                   <tr>
-                    {modifiedColumns.map((col) => {
+                    {visibleColumns.map((col:any) => {
                       const isLabelColumn = col.key === footerConfig.labelColumn;
 
+                      // API Total ko preference do, warna UI Total use karo
+                      const totalValue =
+                        grandTotals?.[col.key] !== undefined
+                          ? grandTotals[col.key]
+                          : totals?.[col.key];
+
                       return (
-                        <td 
-                          key={col.key} 
+                        <td
+                          key={col.key}
                           className={`px-3 py-2 font-semibold ${
-                            (col.type === "currency" || col.type === "number"|| col.type === "percentage" || col.type === "large_integer") 
-                              ? "text-right tabular-nums" 
+                            col.type === "currency" ||
+                            col.type === "number" ||
+                            col.type === "percentage" ||
+                            col.type === "decimal" ||
+                            col.type === "large_integer"
+                              ? "text-right tabular-nums"
                               : "text-left"
                           }`}
                         >
                           {isLabelColumn ? (
                             <span className="font-bold">Total</span>
-                          ) : totals[col.key] !== undefined ? (
-                            col.type === "percentage" 
-                            ? totals[col.key].toFixed(1) + "%"
-                            : col.type === "currency" 
-                              ? new Intl.NumberFormat("en-US", { 
-                                  style: "currency", 
-                                  currency: "USD", 
-                                  minimumFractionDigits: 2, 
-                                  maximumFractionDigits: 2 
-                                }).format(totals[col.key])
-                              : Math.round(totals[col.key]).toLocaleString()
-                          ) : ""}
+                          ) : totalValue !== undefined ? (
+                            col.type === "percentage" ? (
+                              `${Number(totalValue).toFixed(1)}%`
+                            ) : col.type === "currency" ? (
+                              new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }).format(Number(totalValue))
+                            ) : col.type === "decimal" ? (
+                              Number(totalValue).toFixed(2)
+                            ): (
+                              Math.round(Number(totalValue)).toLocaleString()
+                            )
+                          ) : (
+                            ""
+                          )}
                         </td>
                       );
                     })}

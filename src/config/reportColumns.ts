@@ -43,39 +43,76 @@ export const DRILL_DOWN_LINKS: Record<string, any> = {
   expiringcreditcards: {targetUrl: "/report/customerinfo",queryParam: "custId",
   keyFields: ["customer_id", "customerid"]
   },
-  // inactivecustomeragingall: {targetUrl: "/report/customerinfo",queryParam: "custId",
-  // keyFields: ["customer_id", "customerid"]
-  // },
+  invicedsalesbycustomerlytdbyshipto: {targetUrl: "/report/customerinfo",queryParam: "custId",
+  keyFields: ["customer_id", "customerid"]
+  },
+  missingemailaddressforcustomer: {targetUrl: "/report/customerinfo",queryParam: "custId",
+  keyFields: ["customer_id", "customerid"]
+  },
+  recentshipments: {targetUrl: "/report/customerinfo",queryParam: "custId",
+  keyFields: ["customer_id", "customerid"]
+  },
+  salehistoryrepcomparision: {targetUrl: "/report/saleshistory_for_rep_by_customer",queryParam: "repId",
+  keyFields: ["salesrep_id", "salesrepid","rep_id","repid"]
+  },
+  paymentinquirybyamount: {
+    targetUrl: "/report/paymentdetail",
+    queryParam: "check_number", // URL ka main query param
+    keyFields: ["check", "check_number"],
+    idField: "check_number",
+    extraParams: {
+        customerid: "customer_id",
+    }
+},
   inactivecustomeragingall: [
     {
-      targetUrl: "/report/customerinfo", // 1. ID par customerinfo khulega
+      targetUrl: "/report/customerinfo", 
       queryParam: "custId",
       keyFields: ["customer_id", "customerid"]
     },
     {
-      targetUrl: "/report/ecnstatement",  // 2. Name par ecnstatement khulega
+      targetUrl: "/report/ecnstatement", 
       queryParam: "custId",
       keyFields: ["customer_name"],
-      idField: "customer_id" // URL mein ID bhejne ke liye
+      idField: "customer_id" 
     }
   ],
   inactivecustomeragingrecent: [
     {
-      targetUrl: "/report/customerinfo", // 1. ID par customerinfo khulega
+      targetUrl: "/report/customerinfo", 
       queryParam: "custId",
       keyFields: ["customer_id", "customerid"]
     },
     {
-      targetUrl: "/report/ecnstatement",  // 2. Name par ecnstatement khulega
+      targetUrl: "/report/ecnstatement",  
       queryParam: "custId",
       keyFields: ["customer_name"],
-      idField: "customer_id" // URL mein ID bhejne ke liye
+      idField: "customer_id" 
     },
     {
-      targetUrl: "/report/collectioncallnotes",  // 2. Name par ecnstatement khulega
+      targetUrl: "/report/collectioncallnotes",  
       queryParam: "custId",
       keyFields: ["notes"],
-      idField: "customer_id" // URL mein ID bhejne ke liye
+      idField: "customer_id"
+    }
+  ],
+  pastdueaccountreportbyrep: [
+    {
+      targetUrl: "/report/customerinfo", 
+      queryParam: "custId",
+      keyFields: ["customer_id", "customerid"]
+    },
+    {
+      targetUrl: "/report/ecnstatement",  
+      queryParam: "custId",
+      keyFields: ["name"],
+      idField: "customer_id" 
+    },
+    {
+      targetUrl: "/report/collectioncallnotes",  
+      queryParam: "custId",
+      keyFields: ["notes"],
+      idField: "customer_id" 
     }
   ],
 
@@ -83,72 +120,137 @@ export const DRILL_DOWN_LINKS: Record<string, any> = {
   
   
 };
-export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelColumn?: string;dbTotalKeys?: Record<string, string>; }> = {
+export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelColumn?: string;dbTotalKeys?: Record<string, string>; enabled: boolean; }> = {
   
-  apsummary: {totalColumns: ["Balance"],labelColumn: "vendor_name" },
+  apsummary: {enabled: false,totalColumns: ["Balance"],labelColumn: "vendor_name" },
 
-  apdetails: {totalColumns: ["Current", "Over30", "Over60","Over90","Total"], labelColumn: "po_no"},
+  apdetails: {enabled: false,totalColumns: ["Current", "Over30", "Over60","Over90","Total"], labelColumn: "po_no"},
 
-  adssalesreport: {labelColumn: "customer_name",
+  adssalesreport: { enabled: false,labelColumn: "customer_name",
     totalColumns: ["total_ship", "total_handling", "total_feed", "total_other", "total_merch", "total_cost", "grand_total","profit_percent"]
   },
-  agingreportsummary: {labelColumn: "rep",
+  agingreportsummary: {enabled: false,labelColumn: "rep",
     totalColumns: ["Current", "30_to_60", "60_to_90", "Over_90", "Total_Due"]
   },
-  itemwithpriceandcost: {labelColumn: "item_desc",
+  itemwithpriceandcost: {enabled: true,labelColumn: "item_desc",
     totalColumns: ["price1", "cost"],
-    dbTotalKeys: { price1: "price1_total", cost: "cost_total" }
   },
-  agingwithytdsales: {labelColumn: "terms_desc",
+  agingwithytdsales: {enabled: false,labelColumn: "terms_desc",
     totalColumns: ["last_pmt_amount","ytd_sales","ly_sales","Current", "31_to_60", "61_to_90", "Over90", "Total_Due"]
   },
-  closeoutsalesreport: {labelColumn: "sales_discount_group_id",
+  closeoutsalesreport: {enabled: false,labelColumn: "sales_discount_group_id",
     totalColumns: ["qty","sales"]
   },
-  closeoutsaleswithprofit: {labelColumn: "sales_discount_group_id",
+  closeoutsaleswithprofit: {enabled: false,labelColumn: "sales_discount_group_id",
     totalColumns: ["qty","sales","cost","gross_profit","profit_percent"]
   },
-  custactivity: {labelColumn: "ship2_name",
+  custactivity: {enabled: false,labelColumn: "ship2_name",
   totalColumns: ["invoice_total"]
   },
-  corporatepaymentdetailbylocation: {labelColumn: "customer_name",
+  corporatepaymentdetailbylocation: {enabled: false,labelColumn: "customer_name",
   totalColumns: ["payment_amount"]
   },
-  duebycutoff_cutoff: {labelColumn: "customer_name",
+  duebycutoff_cutoff: {enabled: false,labelColumn: "customer_name",
   totalColumns: ["balance_due"]
   },
-  ecnbucks: {labelColumn: "supplier_name",
+  ecnbucks: {enabled: false,labelColumn: "supplier_name",
   totalColumns: ["total"]
   },
-  ecnbuckscustomer: {labelColumn: "customer_name",
+  ecnbuckscustomer: {enabled: false,labelColumn: "customer_name",
   totalColumns: ["total"]
   },
-  ecnstatement: {labelColumn: "po_no",
+  ecnstatement: {enabled: false,labelColumn: "po_no",
   totalColumns: ["current","31_to_60","61_to_90","over_90","total"]
   },
-  ecnstatementshipto: {labelColumn: "ship_to_name",
+  ecnstatementshipto: {enabled: false,labelColumn: "ship_to_name",
   totalColumns: ["current","31_to_60","61_to_90","over_90","total"]
   },
-  inactivecustomeragingall: {labelColumn: "rep",
+  inactivecustomeragingall: {enabled: false,labelColumn: "rep",
   totalColumns: ["120-150","151-180","Over_180","total"]
   },
-  inactivecustomeragingrecent: {labelColumn: "rep",
+  inactivecustomeragingrecent: {enabled: false,labelColumn: "rep",
   totalColumns: ["under_120","120-150","151-180","over_180","total"]
   },
-  inactivecustomers: {labelColumn: "email_address",
+  inactivecustomers: {enabled: false,labelColumn: "email_address",
   totalColumns: ["YTD_SALES","LY_SALES"]
   },
-  inactivecustomerswithlocation: {labelColumn: "email_address",
+  inactivecustomerswithlocation: {enabled: false,labelColumn: "email_address",
   totalColumns: ["YTD_SALES","LY_SALES"]
   },
-  inv_value: {labelColumn: "location_name",
+  inv_value: {enabled: false,labelColumn: "location_name",
   totalColumns: ["qty","value"]
   },
-  inv_value_pg: {labelColumn: "product_group",
+  inv_value_pg: {enabled: false,labelColumn: "product_group",
   totalColumns: ["qty","value"]
   },
-  inventorylevelsandpricesforitemprefix: {labelColumn: "upc",
+  inventorylevelsandpricesforitemprefix: {enabled: false,labelColumn: "upc",
   totalColumns: ["MAC_Cost","standard_cost","price1","MSRP","MAP"]
+  },
+  invoicedsalescustomertotals: {enabled: false,labelColumn: "rep",
+  totalColumns: ["sales"]
+  },
+  invoicedsalescustomertotalswithfreightbreakdown: {enabled: false,labelColumn: "bill2_name",
+  totalColumns: ["product_sales","freight","total"]
+  },
+  invoicedsalesreptotals: {enabled: false,labelColumn: "rep",
+  totalColumns: ["sales"]
+  },
+  invoicedsalessuppliertotals: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["sales"]
+  },
+  invoicedsalessuppliertotalswithprofit: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["sales","cost","gross_profit","profit_percent"]
+  },
+  invoicesummaryforcustomer: {enabled: false,labelColumn: "customer_name",
+  totalColumns: ["Sales","freight","total_amount"]
+  },
+  itemreturnsforcustomer: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["return_amt"]
+  },
+  lowprofitreport: {enabled: true,labelColumn: "rep",
+  totalColumns: ["sales_amount","shipping_cost","gross_profit","profit_percent"]
+  },
+  manualpricechanges: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["price1","sold_price","cust_price","over_price","sales_cost"]
+  },
+  nochargeitemtotalsforsupplier: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty"]
+  },
+  nochargesalesbysupplier: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["price1","qty","sales"]
+  },
+  order_values: {enabled: false,labelColumn: "delete_flag",
+  totalColumns: ["Amt_Filled","Amt_Canceled","Amt_backordered"]
+  },
+  order_weights: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["total_weight(Lb)","total_weight(Kg)"]
+  },
+  pastdueaccountreportbyrep: {enabled: false,labelColumn: "rep",
+  totalColumns: ["Total_Balance","Total_Current","Total_31-60","Total_61-90","Total_Over_90"]
+  },
+  paymentdetail: {enabled: false,labelColumn: "check_number",
+  totalColumns: ["Amount"]
+  },
+  pickticketoverviewexecutive: {enabled: false,labelColumn: "location_name",
+  totalColumns: ["Pick_Count","open_value","avg_amount"]
+  },
+  purchaseoverdtrngbysupplier: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["purchases"]
+  },
+  purchasesummary: {enabled: false,labelColumn: "location_name",
+  totalColumns: ["value"]
+  },
+  putaway: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty_received"]
+  },
+  returnsinvbyloc: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty_on_hand","total"]
+  },
+  returnsinvbylocsummary: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["total_value"]
+  },
+  salehistoryrepcomparision: {enabled: false,labelColumn: "Rep",
+  totalColumns: ["qty_current","sales_current","qty_prior","sales_prior"]
   },
 
 
@@ -193,15 +295,15 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "PmtHist", label: "Pmts Less Sls", type: "currency" }
   ], 
   thirteenmonthcustomersalesforvendor: [
-    { key: "supplier_id",     label: "Supplier Id",     type: "text",    width: "82px" },
-    { key: "supplier_name",   label: "Supplier Name",   type: "text",    width: "120px" },
-    { key: "customer_id",     label: "Customer Id",     type: "text",    width: "90px" },
-    { key: "customer_name",   label: "Customer Name",   type: "text",    width: "120px" },
-    { key: "rep",             label: "Rep",             type: "text",    width: "100px" },
-    { key: "mon1",  label: "Month 1", type: "number", width: "50px" },
-    { key: "mon2",  label: "Month 2", type: "number", width: "50px" },
-    { key: "mon3",  label: "Month 3", type: "number", width: "50px" },
-    { key: "mon4",  label: "Month 4", type: "number", width: "50px" },
+    { key: "supplier_id", label: "Supplier Id", type: "text", width: "82px" },
+    { key: "supplier_name", label: "Supplier Name", type: "text", width: "120px" },
+    { key: "customer_id", label: "Customer Id", type: "text", width: "90px" },
+    { key: "customer_name", label: "Customer Name", type: "text", width: "120px" },
+    { key: "rep", label: "Rep", type: "text", width: "100px" },
+    { key: "mon1", label: "Month 1", type: "number", width: "50px" },
+    { key: "mon2", label: "Month 2", type: "number", width: "50px" },
+    { key: "mon3", label: "Month 3", type: "number", width: "50px" },
+    { key: "mon4", label: "Month 4", type: "number", width: "50px" },
     { key: "mon5",  label: "Month 5", type: "number", width: "50px" },
     { key: "mon6",  label: "Month 6", type: "number", width: "50px" },
     { key: "mon7",  label: "Month 7", type: "number", width: "50px" },
@@ -854,6 +956,902 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "item_desc", label: "Item Desc", type: "text" },
     { key: "total_qty", label: "Total Qty", type: "large_integer" },
     { key: "inventory_value", label: "Inventory Value", type: "currency" }
+  ],
+  discitemswithbinqtyflags: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "primary_bin", label: "Primary Bin", type: "text" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "qty_back_ordered", label: "Qty Back Ordered", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "stockable", label: "Stockable", type: "text" },
+    { key: "sellable", label: "Sellable", type: "text" },
+    { key: "buy", label: "Buy", type: "text" },
+    { key: "order_quantity", label: "Order Quantity", type: "large_integer" },
+    { key: "discontinued", label: "Discontinued", type: "text" },
+    { key: "suppress_from", label: "Suppress From", type: "text" }
+  ],
+  invicedsalesbycustomerlytdbyshipto: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "ship_to_name", label: "Ship To Name", type: "text" },
+    { key: "Salesrep", label: "Salesrep", type: "text" },
+    { key: "lytd", label: "LYTD", type: "currency" },
+    { key: "ytd", label: "YTD", type: "currency" },
+    { key: "Change", label: "Change", type: "currency" },
+    { key: "percent", label: "percent", type: "percentage" },
+    { key: "ly", label: "LY", type: "currency" },
+    { key: "first_si", label: "First SI", type: "date" },
+    { key: "last_si", label: "Last SI", type: "date" },
+    { key: "last_si_day", label: "Last SI day", type: "integer" }
+  ],
+  invoicedsalescustomertotals: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "sales", label: "Sales", type: "currency" }
+  ],
+  invoicedsalescustomertotalswithfreightbreakdown: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Name", type: "text" },
+    { key: "product_sales", label: "Product Sales", type: "currency" },
+    { key: "freight", label: "Freight", type: "currency" },
+    { key: "total", label: "Total", type: "currency" }
+  ],
+  invoicedsalesreptotals: [
+    { key: "salesrep_id", label: "Salesrep Id", type: "integer" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "sales", label: "Sales", type: "currency" }
+  ],
+  invoicedsalessuppliertotals: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "sales", label: "Sales", type: "currency" }
+  ],
+  invoicedsalessuppliertotalswithprofit: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "sales", label: "Sales", type: "currency" },
+    { key: "cost", label: "Cost", type: "currency" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency" },
+    { key: "profit_percent", label: "Profit Percent", type: "percentage" }
+  ],
+  invoicefreightcharges: [
+    { key: "location_name", label: "Customer Name", type: "text" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Name", type: "text" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_state", label: "Ship To State", type: "text" },
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "product_amt", label: "Product Amt", type: "currency" },
+    { key: "freight", label: "Freight", type: "currency" },
+    { key: "total", label: "Total", type: "currency" },
+    { key: "carrier_name", label: "Carrier Name", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "rep", label: "Last SI day", type: "integer" }
+  ],
+  invoicesummaryforcustomer: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "po_no", label: "PO NO", type: "text" },
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "Sales", label: "Sales", type: "currency" },
+    { key: "freight", label: "Freight", type: "currency" },
+    { key: "total_amount", label: "Total Amount", type: "currency" }
+  ],
+  invoicesunderspecifiedamount: [
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "po_no", label: "PO NO", type: "text" },
+    { key: "bill2_name", label: "Bill To Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "total_amount", label: "Total Amount", type: "currency" },
+    { key: "freight", label: "Freight", type: "currency" }
+  ],
+  invoiceswithnochargeitems: [
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship2 Name", type: "text" },
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "total_amount", label: "Total Amount", type: "currency" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "qty_shipped", label: "Qty Shipped", type: "large_integer" },
+    { key: "created_by", label: "Created By", type: "text" }
+  ],
+  itemreturnsforcustomer: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "return_amt", label: "Return Amt", type: "currency" }
+  ],
+  itemsreleasedoverdaterange: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "Release_Date", label: "Release Date", type: "date" }
+  ],
+  itemstochangereleasedate: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "NJ_QTY", label: "NJ QTY", type: "large_integer" },
+    { key: "FL_Qty", label: "FL Qty", type: "large_integer" },
+    { key: "CA_Qty", label: "CA Qty", type: "large_integer" },
+    { key: "total_qty", label: "Total Qty", type: "large_integer" },
+    { key: "msds", label: "MSDS", type: "text" },
+    { key: "release_date", label: "Release Date", type: "date" },
+    { key: "price9", label: "Price9", type: "currency" },
+    { key: "upc", label: "UPC", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" }
+  ],
+  ivdnewreleasereport: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "Release_Date", label: "Release Date", type: "date" }
+  ],
+  ivdrestocku: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "msds", label: "MSDS", type: "text" },
+    { key: "qty_ordered", label: "QTY Ordered", type: "large_integer" },
+    { key: "qty_received", label: "Qty Received", type: "large_integer" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "qty_in_transit", label: "Qty In Transit", type: "large_integer" },
+    { key: "order_quantity", label: "Order Quantity", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "qty_backordered", label: "Qty Backordered", type: "large_integer" },
+    { key: "po_no", label: "Po no", type: "text" },
+    { key: "buyer_id", label: "Buyer Id", type: "integer" }
+  ],
+  ivnmgmt_productdates: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "msds", label: "MSDS", type: "text" },
+    { key: "release_date", label: "Release Date", type: "date" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "buyable", label: "Buyable", type: "text" },
+    { key: "stockable", label: "Stockable", type: "text" },
+    { key: "last_purchase_date", label: "Last Purchase Date", type: "date" },
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "NJ_QTY", label: "NJ Qty", type: "large_integer" },
+    { key: "FL_Qty", label: "FL Qty", type: "large_integer" },
+    { key: "CA_Qty", label: "CA Qty", type: "large_integer" }
+  ],
+  leadtimereport: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "lead_time", label: "Lead Time", type: "integer" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "division_id", label: "Division Id", type: "integer" },
+    { key: "division_name", label: "Division Name", type: "text" }
+  ],
+  linecounts: [
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "pieces_shipped", label: "Pieces Shipped", type: "large_integer" },
+    { key: "sales", label: "Sales", type: "currency" }
+  ],
+  location_inventory: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_available", label: "Qty Available", type: "large_integer" },
+    { key: "price", label: "Price", type: "currency" },
+    { key: "upc", label: "UPC", type: "text" }
+  ],
+  loggedinusers: [
+    { key: "login_name", label: "Login Name", type: "text" },
+    { key: "nt_username", label: "NT Username", type: "text" },
+    { key: "database_name", label: "Database Name", type: "text" },
+    { key: "dbid", label: "DBID", type: "integer" },
+    { key: "current_date", label: "Current Date", type: "datetime" },
+    { key: "date_logged_in", label: "Date Logged In", type: "datetime" },
+    { key: "client_net_address", label: "Client Net Address", type: "text" },
+    { key: "host_name", label: "Host Name", type: "text" }
+  ],
+  lowprofitreport: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "sales_amount", label: "Sales Amount", type: "currency" },
+    { key: "shipping_cost", label: "Shipping Cost", type: "currency" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency" },
+    { key: "profit_percent", label: "Profit Percent", type: "percentage" }
+  ],
+  manualfreightchangesonorders: [
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "address_id", label: "Address Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "po_no", label: "PO NO", type: "text" },
+    { key: "DEFAULT_CARRIER", label: "Default Carrier", type: "text" },
+    { key: "CARRIER_USED", label: "Carrier Used", type: "text" },
+    { key: "changed_by", label: "Changed By", type: "text" },
+    { key: "date_changed", label: "Date Changed", type: "date" }
+  ],
+  manualpricechanges: [
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "created_by", label: "Created By", type: "text" },
+    { key: "quote", label: "Quote", type: "text" },
+    { key: "po_no", label: "Po NO", type: "text" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "sold_price", label: "Sold Price", type: "currency" },
+    { key: "cust_price", label: "Cust Price", type: "currency" },
+    { key: "over_price", label: "Over Price", type: "currency" },
+    { key: "sales_cost", label: "Sales Cost", type: "currency" },
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "Audti_created_by", label: "Audti Created By", type: "text" },
+  ],
+  mismatchedcredittermsreport: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "bill_to_terms", label: "Bill To Terms", type: "text" },
+    { key: "ship2_terms", label: "Ship To Terms ", type: "text" }
+  ],
+  missingemailaddressforcustomer: [
+    { key: "customer_id", label: "Customerr Id", type: "integer" },
+    { key: "customer_name", label: "Customerr Name", type: "text" },
+    { key: "credit_limit", label: "Credit Limit ", type: "currency" },
+    { key: "credit_status", label: "Credit Status ", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "last_si", label: "Last SI", type: "date" },
+    { key: "invoice_uid", label: "Invoice Uid", type: "large_integer" },
+    { key: "invoice_method", label: "Invoice Method", type: "text" },
+    { key: "statement_uid", label: "Statement Uid", type: "large_integer" },
+    { key: "statement_method", label: "Statement Method", type: "text" },
+    { key: "email_address", label: "Email Address", type: "text" },
+    { key: "created_by", label: "Created By", type: "text" }
+  ],
+  missingparkercode: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "parker_product", label: "Parker Product", type: "text" },
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "release_date", label: "Release Date", type: "date" }
+  ],
+  mixeslastsalelastreceiveddate: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "qty", label: "Qty", type: "text" },
+    { key: "last_sale_date", label: "Last Sales Date", type: "date" },
+    { key: "last_received_date", label: "Last Received Date", type: "date" }
+  ],
+  monthovermonthsalesforcustomer: [
+    { key: "year", label: "Year", type: "integer" },
+    { key: "Jan", label: "Jan", type: "currency" },
+    { key: "Feb", label: "Feb", type: "currency" },
+    { key: "Mar", label: "Mar", type: "currency" },
+    { key: "Apr", label: "Apr", type: "currency" },
+    { key: "May", label: "May", type: "currency" },
+    { key: "Jun", label: "Jun", type: "currency" },
+    { key: "Jul", label: "Jul", type: "currency" },
+    { key: "Aug", label: "Aug", type: "currency" },
+    { key: "Sep", label: "Sep", type: "currency" },
+    { key: "Oct", label: "Oct", type: "currency" },
+    { key: "Nov", label: "Nov", type: "currency" },
+    { key: "Dec", label: "Dec", type: "currency" },
+    { key: "TOTAL", label: "Total", type: "currency" }
+  ],
+  multiplelogins: [
+    { key: "login_name", label: "Login Name", type: "text" },
+    { key: "nt_username", label: "NT Username", type: "text" },
+    { key: "database_name", label: "Database Name", type: "text" },
+    { key: "dbid", label: "Dbid", type: "number" },
+    { key: "host_name", label: "Host Name", type: "text" }
+  ],
+  newlybuiltitemsreport: [
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "release_date", label: "Release Date", type: "datetime" },
+    { key: "date_created", label: "Date Created", type: "datetime" },
+    { key: "created_by", label: "Created By", type: "text" },
+    { key: "last_maintained_by", label: "Last Maintained By", type: "text" }
+  ],
+  njmixeswithcost: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "last_rec_po", label: "Last Rec Po", type: "large_integer" }
+  ],
+  nochargeitemtotalsforsupplier: [
+    { key: "supplier_id", label: "Supplier Id", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" }
+  ],
+  nochargesalesbysupplier: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "price1", label: "Price", type: "currency" },
+    { key: "tester", label: "Tester", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "sales", label: "sales", type: "currency" }
+  ],
+  nondefaultsourcelocationforitem: [
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "taker", label: "Taker", type: "text" },
+    { key: "job_name", label: "Job Name", type: "text" },
+    { key: "po_no", label: "Po NO", type: "text" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Bill To Name", type: "text" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "state", label: "State", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_requested", label: "Qty Requested", type: "large_integer" },
+    { key: "qty_shipped", label: "Qty Shipped", type: "large_integer" },
+    { key: "price", label: "Price", type: "currency" },
+    { key: "extended_price", label: "Extended Price", type: "currency" },
+    { key: "Def_Loc", label: "Def Loc", type: "text" },
+    { key: "Used_loc", label: "Used Loc", type: "text" },
+    { key: "nj", label: "NJ", type: "large_integer" },
+    { key: "fl", label: "FL", type: "large_integer" },
+    { key: "ca", label: "CA", type: "large_integer" }
+  ],
+  nondefaultsourcelocationinvoicelinedetail: [
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "taker", label: "Taker", type: "text" },
+    { key: "job_name", label: "Job Name", type: "text" },
+    { key: "po_no", label: "Po NO", type: "text" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Bill To Name", type: "text" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "state", label: "State", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_requested", label: "Qty Requested", type: "large_integer" },
+    { key: "qty_shipped", label: "Qty Shipped", type: "large_integer" },
+    { key: "price", label: "Price", type: "currency" },
+    { key: "extended_price", label: "Extended Price", type: "currency" },
+    { key: "Def_Loc", label: "Def Loc", type: "text" },
+    { key: "Used_loc", label: "Used Loc", type: "text" },
+    { key: "nj", label: "NJ", type: "large_integer" },
+    { key: "fl", label: "FL", type: "large_integer" },
+    { key: "ca", label: "CA", type: "large_integer" }
+  ],
+  nondefaultsourcelocationinvoicesummary: [
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "po_no", label: "Po NO", type: "text" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "amt", label: "Amt", type: "currency" },
+    { key: "lines", label: "Lines", type: "integer" },
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "preferred_location_id", label: "Preferred Location Id", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Bill To Name", type: "text" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" }
+  ],
+  nosalesforspecificitem: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "last_si", label: "Last SI", type: "date" },
+    { key: "ytd_sales", label: "Ytd Sales", type: "currency" }
+  ],
+  nrqtyreceiveddatacenter: [
+    { key: "msds", label: "MSDS", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "qty_received", label: "Qty Received", type: "large_integer" }
+  ],
+  openorderlistview: [
+    { key: "salesrep_id", label: "Salesrep Id", type: "integer" },
+    { key: "ship2_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "po_no", label: "Po No", type: "text" }
+  ],
+  openorders: [
+    { key: "salesrep_id", label: "Salesrep Id", type: "integer" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "ship2_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "qty_on_pick_tickets", label: "Qty On Pick Tickets", type: "large_integer" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "disposition", label: "Disposition", type: "text" },
+    { key: "qty_invoiced", label: "Qty Invoiced", type: "large_integer" }
+  ],
+  openordersbysupplier: [
+    { key: "salesrep_id", label: "Salesrep Id", type: "integer" },
+    { key: "ship2_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "location_id", label: "Location Id", type: "text" },
+    { key: "supplier_id", label: "Supplier Id", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "qty_on_pick_tickets", label: "Qty On Pick Tickets", type: "large_integer" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "disposition", label: "Disposition", type: "text" },
+    { key: "qty_invoiced", label: "Qty Invoiced", type: "large_integer" }
+  ],
+  openordersforitem: [
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "ship2_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "job_name", label: "Job Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "unit_price", label: "Unit Price", type: "currency" },
+    { key: "approved", label: "Approved", type: "text" }
+  ],
+  openpickoverview: [
+    { key: "Order_Type", label: "Order Type", type: "text" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "Pick_Count", label: "Pick Count", type: "integer" },
+    { key: "Oldest", label: "Oldest", type: "datetime" },
+    { key: "Newest", label: "Newest", type: "datetime" }
+  ],
+  openquotereport: [
+    { key: "salesrep_id", label: "Salesrep Id", type: "integer" },
+    { key: "ship2_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" }
+  ],
+  openquotesreport: [
+    { key: "salesrep_id", label: "Salesrep Id", type: "integer" },
+    { key: "quote_no", label: "Quote No", type: "integer" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "ship2_id", label: "Ship To Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "po_no", label: "Po No", type: "text" }    
+  ],
+  openrmadetail: [
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "created_by", label: "Created By", type: "text" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "taker", label: "Taker", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "price", label: "Price", type: "currency" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "qty_canceled", label: "Qty Canceled", type: "large_integer" },
+    { key: "qty_invoiced", label: "Qty Invoiced", type: "large_integer" },
+    { key: "qty_open", label: "Qty Open", type: "large_integer" },
+    { key: "last_date", label: "Last Date", type: "date" }
+  ],
+  opentransfer: [
+    { key: "transfer_no", label: "Transfer No", type: "integer" },
+    { key: "from_location_id", label: "From Location Id", type: "integer" },
+    { key: "to_location_id", label: "To Location Id", type: "integer" },
+    { key: "delete_flag", label: "Delete Flag", type: "text" },
+    { key: "complete_flag", label: "Complete Flag", type: "text" },
+    { key: "printed_date", label: "Printed Date", type: "date" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "qty_to_transfer", label: "Qty To Transfer", type: "large_integer" },
+    { key: "qty_transferred", label: "Qty Transferred", type: "large_integer" },
+    { key: "qty_received", label: "Qty Received", type: "large_integer" },
+    { key: "created_by", label: "Created By", type: "text" }
+  ],
+  openvendorreturns: [
+    { key: "buyer_id", label: "Buyer Id", type: "integer" },
+    { key: "buyer_name", label: "Buyer Name", type: "text" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "last_maintained_by", label: "last Maintained", type: "text" },
+    { key: "return_no", label: "Return No", type: "integer" },
+    { key: "rma_no", label: "Rma No", type: "text" },
+    { key: "return_value", label: "Return Value", type: "currency" },
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "Status", label: "Status", type: "text" }
+  ],
+  order_values: [
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "disposition", label: "Disposition", type: "text" },
+    { key: "delete_flag", label: "Delete Flag", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "qty_filled", label: "Qty Filled", type: "large_integer" },
+    { key: "Amt_Filled", label: "Amt Filled", type: "currency" },
+    { key: "qty_canceled", label: "Qty Canceled", type: "large_integer" },
+    { key: "Amt_Canceled", label: "Amt Canceled", type: "currency" },
+    { key: "qty_backordered", label: "Qty backordered", type: "large_integer" },
+    { key: "Amt_backordered", label: "Amt backordered", type: "currency" }
+  ],
+  order_weights: [
+    { key: "line_no", label: "Line No", type: "integer" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "weight(Lb)", label: "Weight(Lb)", type: "decimal", format: "0.00" },
+    { key: "total_weight(Lb)", label: "Total Weight(Lb)", type: "decimal" ,format: "0.00" },
+    { key: "total_weight(Kg)", label: "Total Weight(Kg)", type: "decimal", format: "0.00"}
+  ],
+  orderallocatedvaluebysupplier: [
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "created_by", label: "Created BY", type: "text" },
+    { key: "cancel_flag", label: "Cancel Flag", type: "text" },
+    { key: "projected_order", label: "Projected Order", type: "text" },
+    { key: "delete_flag", label: "Delete Flag", type: "text" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "value", label: "Value", type: "currency" }
+  ],
+  orderexport: [
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "unit_price", label: "Unit Price", type: "currency" },
+    { key: "Discount", label: "Discount", type: "decimal" ,format: "0.00" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "upc", label: "UPC", type: "text" }
+  ],
+  orderexportforeign: [
+    { key: "line_no", label: "Line No", type: "integer" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_invoiced", label: "Qty Invoiced", type: "large_integer" },
+    { key: "weight", label: "Weight", type: "decimal", format: "0.00" },
+    { key: "country", label: "Country", type: "text" },
+    { key: "class_code", label: "Class Code", type: "text" },
+    { key: "material1", label: "Material1", type: "text" },
+    { key: "material2", label: "Material2", type: "text" },
+    { key: "battery", label: "Battery", type: "text" },
+    { key: "battery_location", label: "Battery Location", type: "text" }
+  ],
+  orderexportnodiscount: [
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "unit_price", label: "Unit Price", type: "currency" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "upc", label: "UPC", type: "text" }
+  ],
+  ordersreleasefromhold: [
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "Date_Released", label: "Date Released", type: "date" },
+    { key: "Released_By", label: "Released By", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" }
+  ],
+  ordersshippedbylocation: [
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Bill To Name", type: "text" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "invoice_date", label: "Invoiced Date", type: "date" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "freight", label: "Freight", type: "currency" },
+    { key: "carrier_name", label: "Carrier Name", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "invoice_desc", label: "Invoice Desc", type: "text" }
+  ],
+  p21notesforsalesrepcustomers: [
+    { key: "note_id", label: "Note Id", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "salesrep_id", label: "Salesrep Id", type: "integer" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "topic", label: "Topic", type: "text" },
+    { key: "note", label: "Note", type: "text" },
+    { key: "note_area", label: "Note Area", type: "text" },
+    { key: "mandatory", label: "Mandatory", type: "text" },
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "created_by", label: "Created By", type: "text" }
+  ],
+  pastdueaccountreportbyrep: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "name", label: "Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "Oldest_Invoice", label: "Oldest Invoice", type: "large_integer" },
+    { key: "Total_Balance", label: "Total Balance", type: "currency" },
+    { key: "Total_Current", label: "Total Current", type: "currency" },
+    { key: "Total_31-60", label: "Total 31-60", type: "currency" },
+    { key: "Total_61-90", label: "Total 61-90", type: "currency" },
+    { key: "Total_Over_90", label: "Total Over 90", type: "currency" },
+    { key: "Last_Ar_Note", label: "Last AR Note", type: "date" },
+    { key: "notes", label: "Notes", type: "text" }
+  ],
+  paymentdetail: [
+    { key: "Date", label: "Date", type: "date" },
+    { key: "check_number", label: "Check Number", type: "text" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "invoice_no", label: "Invoice No", type: "large_integer" },
+    { key: "Amount", label: "Amount", type: "currency" }
+  ],
+  paymentforcustomer: [
+    { key: "Remitter", label: "Remitter", type: "integer" },
+    { key: "Date", label: "Date", type: "date" },
+    { key: "check_number", label: "Check Number", type: "text" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "invoice_no", label: "Invoice No", type: "large_integer" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "AGE", label: "AGE", type: "large_integer" },
+    { key: "Amt_paid", label: "Amt paid", type: "currency" }
+  ],
+  paymentinquirybyamount: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "name", label: "Name", type: "text" },
+    { key: "date", label: "Date", type: "date" },
+    { key: "check", label: "Check", type: "text" },
+    { key: "amount", label: "Amount", type: "currency" }
+  ],
+  pendingapproval: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "name", label: "Name", type: "text" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "job_name", label: "Job Name", type: "text" }
+  ],
+  pickticketoverviewexecutive: [
+    { key: "Order_Type", label: "Order Type", type: "text" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "Pick_Count", label: "Pick Count", type: "integer" },
+    { key: "open_value", label: "Open Value", type: "currency" },
+    { key: "avg_amount", label: "Avg Amount", type: "currency" },
+    { key: "oldest", label: "Oldset", type: "datetime" },
+    { key: "newest", label: "Newest", type: "datetime" }
+  ],
+  piecesshipped: [
+    { key: "source_location_id", label: "Source Loction Id", type: "integer" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "item_id", label: "Iten Id", type: "text" },
+    { key: "qty_shipped", label: "Qty Shipped", type: "large_integer" },
+    { key: "unit_price", label: "Avg Amount", type: "currency" }
+  ],
+  poreceivingdiscrepancyreport: [
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "receipt_number", label: "Receipt Number", type: "text" },
+    { key: "po_no", label: "PO NO", type: "text" },
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "vendor_id", label: "Vendor Id", type: "integer" },
+    { key: "vendor_name", label: "Vendor Name", type: "text" },
+    { key: "topic", label: "topic", type: "text" },
+    { key: "note", label: "note", type: "text" }
+  ],
+  pricinginfoforsupplier: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "MSRP", label: "MSRP", type: "currency" },
+    { key: "MAP", label: "MAP", type: "currency" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "cost", label: "Cost", type: "currency" }
+  ],
+  productexpirationsreport: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "primary_bin", label: "Primary Bin", type: "text" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "text" },
+    { key: "product_group_desc", label: "Product Group Desc", type: "text" },
+    { key: "expiration_date", label: "Expiration Date", type: "date" }    
+  ],
+  proforma: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "unit_price", label: "Unit Price", type: "currency" },
+    { key: "Discount", label: "Discount", type: "decimal" ,format: "0.00" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "disposition", label: "Disposition", type: "text" },
+    { key: "upc", label: "UPC", type: "text" }
+  ],
+  purchaseoverdtrngbysupplier: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "purchases", label: "Purchases", type: "currency" }
+  ],
+  purchasesummary: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "order_date", label: "Order Date", type: "date" }, 
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "created_by", label: "Created By", type: "text" },  
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "value", label: "Value", type: "currency" }
+  ],
+  purchasing_poexport: [
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" }, 
+    { key: "supplier_part_no", label: "Supplier Part No", type: "text" },
+    { key: "item_description", label: "Item Description", type: "text" },  
+    { key: "unit_of_measure", label: "Unit Of Measure", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" }
+  ],
+  purchasingdemandreport: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "cost", label: "Cost", type: "currency" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "last_sale_date", label: "Last Sales Date", type: "date" },
+    { key: "last_purchase_date", label: "Last Purchase Date", type: "date" },
+    { key: "release_date", label: "Release Date", type: "date" },
+    { key: "SUM", label: "SUM", type: "large_integer" },
+    { key: "MAX", label: "MAX", type: "large_integer" },
+    { key: "AVG", label: "AVG", type: "large_integer" },
+    { key: "years_usage", label: "Years Usage", type: "large_integer" },
+    { key: "overstock", label: "Overstock", type: "large_integer" },
+    { key: "primary_bin", label: "Primary Bin", type: "text" },
+    { key: "default_sales_discount_group", label: "Sels Discount Group", type: "text" },
+  ],
+  putaway: [
+    { key: "receipt_no", label: "Receipt Number", type: "integer" },
+    { key: "po_no", label: "PO Number", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty_received", label: "Qty Received", type: "large_integer" },
+    { key: "primary_bin", label: "Primary Bin", type: "text" },
+    { key: "date_created", label: "Date Created", type: "datetime" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "qty_backordered", label: "Qty Backordered", type: "large_integer" }
+  ],
+  receivedporeport: [
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "po_no", label: "PO Number", type: "text" }, 
+    { key: "external_po_no", label: "External Po No", type: "text" }
+  ],
+  receivinglog_pickdate: [
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "receipt_no", label: "Receipt Number", type: "integer" },
+    { key: "po_no", label: "PO Number", type: "text" },
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "vendor_id", label: "Vendor Id", type: "integer" },
+    { key: "vendor_name", label: "Vendor Name", type: "text" },
+    { key: "topic", label: "Topic", type: "text" },
+  ],
+  recentshipments: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "name", label: "Name", type: "text" },
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "po_no", label: "PO NO", type: "text" }, 
+    { key: "ticket_no", label: "Ticket No", type: "integer" },
+    { key: "carrier", label: "Carrier", type: "text" },
+    { key: "tracking_no", label: "Tracking No", type: "text" },
+    { key: "total_amount", label: "Total Amount", type: "currency" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "rep_id", label: "Rep Id", type: "integer" }
+  ],
+  reducedfreight: [
+    { key: "ship_to_id", label: "Ship To Id", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "name", label: "Name", type: "text" },
+    { key: "carrier_id", label: "Carrier Id", type: "integer" },
+    { key: "FREIGHT", label: "Freight", type: "text" },
+    { key: "total_sales", label: "Total Sales", type: "currency" },
+    { key: "Rep", label: "Rep", type: "text" }, 
+    { key: "discount", label: "Discount", type: "text" },
+    { key: "payment_type_desc", label: "Payment Type Desc", type: "text" },
+    { key: "over_90", label: "over 90", type: "currency" }
+  ],
+  returnsbybuyer: [
+    { key: "buyer_id", label: "Buyer Id", type: "integer" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "date_created", label: "Date Created", type: "date" },
+    { key: "return_no", label: "Return#", type: "integer" },
+    { key: "rma_no", label: "RMA#", type: "text" }, 
+    { key: "location_id", label: "Location Id", type: "integer" }
+  ],
+  returnsinvbyloc: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "division_name", label: "Division Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" }, 
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "moving_average_cost", label: "Moving Average Cost", type: "currency" },
+    { key: "total", label: "Total", type: "currency" }
+  ],
+  returnsinvbylocsummary: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "Sum_of_qty_on_hand", label: "Sum Of Qty On Hand", type: "large_integer" },
+    { key: "total_value", label: "Total Value", type: "currency" }
+  ],
+  returnstotalsforsuppliers: [
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "total_value", label: "Total Value", type: "currency" }
+  ],
+  salehistoryrepcomparision: [
+    { key: "salesrep_id", label: "Rep Id", type: "integer" },
+    { key: "Rep", label: "Rep", type: "text" },
+    { key: "qty_current", label: "Qty Current", type: "large_integer" },
+    { key: "sales_current", label: "Sales Current", type: "currency" },
+    { key: "qty_prior", label: "Qty Prior", type: "large_integer" },
+    { key: "sales_prior", label: "Sales Prior", type: "currency" }
   ],
 
   
