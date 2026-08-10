@@ -19,7 +19,9 @@ import ScheduleModal from "./ScheduleModal";
 import {fetchCompanies,fetchVendors,fetchSalesReps,fetchSuppliers,fetchSuppliersop, fetchCustomers,
 validateCustomer,CompanyOption,VendorOption,SalesRepOption,CustomerOption,SupplierOption, SupplierOpOption,
 fetchShows,fetchPromos,fetchLocations,fetchLocationSupplier,ShowOption,PromoOption,LocationOption,
-LocationSupplierOption,fetchPeriods,PeriodOption
+LocationSupplierOption,fetchPeriods,PeriodOption,fetchSalsifyMcat,fetchSalsifyScat,fetchItemCategories,
+fetchPricePages,fetchTerms,fetchClassNumbers,fetchClassIds,SalsifyMcatOption,SalsifyScatOption,ItemCategoryOption,
+PricePageOption,TermsOption,ClassNumberOption,ClassIdOption,fetchPurchaseClass,PurchaseClassOption,fetchProductGroup,ProductGroupOption
 } from "../lib/dropdownApi";
 
 interface ReportViewerProps {
@@ -59,12 +61,31 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
   const [locationSuppliers, setLocationSuppliers] = useState<LocationSupplierOption[]>([]);
   const [selectedLocationSupplier, setSelectedLocationSupplier] = useState<LocationSupplierOption | null>(null);
   const [periodOptions, setPeriodOptions] = useState<PeriodOption[]>([]);
+  const [salsifyMcats, setSalsifyMcats] = useState<SalsifyMcatOption[]>([]);
+  const [selectedSalsifyMcat, setSelectedSalsifyMcat] = useState<SalsifyMcatOption | null>(null);
+  const [salsifyScats, setSalsifyScats] = useState<SalsifyScatOption[]>([]);
+  const [selectedSalsifyScat, setSelectedSalsifyScat] = useState<SalsifyScatOption | null>(null);
+  const [itemCategories, setItemCategories] = useState<ItemCategoryOption[]>([]);
+  const [selectedItemCategory, setSelectedItemCategory] = useState<ItemCategoryOption | null>(null);
+  const [pricePages, setPricePages] = useState<PricePageOption[]>([]);
+  const [selectedPricePage, setSelectedPricePage] = useState<PricePageOption | null>(null);
+  const [terms, setTerms] = useState<TermsOption[]>([]);
+  const [selectedTerms, setSelectedTerms] = useState<TermsOption | null>(null);
+  const [classNumbers, setClassNumbers] = useState<ClassNumberOption[]>([]);
+  const [selectedClassNumber, setSelectedClassNumber] = useState<ClassNumberOption | null>(null);
+  const [classIds, setClassIds] =useState<ClassIdOption[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<ClassIdOption | null>(null);
+  const [PurchaseClass, setPurchaseClass] =useState<PurchaseClassOption[]>([]);
+  const [selectedPurchaseClass, setSelectedPurchaseClass] = useState<PurchaseClassOption | null>(null);
+  const [ProductGroup, setProductGroup] =useState<ProductGroupOption[]>([]);
+  const [selectedProductGroup, setSelectedProductGroup] = useState<ProductGroupOption | null>(null);
   const [months, setMonths] = useState<any[]>([]);
   const [autoRun, setAutoRun] = useState(false); 
   const [downloading, setDownloading] = useState(false);
   const [grandTotals, setGrandTotals] = useState<Record<string, number>>({});
 
   const validateFilters = () => {
+    
     const missingFields: string[] = [];
     const configFilters = report?.filter_config?.filters || [];
   
@@ -186,9 +207,23 @@ const formatCellValue = (value: any, type: string) => {
   return String(value);
 };
   const reportKey = report.key || report.name?.toLowerCase().trim();
-  const isThirteenMonthReport = report.api_endpoint?.toLowerCase().includes("thirteenmonthcustomersalesforvendor");
-  let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
- 
+  const endpoint = report.api_endpoint?.toLowerCase() || "";
+  const isThirteenMonthReport = 
+    endpoint.includes("thirteenmonthcustomersalesforvendor") || 
+    endpoint.includes("thirteenmonthsales") || 
+    endpoint.includes("thirteenmonthvendorsalesforcustomer");
+    let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
+    if (reportKey === "backordersforcustomer" ||reportKey === "canceled_items_for_customer") {
+      if (appliedFilters.company === "XG") {
+        columns = columns.filter(
+          (col: any) => !["NJ", "NJ_PO", "FL", "FL_PO", "CA", "CA_PO"].includes(col.key)
+        );
+      } else {
+        columns = columns.filter(
+          (col: any) => !["PA", "PA_PO"].includes(col.key)
+        );
+      }
+    }
   if (isThirteenMonthReport && months.length > 0) {
     columns = columns.map((col) => {
       if (col.key.startsWith("mon")) {
@@ -217,7 +252,8 @@ const formatCellValue = (value: any, type: string) => {
     queryParam: string,
     keyFields: string[],
     idField?: string,
-    extraParams?: Record<string, string>
+    extraParams?: Record<string, string>,
+    carryFilters?: string[]
   ) => {
   
     const Comp_id = filters.company || "";
@@ -237,7 +273,7 @@ const formatCellValue = (value: any, type: string) => {
     let finalUrl =
       `${targetUrl}${separator}Comp_id=${encodeURIComponent(Comp_id)}` +
       `&${queryParam}=${encodeURIComponent(targetVal)}`;
-  
+
     // extra params add
     if (extraParams) {
       Object.entries(extraParams).forEach(([urlParam, rowField]) => {
@@ -254,7 +290,14 @@ const formatCellValue = (value: any, type: string) => {
         }
       });
     }
-  
+    carryFilters?.forEach(filterName => {
+
+      const value = filters[filterName];
+
+      if (value) {
+          finalUrl += `&${filterName}=${encodeURIComponent(value)}`;
+      }
+  });
     console.log("FINAL URL:", finalUrl);
   
     window.open(
@@ -263,22 +306,6 @@ const formatCellValue = (value: any, type: string) => {
       "noopener,noreferrer"
     );
   };
-  // const handleRowDrillDown = (row: any,targetUrl: string, queryParam: string, keyFields: string[],idField?: string, extraParams?: Record<string, string>) => {
-  //   const Comp_id = filters.company || "";
-  //   const targetVal = idField 
-  //       ? row[idField] 
-  //       : keyFields.map(f => row[f]).find(v => v !== undefined && v !== null);
-
-  //   if (targetVal) {
-  //     const separator = targetUrl.includes("?") ? "&" : "?";
-  //   const finalUrl = `${targetUrl}${separator}Comp_id=${Comp_id}&${queryParam}=${targetVal}`;
-  //   window.open(
-  //     finalUrl,
-  //     "_blank",
-  //     "noopener,noreferrer"
-  //   );
-  // }
-  // };
   
   const modifiedColumns = columns.map((col) => {
   const colKeyLower = col.key.toLowerCase();
@@ -303,11 +330,16 @@ const formatCellValue = (value: any, type: string) => {
     };
   }
     const apiEndpointLower = report.api_endpoint?.toLowerCase() || "";
-    const activeReportConfigKey = Object.keys(DRILL_DOWN_LINKS).find(key => apiEndpointLower.includes(key));
+    const reportKey = apiEndpointLower.split("?")[0].split("/").pop()?.toLowerCase() || "";
+    const activeReportConfigKey = Object.keys(DRILL_DOWN_LINKS).find(
+      // key => apiEndpointLower.includes(key)
+      key => key.toLowerCase() === reportKey
+      );
 
     if (activeReportConfigKey) {
       const rawConfig = DRILL_DOWN_LINKS[activeReportConfigKey];
-      const linkConfigs: any[] = Array.isArray(rawConfig) ? rawConfig : [rawConfig];
+      // const linkConfigs: any[] = Array.isArray(rawConfig) ? rawConfig : [rawConfig];
+      const linkConfigs = Array.isArray(rawConfig) ? rawConfig : [rawConfig];
       const matchedConfig = linkConfigs.find((config: any) => 
         config.keyFields.some((field: string) => field.toLowerCase() === colKeyLower)
       );
@@ -317,7 +349,9 @@ const formatCellValue = (value: any, type: string) => {
           render: (row: any) => {
             let displayValue = colKeyLower === "notes" 
               ? (col.label || "Notes") 
-              : (row[col.key] !== undefined && row[col.key] !== null ? row[col.key] : "—");
+              : (colKeyLower === "gotostatement" 
+              ? "Go to Statement" 
+              : (row[col.key] ?? "—"));
             if (displayValue === "—" || displayValue === "") return "—";
 
             return (
@@ -331,7 +365,8 @@ const formatCellValue = (value: any, type: string) => {
                     matchedConfig.queryParam, 
                     matchedConfig.keyFields, 
                     matchedConfig.idField,
-                    matchedConfig.extraParams
+                    matchedConfig.extraParams,
+                    matchedConfig.carryFilters
                   );
                 }}
                 className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
@@ -340,28 +375,7 @@ const formatCellValue = (value: any, type: string) => {
               </a>
             );
           }
-        }
-      // if (isLinkableColumn) {
-      //   return {
-      //     ...col,
-      //     render: (row: any) => {
-      //       const targetKey = linkConfig.keyFields.find(f => row[f] !== undefined);
-      //       const displayValue = targetKey ? row[targetKey] : "—";
-
-      //       return (
-      //         <a
-      //           href="#"
-      //           onClick={(e) => {
-      //             e.preventDefault();
-      //             handleRowDrillDown(row, linkConfig.targetUrl, linkConfig.queryParam, linkConfig.keyFields,linkConfig.idField);
-      //           }}
-      //           className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
-      //         >
-      //           {displayValue}
-      //         </a>
-      //       );
-      //     }
-      //   };
+        }      
      }
     }
     return col;
@@ -406,13 +420,21 @@ useEffect(() => {
     let hasValidParams = false;
 
     // 1. Dynamic Parameter Mapping Dictionary
-    // URL me kuch bhi aaye (Left side), wo hamare state key (Right side) par bind ho jayega
     const keyMap: Record<string, string> = {
       comp_id: "company", compid: "company",company: "company",
       vendorid: "vendor", vendor_id: "vendor",
       custid: "customer", customerid: "customer", customer_id: "customer",
       repid: "salesrep", salesrepid: "salesrep", salesrep_id: "salesrep",
       payment_no: "payment_no", paymentno: "payment_no",
+      timeperiod: "timeperiod",
+      period: "timeperiod",
+    
+      fromdate: "fromdate",
+      from_date: "fromdate",
+    
+      tilldate: "tilldate",
+      todate: "tilldate",
+      till_date: "tilldate"
     };
 
     // 2. Loop through all URL parameters
@@ -423,7 +445,7 @@ useEffect(() => {
       const stateKey = keyMap[cleanUrlKey];
       
       if (stateKey && value) {
-        newFilters[stateKey] = value;
+        newFilters[stateKey] =  decodeURIComponent(value);;
         hasValidParams = true;
 
         // 3. Dropdowns ko bhi automatically state parameters ke sath update karo
@@ -450,11 +472,14 @@ useEffect(() => {
 }, [location.search]);
 
 useEffect(() => {
-  if (autoRun) {
-    handleApplyFilters();
-    setAutoRun(false);
-  }
-}, [autoRun]);
+  if (!autoRun) return;
+
+  if (!filters.company) return;
+
+  handleApplyFilters();
+  setAutoRun(false);
+
+}, [autoRun, filters]);
 
   useEffect(() => {
     if (!token) return;
@@ -478,7 +503,20 @@ useEffect(() => {
 
   if (activeFilters.includes("salesrep")) {
     fetchSalesReps(token, filters.company, "")
-      .then(setSalesReps)
+      .then((data) => {
+        setSalesReps(data);
+  
+        // URL se repId aya hua ho to usko select karo
+        if (filters.salesrep) {
+          const rep = data.find(
+            (x: any) => String(x.value) === String(filters.salesrep)
+          );
+  
+          if (rep) {
+            setSelectedSalesRep(rep);
+          }
+        }
+      })
       .catch(() => setSalesReps([]));
   }
   if (activeFilters.includes("show")) {
@@ -501,6 +539,7 @@ useEffect(() => {
       }
     });
   }
+  
   if (activeFilters.includes("locationsupplier")) {
     fetchLocationSupplier(token, filters.company).then(setLocationSuppliers);
   }
@@ -538,6 +577,152 @@ useEffect(() => {
   }
 }, [filters.company, token, report]);
 
+useEffect(() => {
+
+  if (!token) return;
+
+  const activeFilters =
+    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+
+  // MCAT
+  if (activeFilters.includes("mcat")) {
+    fetchSalsifyMcat(token)
+      .then(setSalsifyMcats)
+      .catch(() => setSalsifyMcats([]));
+  }
+
+  // SCAT only report (without MCAT)
+  if (activeFilters.includes("scat") && !activeFilters.includes("mcat")) {
+    fetchSalsifyScat(token)
+      .then(setSalsifyScats)
+      .catch(() => setSalsifyScats([]));
+  }
+
+  // Item Category
+  if (activeFilters.includes("itemcategory") && filters.company) {
+    fetchItemCategories(token, filters.company)
+      .then(setItemCategories)
+      .catch(() => setItemCategories([]));
+  }
+
+  // Terms
+  if (activeFilters.includes("terms") && filters.company) {
+    fetchTerms(token, filters.company)
+      .then(setTerms)
+      .catch(() => setTerms([]));
+  }
+
+  // Class Number
+  if (activeFilters.includes("classnumber") && filters.company) {
+    fetchClassNumbers(token, filters.company)
+      .then(setClassNumbers)
+      .catch(() => setClassNumbers([]));
+  }
+
+}, [filters.company, report, token]);
+
+useEffect(() => {
+
+  if (!token) return;
+
+  const activeFilters =
+    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+
+  // Report me SCAT hi nahi hai
+  if (!activeFilters.includes("scat")) return;
+
+  // Report me MCAT bhi hai
+  if (activeFilters.includes("mcat")) {
+
+    // MCAT select nahi hua
+    if (!selectedSalsifyMcat) {
+      fetchSalsifyScat(token)
+        .then(setSalsifyScats)
+        .catch(() => setSalsifyScats([]));
+      return;
+    }
+
+    // MCAT select ho gaya
+    fetchSalsifyScat(token, selectedSalsifyMcat.value)
+      .then(setSalsifyScats)
+      .catch(() => setSalsifyScats([]));
+
+    return;
+  }
+
+  // Report me sirf SCAT hai
+  fetchSalsifyScat(token)
+    .then(setSalsifyScats)
+    .catch(() => setSalsifyScats([]));
+
+}, [token, report, selectedSalsifyMcat]);
+
+useEffect(()=>{
+
+  if(!filters.company) return;
+  if(!selectedClassNumber) return;
+
+  fetchClassIds(
+     token,
+     filters.company,
+     selectedClassNumber.value
+  )
+  .then(setClassIds)
+  .catch(()=>setClassIds([]));
+
+},[selectedClassNumber]);
+
+useEffect(() => {
+  if (!filters.company || !token) {
+    setPurchaseClass([]);
+    setSelectedPurchaseClass(null);
+    return;
+  }
+
+  const activeFilters =
+    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+
+  if (!activeFilters.includes("purchaseclass")) return;
+
+  fetchPurchaseClass(token, filters.company)
+    .then(setPurchaseClass)
+    .catch(() => setPurchaseClass([]));
+
+}, [filters.company, token, report]);
+
+useEffect(() => {
+  if (!filters.company || !token) {
+    setProductGroup([]);
+    setSelectedProductGroup(null);
+    return;
+  }
+
+  const activeFilters =
+    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+
+  if (!activeFilters.includes("productgroup")) return;
+
+  fetchProductGroup(token, filters.company)
+    .then(setProductGroup)
+    .catch(() => setProductGroup([]));
+
+}, [filters.company, token, report]);
+
+useEffect(()=>{
+
+  if(!filters.company) return;
+  if(!selectedSupplier) return;
+
+  fetchPricePages(
+     token,
+     filters.company,
+     selectedSupplier.value
+  )
+  .then(setPricePages)
+  .catch(()=>setPricePages([]));
+
+},[selectedSupplier]);
+
 const salesRepFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "salesrep"
 );
@@ -550,16 +735,23 @@ const supplierOpFilter = report?.filter_config?.filters?.find(
 const locationFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "location"
 );
+const locationsupplierFilter = report?.filter_config?.filters?.find(
+  (f: any) => f.name === "locationsupplier"
+);
 const allowSalesRepAll = salesRepFilter?.allowAll === true;
 const allowSupplierAll = supplierFilter?.allowAll === true;
 const allowSupplierOPAll = supplierOpFilter?.allowAll === true;
 const allowLocationAll = locationFilter?.allowAll === true ;
+const allowLocationSupplierAll = locationsupplierFilter?.allowAll === true ;
+
 // ✅ NEW: options with ALL conditionally
 const salesRepOptions = allowSalesRepAll? [{ value: "ALL", label: "ALL" }, ...salesReps]: salesReps;
 const supplierOptions = allowSupplierAll? [{ value: "ALL", label: "ALL" }, ...suppliers]: suppliers;
 const supplierOpOptions = allowSupplierOPAll? [{ value: "ALL", label: "ALL" }, ...suppliersOp]: suppliersOp;
 const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...locations] : locations;
-  /* UPDATE FILTER */
+const locationsupplierOptions = allowLocationSupplierAll ? [{ value: "ALL", label: "ALL" }, ...locationSuppliers] : locationSuppliers;
+
+/* UPDATE FILTER */
   const updateFilter = (name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
     if (name === "company") {
@@ -570,6 +762,8 @@ const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...l
       setSelectedPromo(null);
       setSelectedLocation(null);
       setSelectedLocationSupplier(null);
+      setSelectedPurchaseClass(null);
+      setSelectedProductGroup(null);
       setCustomerError("");
       setFilters((prev) => ({
         ...prev,
@@ -579,7 +773,10 @@ const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...l
         show: "",
         promo: "",
         location: "",
-        locationsupplier: ""
+        locationsupplier: "",
+        purchaseclass: "",
+        productgroup: ""
+
       }));
     }
   };
@@ -597,14 +794,15 @@ const fetchData = async (pageNum: number, isInitial = false) => {
   try {
   
     const url = new URL(buildApiUrl(`/api/MasterReport/${reportKey}`));
-    const isSummary = reportKey.toLowerCase().includes("summary") || reportKey.toLowerCase().includes("totals");
+    // const isSummary = reportKey.toLowerCase().includes("summary") || reportKey.toLowerCase().includes("totals");
+    const usePagination = report?.pagination ?? true;
     Object.entries(filters).forEach(([k, v]) => {
       if (!v) return;
       const filterDef = report.filter_config.filters.find(f => f.name === k);
       const paramName = filterDef?.apiParam || k;
       url.searchParams.append(paramName, v);
     });
-    if (!isCustomerInfo && !isSummary) {
+    if (!isCustomerInfo && usePagination) {
       url.searchParams.append("pageNumber", pageNum.toString());
       url.searchParams.append("pageSize", PAGE_SIZE.toString());
     }
@@ -631,12 +829,12 @@ const fetchData = async (pageNum: number, isInitial = false) => {
           console.log("API Totals:", res.data.totals);
       }
         // Agar summary hai toh scroll permanently band
-        setHasMore(!isSummary && newItems.length === PAGE_SIZE);
+        setHasMore(usePagination && newItems.length === PAGE_SIZE);
       
       } else {
         // Sirf scroll hone par append
         setData((prev) => [...prev, ...newItems]);
-        setHasMore(newItems.length === PAGE_SIZE);
+        setHasMore(usePagination &&newItems.length === PAGE_SIZE);
       }
     }
     setAppliedFilters({ ...filters });
@@ -651,10 +849,6 @@ const fetchData = async (pageNum: number, isInitial = false) => {
 // 🔹 EXCEL EXPORT LOGIC
 const handleExport = async (type: "excel" | "pdf") => {
   if (!validateFilters()) return;
-  // if (type === "pdf") {
-  //   alert("PDF Export coming soon...");
-  //   return;
-  // }
   setDownloading(true);
   try {
     const exportUrl = buildApiUrl(`/api/MasterReport/${reportKey}/${type}`);
@@ -687,10 +881,7 @@ const handleExport = async (type: "excel" | "pdf") => {
     });
     const mimeType = type === "excel" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
     const blob = new Blob( [res.data], { type: mimeType } );
-    // 3. Create Download Link
-    // const blob = new Blob([res.data], { 
-    //   type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
-    // });
+    
     // 🔹 handleExport ke andar create download link wala part
 const generateFormattedFileName = () => {
   const reportName = report.name;
@@ -776,18 +967,7 @@ const dbTotalKeys = footerConfig.dbTotalKeys || {};
  const totals: Record<string, number> = {};
 const firstRow = sortedData[0] || {};
 totalColumns.forEach((colKey) => {
-  //const dbMappedKey = dbTotalKeys[colKey]; 
-  // colKeyLower = colKey.toLowerCase();
-  //const isPercentageCol = colKeyLower.includes("percent") || 
   visibleColumns.find(c => c.key === colKey)?.type === "percentage";
-  // if (dbMappedKey && firstRow[dbMappedKey] !== undefined && firstRow[dbMappedKey] !== null) {
-  //   totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
-  // }   else if (!isPercentageCol) {
-  //   totals[colKey] = sortedData.reduce((sum: number, row: any) => {
-  //     const val = parseFloat(String(row[colKey] || "0"));
-  //     return sum + (isNaN(val) ? 0 : val);
-  //   }, 0);
-  // }
 });
 
 
@@ -811,9 +991,26 @@ totalColumns.forEach((colKey) => {
 
 // 2. SECOND PASS: Percentage calculation (ADS vs Closeout safe logic)
 visibleColumns.forEach((col) => {
+  if (!totalColumns.includes(col.key)) return;
   const colKeyLower = col.key.toLowerCase();
 
   if (col.type === "percentage" || colKeyLower.includes("percent")) {
+    if (reportKey === "saleshistory_customer_ytd" || reportKey === "saleshistory_customer_ytd_rep" 
+    || reportKey ==="saleshistory_for_supplier_by_customer_ytd_lytd" || reportKey =="saleshistory_rep_ytd" 
+    || reportKey ==="ydtvslytdsalesexcludingfreight") {
+
+      const lytdTotal = totals["lytd"] || 0;
+      const ytdTotal = totals["ytd"] || 0;
+      const changeTotal = totals["Change"] || (ytdTotal - lytdTotal);
+  
+      if (lytdTotal !== 0) {
+          totals[col.key] = (changeTotal / lytdTotal) * 100;
+      } else {
+          totals[col.key] = 0;
+      }
+  
+      return;
+  }
     const salesKey = visibleColumns.find(c => 
       ["total_merch", "sales", "merch", "extended_price"].some(k => c.key.toLowerCase() === k)
     )?.key;
@@ -843,56 +1040,6 @@ visibleColumns.forEach((col) => {
     const result = await validateCustomer(token, filters.company, filters.customer);
     setCustomerError(result ? "" : "Invalid Customer ID");
   };
-// ================== FILTER SUMMARY FOR EXCEL TITLE ==================
-// const buildFilterSummary = (): string => {
-//   const parts: string[] = [];
-
-//   // Company
-//   if (filters.company) {
-//     const companyName = companies.find(c => c.value === filters.company)?.label || filters.company;
-//     parts.push(`Company: ${companyName}`);
-//   }
-
-//   // Vendor
-//   if (filters.vendor && selectedVendor?.label) {
-//     parts.push(`Vendor: ${selectedVendor.label}`);
-//   }
-
-//   // Sales Rep
-//   if (filters.salesrep && selectedSalesRep?.label) {
-//     parts.push(`Sales Rep: ${selectedSalesRep.label}`);
-//   }
-
-//   // Customer
-//   if (filters.customer && selectedCustomer?.label) {
-//     parts.push(`Customer: ${selectedCustomer.label}`);
-//   }
-
-//   // Supplier
-//   if (filters.supplier && selectedSupplier?.label) {
-//     parts.push(`Supplier: ${selectedSupplier.label}`);
-//   }
-
-//   // Supplier OP
-//   if (filters.supplierop && selectedSupplierOp?.label) {
-//     parts.push(`Supplier: ${selectedSupplierOp.label}`);
-//   }
-
-//   // Date Range
-//   if (filters.fromdate && filters.tilldate) {
-//     parts.push(`From: ${filters.fromdate} To: ${filters.tilldate}`);
-//   } 
-//   else if (filters.timeperiod) {
-//     parts.push(`Time Period: ${filters.timeperiod}`);
-//   }
-//   else {
-//     // 🔥 Sabse zaroori: Agar kuch bhi select nahi hai, toh Current Date (YYYY-MM-DD)
-//     const today = new Date().toISOString().split('T')[0]; // Format: 2026-04-23
-//     parts.push(`As of: ${today}`);
-//   }
-
-//   return parts.length > 0 ? parts.join(" | ") : "";
-// };
 
 const buildFilterSummary = (): string => {
 
@@ -1041,7 +1188,12 @@ const buildFilterSummary = (): string => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {report.filter_config.filters.map((f) => {
-              
+               if (
+                f.hideWhen &&
+                filters[f.hideWhen.filter] === f.hideWhen.value
+              ) {
+                return null;
+              }
               // ================== MUTUAL DISABLE LOGIC ==================
               let isDisabled = false;
               const shouldShowLabel = f.hideLabel === false ? true : false;
@@ -1068,6 +1220,11 @@ const buildFilterSummary = (): string => {
                     onChange={(e) => updateFilter(f.name, e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
                   >
+                    {f.showSelectOption === true && (
+                      <option value="">
+                        {`Select ${f.label}`}
+                      </option>
+                    )}
                     {f.options.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
@@ -1272,15 +1429,256 @@ const buildFilterSummary = (): string => {
                     value={selectedLocationSupplier?.value || ""}
                     onChange={(e) => {
                       const val = e.target.value;
-                      const obj = locationSuppliers.find(l => l.value === val) || null;
+                      const obj = locationsupplierOptions.find(l => l.value === val) || null;
                       setSelectedLocationSupplier(obj);
                       updateFilter("locationsupplier", val);
                     }}
                   >
-                    <option value="">Select Location Supplier</option>
-                    {locationSuppliers.map(l => (
+                    <option value="">Select Location</option>
+                    {locationsupplierOptions.map(l => (
                       <option key={l.value} value={l.value}>{l.label}</option>
                     ))}
+                  </select>
+                ) : f.name === "mcat" ? (
+                    <select
+                    value={selectedSalsifyMcat?.value || ""}
+                    onChange={(e)=>{
+                    
+                    const obj=salsifyMcats.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedSalsifyMcat(obj);
+                    
+                    updateFilter("mcat",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select MCAT</option>
+                    
+                    {salsifyMcats.map((x, index) => (
+                      <option
+                        key={`${x.value}-${index}`}
+                        value={x.value}
+                      >
+                        {x.label}
+                      </option>
+                    ))}
+                    
+                    </select>
+                ) : f.name==="scat" ? (
+                    
+                  <select
+                    value={selectedSalsifyScat?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=salsifyScats.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedSalsifyScat(obj);
+                    
+                    updateFilter("scat",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select SCAT</option>
+                    
+                    {salsifyScats.map((x, index) => (
+                      <option
+                        key={`${x.value}-${index}`}
+                        value={x.value}
+                      >
+                        {x.label}
+                      </option>
+                    ))}
+                    
+                    </select>
+                ) : f.name==="itemcategory" ? (
+                    
+                   <select
+                    value={selectedItemCategory?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=itemCategories.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedItemCategory(obj);
+                    
+                    updateFilter("itemcategory",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select Item Category</option>
+                    
+                    {itemCategories.map(x=>
+                    
+                    <option key={x.value} value={x.value}>
+                    {x.label}
+                    </option>
+                    
+                    )}
+                    
+                  </select>
+                ) : f.name==="pricepage" ? (
+                    
+                    <select
+                    value={selectedPricePage?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=pricePages.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedPricePage(obj);
+                    
+                    updateFilter("pricepage",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select Price Page</option>
+                    
+                    {pricePages.map(x=>
+                    
+                    <option key={x.value} value={x.value}>
+                    {x.label}
+                    </option>
+                    
+                    )}
+                    
+                    </select>
+                ) : f.name==="terms" ? (
+                    
+                    <select
+                    value={selectedTerms?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=terms.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedTerms(obj);
+                    
+                    updateFilter("terms",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select Terms</option>
+                    
+                    {terms.map(x=>
+                    
+                    <option key={x.value} value={x.value}>
+                    {x.label}
+                    </option>
+                    
+                    )}
+                    
+                    </select>
+                ) : f.name==="classnumber" ? (
+                    
+                    <select
+                    value={selectedClassNumber?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=classNumbers.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedClassNumber(obj);
+                    
+                    updateFilter("classnumber",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select Class Number</option>
+                    
+                    {classNumbers.map(x=>
+                    
+                    <option key={x.value} value={x.value}>
+                    {x.label}
+                    </option>
+                    
+                    )}
+                    
+                    </select>
+                ) : f.name==="classid" ? (                   
+                  <select
+                    value={selectedClassId?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=classIds.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedClassId(obj);
+                    
+                    updateFilter("classid",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select Class Id</option>
+                    
+                    {classIds.map(x=>
+                    
+                    <option key={x.value} value={x.value}>
+                    {x.label}
+                    </option>
+                    
+                    )}
+                    
+                  </select>
+                ) : f.name==="purchaseclass" ? (                   
+                  <select
+                    value={selectedPurchaseClass?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=PurchaseClass.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedPurchaseClass(obj);
+                    
+                    updateFilter("purchaseclass",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select Purchase Class</option>
+                    
+                    {PurchaseClass.map(x=>
+                    
+                    <option key={x.value} value={x.value}>
+                    {x.label}
+                    </option>
+                    
+                    )}
+                    
+                  </select>
+                ) : f.name==="productgroup" ? (                   
+                  <select
+                    value={selectedProductGroup?.value||""}
+                    onChange={(e)=>{
+                    
+                    const obj=ProductGroup.find(x=>x.value===e.target.value)||null;
+                    
+                    setSelectedProductGroup(obj);
+                    
+                    updateFilter("productgroup",obj?.value||"");
+                    
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    >
+                    
+                    <option value="">Select Product Group</option>
+                    
+                    {ProductGroup.map(x=>
+                    
+                    <option key={x.value} value={x.value}>
+                    {x.label}
+                    </option>
+                    
+                    )}
+                    
                   </select>
                 ) : f.type === "date" ? (
                   <div className="relative w-full custom-datepicker-container">
@@ -1323,7 +1721,7 @@ const buildFilterSummary = (): string => {
                       </option>
                     ))}
                   </select>
-               ) : f.type === "periodStart" ? (
+                ) : f.type === "periodStart" ? (
                 <div className="flex flex-col gap-1">
                   <select
                     disabled={isDisabled}
@@ -1357,7 +1755,8 @@ const buildFilterSummary = (): string => {
                     value={filters[f.name] || ""}
                     onChange={(e) => updateFilter(f.name, e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={shouldShowLabel ? (f.placeholder || "") : (f.label || f.placeholder || "")}
+                    // placeholder={shouldShowLabel ? (f.placeholder || "") : (f.label || f.placeholder || "")}
+                    placeholder={shouldShowLabel ? (f.placeholder || "") : ( f.placeholder || "")}
                   />
                 )}
               </div>

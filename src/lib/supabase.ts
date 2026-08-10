@@ -46,7 +46,11 @@ export interface FilterConfig {
   Placeholder?: string;
   defaultSelect?: string;
   hideLabel?: boolean;
-  
+  hideWhen?: {
+    filter: string;
+    value: any;
+  };
+  showSelectOption?: boolean;
 
 }
 
@@ -59,12 +63,13 @@ export interface Report {
   api_endpoint: string;
   supports_excel_export: boolean;
   supports_pdf_export: boolean;
-  enableSchedule?: boolean; // ✅ ADD THIS
+  enableSchedule?: boolean; 
   filter_config: {
     filters: FilterConfig[];
   };
   columns?: Column[];
   locationType?: string;
+  pagination?: boolean;
 }
 
 export const API_BASE_URL = "http://localhost:5278";

@@ -53,6 +53,51 @@ export interface CustomerOption {
     startDate: string;
     endDate: string;
   }
+  export interface SalsifyMcatOption {
+    value: string;
+    label: string;
+  }
+  
+  export interface SalsifyScatOption {
+    value: string;
+    label: string;
+  }
+  
+  export interface ItemCategoryOption {
+    value: string;
+    label: string;
+  }
+  
+  export interface PricePageOption {
+    value: string;
+    label: string;
+  }
+  
+  export interface TermsOption {
+    value: string;
+    label: string;
+  }
+  
+  export interface ClassNumberOption {
+    value: string;
+    label: string;
+  }
+  
+  export interface ClassIdOption {
+    value: string;
+    label: string;
+  }
+
+  export interface PurchaseClassOption {
+    value: string;
+    label: string;
+  }
+
+  export interface ProductGroupOption {
+    value: string;
+    label: string;
+  }
+  
   
 // Fetch companies
 export const fetchCompanies = async (token: string): Promise<CompanyOption[]> => {
@@ -238,4 +283,196 @@ export const fetchPeriods = async (token: string): Promise<PeriodOption[]> => {
     headers: { Authorization: `Bearer ${token}` },
   });
   return Array.isArray(res.data) ? res.data : [];
+};
+
+export const fetchSalsifyMcat = async (
+  token: string
+): Promise<SalsifyMcatOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/salsify/mcat`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.mcat,
+        label: x.mcat,
+      }))
+    : [];
+};
+
+export const fetchSalsifyScat = async (
+  token: string,
+  mcat?: string
+): Promise<SalsifyScatOption[]> => {
+
+  const params: any = {};
+
+  if (mcat && mcat.trim() !== "") {
+    params.mcat = mcat;
+  }
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/salsify/scat`, {
+    params,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.scat,
+        label: x.scat,
+      }))
+    : [];
+};
+
+export const fetchItemCategories = async (
+  token: string,
+  companyId: string
+): Promise<ItemCategoryOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/itemcategories`, {
+    params: { compId: companyId },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchPricePages = async (
+  token: string,
+  companyId: string,
+  supplierId: string
+): Promise<PricePageOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/pricepages`, {
+    params: {
+      compId: companyId,
+      supplierId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchTerms = async (
+  token: string,
+  companyId: string
+): Promise<TermsOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/terms`, {
+    params: {
+      compId: companyId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchClassNumbers = async (
+  token: string,
+  companyId: string
+): Promise<ClassNumberOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/classnumbers`, {
+    params: {
+      compId: companyId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchClassIds = async (
+  token: string,
+  companyId: string,
+  classNumber: string
+): Promise<ClassIdOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/classid`, {
+    params: {
+      compId: companyId,
+      classNumber,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchPurchaseClass = async (
+  token: string,
+  companyId: string
+): Promise<PurchaseClassOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/purchaseclass`, {
+    params: {
+      compId: companyId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchProductGroup = async (
+  token: string,
+  companyId: string
+): Promise<ProductGroupOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/productgroup`, {
+    params: {
+      compId: companyId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
 };
