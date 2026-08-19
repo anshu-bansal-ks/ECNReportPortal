@@ -556,6 +556,30 @@ export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelC
   showreportinvoices: {enabled: false,labelColumn: "rep",
   totalColumns: ["SALES","freight","COST","gross_profit","profit_percent"]
   },
+  eventreportinvoicesalesvendortotalswithprofitforeventsuppliers: {enabled: false,labelColumn: "rep",
+  totalColumns: ["SALES","SHOW_SALES","show_profit","NON_SHOW_SALES","non_show_profit"]
+  },
+  salesbysupplierforgroupcodeytdcomparison: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["SALES_LY","SALES_YTD"]
+  },
+  saleshistory_for_supplier_by_item_location: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["TOTAL","SALES","price1","COST"]
+  },
+  shows_discount_calculation_for_order: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["SHOW_SALES","discount_amt","NON_SHOW_SALES"]
+  },
+  shows_report_saleshistory_by_vendor: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["SALES","SHOW_SALES","NON_SHOW_SALES"]
+  },
+  shows_report_saleshistory_by_vendor_with_profit: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["SALES","COST","gross_profit","profit_percent"]
+  },
+  shows_report_saleshistory_for_customer: {enabled: false,labelColumn: "rep",
+  totalColumns: ["SALES","SHOW_SALES","NON_SHOW_SALES"]
+  },
+  shows_report_saleshistory_for_customer_item: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty","SALES"]
+  },
 
 
   
@@ -3355,6 +3379,218 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "product_group", label: "Product Group", type: "text" },
     { key: "supplier_name", label: "Supplier Name", type: "text" }
   ],
+  discitems_for_supplier: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "PA", label: "PA", type: "large_integer" },
+    { key: "NJ", label: "NJ", type: "large_integer" },
+    { key: "FL", label: "FL", type: "large_integer" },
+    { key: "CA", label: "CA", type: "large_integer" },
+    { key: "Total", label: "Total", type: "large_integer" },
+    { key: "cost", label: "Cost", type: "currency" },
+    { key: "value", label: "Value", type: "currency" }
+  ],
+  discontinueditemstats: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "PA_QTY", label: "PA Qty", type: "large_integer" },
+    { key: "PA_On_Order", label: "PA On Order", type: "large_integer" },
+    { key: "nj_Qty", label: "NJ Qty", type: "large_integer" },
+    { key: "nj_On_Order", label: "NJ On Order", type: "large_integer" },
+    { key: "FL_Qty", label: "FL Qty", type: "large_integer" },
+    { key: "FL_On_Order", label: "FL ON Order", type: "large_integer" },
+    { key: "ca_Qty", label: "CA Qty", type: "large_integer" },
+    { key: "ca_On_Order", label: "CA ON Order", type: "large_integer" },
+    { key: "primary_bin", label: "Primary Bin", type: "text" }
+  ],
+  divisionlookup: [
+    { key: "division_id", label: "Division Id", type: "integer" },
+    { key: "division_name", label: "Division Desc", type: "text" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" }
+  ],
+  ecnproductrank: [
+    { key: "sr_No", label: "Sr No.", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "upc", label: "UPC", type: "text" },
+    { key: "price", label: "Price", type: "currency" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "product_group", label: "Product Group", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" }  
+  ],
+  eventreportinvoicesalesvendortotalswithprofitforeventsuppliers: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "SHOW_SALES", label: "Show Sales", type: "currency" },
+    { key: "show_profit", label: "Show Profit", type: "percentage" },
+    { key: "NON_SHOW_SALES", label: "Non Show Sales", type: "currency" },
+    { key: "non_show_profit", label: "Non Show profit", type: "percentage" }
+  ],
+  inventory_levels_cost_for_supplier: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "PA", label: "PA", type: "large_integer" },
+    { key: "NJ", label: "NJ", type: "large_integer" },
+    { key: "FL", label: "FL", type: "large_integer" },
+    { key: "CA", label: "CA", type: "large_integer" },
+    { key: "LV", label: "LV", type: "large_integer" },
+    { key: "total", label: "Total", type: "large_integer" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "cost", label: "Cost", type: "currency" }
+  ],
+  inventory_levels_for_item_prefix: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "upc", label: "UPC", type: "text" },
+    { key: "PA", label: "PA", type: "large_integer" },
+    { key: "NJ", label: "NJ", type: "large_integer" },
+    { key: "FL", label: "FL", type: "large_integer" },
+    { key: "CA", label: "CA", type: "large_integer" },
+    { key: "total", label: "Total", type: "large_integer" }
+  ],
+  inventorylevelsallitemswithcost: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "PA", label: "PA", type: "large_integer" },
+    { key: "NJ", label: "NJ", type: "large_integer" },
+    { key: "FL", label: "FL", type: "large_integer" },
+    { key: "CA", label: "CA", type: "large_integer" },
+    { key: "total", label: "Total", type: "large_integer" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "supplier_cost", label: "Supplier Cost", type: "currency" }
+  ],
+  logoforderimportexcel: [
+    { key: "id", label: "Id", type: "integer" },
+    { key: "company", label: "Company", type: "text" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "sales_rep_id", label: "Sales Rep Id", type: "integer" },
+    { key: "po_number", label: "Po Number", type: "text" },
+    { key: "no_of_item", label: "No Of Item", type: "large_integer" },
+    { key: "user_name", label: "User Name", type: "text" },
+    { key: "date_Created", label: "Date Created", type: "date" },
+    { key: "status", label: "Status", type: "text" }
+  ],
+  overstock: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "Primary_Supplier", label: "Primary Supplier", type: "integer" },
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "release_date", label: "Release Date", type: "date" },
+    { key: "usage", label: "Usage", type: "large_integer" },
+    { key: "qty_on_po", label: "Qty On Po", type: "large_integer" },
+    { key: "qty_on_transfer", label: "Qty On Transfer", type: "large_integer" },
+    { key: "qty_available", label: "Qty Available", type: "large_integer" },
+    { key: "value", label: "Value", type: "currency" },
+    { key: "standard_cost", label: "Standard Cost", type: "currency" },
+    { key: "first_received", label: "First Received", type: "date" },
+    { key: "last_received", label: "Last Received", type: "date" },
+    { key: "times_received", label: "Times Received", type: "large_integer" }
+  ],
+  overstocknodate: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "Primary_Supplier", label: "Primary Supplier", type: "integer" },
+    { key: "location_id", label: "Location Id", type: "integer" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "release_date", label: "Release Date", type: "date" },
+    { key: "usage", label: "Usage", type: "large_integer" },
+    { key: "qty_available", label: "Qty Available", type: "large_integer" },
+    { key: "overstock", label: "Overstock", type: "large_integer" },
+    { key: "standard_cost", label: "Standard Cost", type: "currency" }
+  ],
+  p21roles: [
+    { key: "user_id", label: "User Id", type: "text" },
+    { key: "user_name", label: "User Name", type: "text" },
+    { key: "role", label: "Role", type: "text" },
+    { key: "email_address", label: "Email Address", type: "text" }
+  ],
+  poitemsordered: [
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "buyer", label: "Buyer", type: "text" },
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_description", label: "Item Description", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "large_integer" },
+    { key: "unit_of_measure", label: "Unti Of Measure", type: "text" },
+  ],
+  rolesandreports: [
+    { key: "role_name", label: "Role Name", type: "text" },
+    { key: "report_name", label: "Report Name", type: "text" }
+  ],
+  salesbysupplierforgroupcodeytdcomparison: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "SALES_LY", label: "Sales LYTD", type: "currency" },
+    { key: "SALES_YTD", label: "Sales YTD", type: "currency" }
+  ],
+  saleshistory_for_supplier_by_item_location: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "PA", label: "PA", type: "large_integer" },
+    { key: "NJ", label: "NJ", type: "large_integer" },
+    { key: "FL", label: "FL", type: "large_integer" },
+    { key: "CA", label: "CA", type: "large_integer" },
+    { key: "TOTAL", label: "Total", type: "large_integer" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "COST", label: "Cost", type: "currency" }
+  ],
+  shows_discount_calculation_for_order: [
+    { key: "order_no", label: "Order No", type: "integer" },
+    { key: "order_date", label: "Order Date", type: "date" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "ship2_name", label: "Ship2 Name", type: "text" },
+    { key: "created_by", label: "Created By", type: "text" },
+    { key: "cancel_flag", label: "Cancel Flag", type: "text" },
+    { key: "projected_order", label: "Projected Order", type: "text" },
+    { key: "delete_flag", label: "Delete Flag", type: "text" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "SHOW_SALES", label: "Show Sales", type: "currency" },
+    { key: "discount_percent", label: "Discount Percent", type: "percentage" },
+    { key: "discount_amt", label: "Discount Amt", type: "currency" },
+    { key: "NON_SHOW_SALES", label: "Non Show Sales", type: "currency" }
+  ],
+  shows_report_saleshistory_by_vendor: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "SHOW_SALES", label: "Show Sales", type: "currency" },
+    { key: "NON_SHOW_SALES", label: "Non Show Sales", type: "currency" }
+  ],
+  shows_report_saleshistory_by_vendor_with_profit: [
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "COST", label: "Cost", type: "currency" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency" },
+    { key: "profit_percent", label: "Profit Percent", type: "percentage" }
+  ],
+  shows_report_saleshistory_for_customer: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Bill2 Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "SHOW_SALES", label: "Show Sales", type: "currency" },
+    { key: "NON_SHOW_SALES", label: "Non Show Sales", type: "currency" }
+  ],
+  shows_report_saleshistory_for_customer_item: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "SALES", label: "Sales", type: "currency" }
+  ],
+
 
 
   

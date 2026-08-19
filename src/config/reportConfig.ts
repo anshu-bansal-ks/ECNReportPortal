@@ -3799,6 +3799,334 @@ export const REPORT_CONFIG: Record<string, Partial<Report>> = {
       ]
     }
   },
+  "discitems_for_supplier": {
+    key: "discitems_for_supplier",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+        { type: "select", name: "location", label: "Location", apiParam: "locationId", required: true }
+      ]
+    }
+  },
+  "discontinueditemstats": {
+    key: "discontinueditemstats",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "location", label: "Location", apiParam: "locationId", required: true }
+      ]
+    }
+  },
+  "divisionlookup": {
+    key: "divisionlookup",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "text", name: "strfilter", label: "strings filter", apiParam: "strfilter", placeholder: "Enter strings filter here.." , required: true }
+      ]
+    }
+  },
+  "ecnproductrank": {
+    key: "ecnproductrank",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId"},
+        { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId" },
+        { type: "select", name: "productgroup", label: "Product Group", apiParam: "productgroup" },
+        { type: "select", name: "topn", label: "Top Number", apiParam: "topn",
+          options: ["ALL", "25", "50", "100", "200"] , defaultValue: "ALL"}, 
+        { type: "radio", name: "rankType", label: "Rank Type", apiParam: "rankType", options: ["Qty", "Dollar"], defaultValue: "Qty" }       
+      ]
+    }
+  },
+  "eventreportinvoicesalesvendortotalswithprofitforeventsuppliers": {
+    key: "eventreportinvoicesalesvendortotalswithprofitforeventsuppliers",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "show", label: "ShowName", apiParam: "ShowId", required: true },
+        { type: "checkbox", name: "AllPO", label: "ALL PO" },
+        { type: "text", name: "pono", label: "Po No", apiParam: "pono", placeholder: "Enter po number here..." ,hideWhen: {filter: "AllPO",value: true} },
+        { type: "checkbox", name: "Alljobname", label: "ALLJOB" },
+        { type: "text", name: "job_name", label: "Po No", apiParam: "job_name", placeholder: "Enter Job name here..." ,hideWhen: {filter: "Alljobname",value: true} },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "inventory_levels_cost_for_supplier": {
+    key: "inventory_levels_cost_for_supplier",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+        { type: "checkbox", name: "status", label: "Suppress Zero Totals"  }
+      ]
+    }
+  },
+  "inventory_levels_cost_for_supplier_nocost": {
+    key: "inventory_levels_cost_for_supplier_nocost",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+        { type: "checkbox", name: "status", label: "Suppress Zero Totals"  }
+      ]
+    }
+  },
+  "inventory_levels_for_item_prefix": {
+    key: "inventory_levels_for_item_prefix",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "text", name: "prefix", label: "Prefix", apiParam: "prefix", placeholder: "Enter prefix here.." , required: true }
+      ]
+    }
+  },
+  "inventorylevelsallitemswithcost": {
+    key: "inventorylevelsallitemswithcost",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "checkbox", name: "status", label: "Show Zero Totals"  }
+      ]
+    }
+  },
+  "logoforderimportexcel": {
+    key: "logoforderimportexcel",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "overstock": {
+    key: "overstock",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+        { type: "select", name: "location", label: "Location", apiParam: "locationId", required: true },
+        { type: "month", name: "beginDate", label: "Begin M&Y", apiParam: "begindate", required: true },
+        { type: "month", name: "endDate", label: "End M&Y", apiParam: "enddate", required: true },
+        { type: "date", name: "startrelease", label: "Start Release", apiParam: "startrelease", required: true },
+        { type: "date", name: "endrelease", label: "End Release", apiParam: "endrelease", required: true },
+        { type: "number", name: "maxRecieved", label: "Max Rec.", apiParam: "maxRecieved", defaultValue: "1" }
+      ]
+    }
+  },
+  "overstocknodate": {
+    key: "overstocknodate",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+        { type: "select", name: "location", label: "Location", apiParam: "locationId", required: true },
+        { type: "month", name: "beginDate", label: "Begin M&Y", apiParam: "begindate", required: true },
+        { type: "month", name: "endDate", label: "End M&Y", apiParam: "enddate", required: true }
+      ]
+    }
+  },
+  "p21roles": {
+    key: "p21roles",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "roles", label: "Roles", apiParam: "roles", required: true, allowAll: true },
+      ]
+    }
+  },
+  "poitemsordered": {
+    key: "poitemsordered",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "buyer", label: "Buyer", apiParam: "buyer", required: true, allowAll: true },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Last Week(Sun to Sat)", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "rolesandreports": {
+    key: "rolesandreports",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "rolesreports", label: "Role Reports", apiParam: "rolesreports", required: true, allowAll: true }
+      ]
+    }
+  },
+  "salesbysupplierforgroupcodeytdcomparison": {
+    key: "salesbysupplierforgroupcodeytdcomparison",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "ytdcomparison", label: "Comparison",
+          options: [ "YTD v LYTD", "YTD v LY"], defaultValue: "YTD v LYTD" },
+        { type: "text", name: "group_code", label: "Group Code", apiParam: "group_code", placeholder: "Enter group code here...", required: true }
+       
+      ]
+    }
+  },
+  "saleshistory_for_supplier_by_item_location": {
+    key: "saleshistory_for_supplier_by_item_location",
+    enableSchedule: true,
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+		    { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+        { type: "select", name: "custclass", label: "Customer Class", apiParam: "custclass",
+          options: ["ALL", "ADS", "B2B", "KIOSK"], defaultValue: "ALL" },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "shows_discount_calculation_for_order": {
+    key: "shows_discount_calculation_for_order",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "show", label: "ShowName", apiParam: "ShowId", required: true },
+        { type: "checkbox", name: "AllPO", label: "ALL PO" },
+        { type: "text", name: "pono", label: "Po No", apiParam: "pono", placeholder: "Enter po number here..." ,hideWhen: {filter: "AllPO",value: true} },
+        { type: "text", name: "ordernum", label: "Order Num", apiParam: "ordernum", placeholder: "Order Number", required: true }
+      ]
+    }
+  },
+  "shows_report_saleshistory_by_vendor": {
+    key: "shows_report_saleshistory_by_vendor",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "show", label: "ShowName", apiParam: "ShowId", required: true },
+        { type: "checkbox", name: "AllPO", label: "ALL PO", defaultValue: "true" },
+        { type: "text", name: "pono", label: "Po No", apiParam: "pono", placeholder: "Enter po number here..." ,hideWhen: {filter: "AllPO",value: true} },
+        { type: "checkbox", name: "Alljobname", label: "ALLJOB" },
+        { type: "text", name: "job_name", label: "Po No", apiParam: "job_name", placeholder: "Enter Job name here..." ,hideWhen: {filter: "Alljobname",value: true} },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "shows_report_saleshistory_by_vendor_with_profit": {
+    key: "shows_report_saleshistory_by_vendor_with_profit",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "show", label: "ShowName", apiParam: "ShowId", required: true },
+        { type: "checkbox", name: "AllPO", label: "ALL PO" },
+        { type: "text", name: "pono", label: "Po No", apiParam: "pono", placeholder: "Enter po number here..." ,hideWhen: {filter: "AllPO",value: true} },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "shows_report_saleshistory_for_customer": {
+    key: "shows_report_saleshistory_for_customer",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "show", label: "ShowName", apiParam: "ShowId", required: true },
+        { type: "select", name: "custclass", label: "Customer Class", apiParam: "custclass",
+          options: ["ALL", "ADS", "B2B"], defaultValue: "ALL" },
+        { type: "checkbox", name: "AllPO", label: "ALL PO", defaultValue: "true" },
+        { type: "text", name: "pono", label: "Po No", apiParam: "pono", placeholder: "Enter po number here..." ,hideWhen: {filter: "AllPO",value: true} },
+        { type: "checkbox", name: "Alljobname", label: "ALLJOB" },
+        { type: "text", name: "job_name", label: "Po No", apiParam: "job_name", placeholder: "Enter Job name here..." ,hideWhen: {filter: "Alljobname",value: true} },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "shows_report_saleshistory_for_customer_item": {
+    key: "shows_report_saleshistory_for_customer_item",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "show", label: "ShowName", apiParam: "ShowId", required: true },
+        { type: "select", name: "customer", label: "Customer", apiParam: "custId", required: true },
+        { type: "checkbox", name: "AllPO", label: "ALL PO", defaultValue: "true" },
+        { type: "text", name: "pono", label: "Po No", apiParam: "pono", placeholder: "Enter po number here..." ,hideWhen: {filter: "AllPO",value: true} },
+        { type: "checkbox", name: "Alljobname", label: "ALLJOB" },
+        { type: "text", name: "job_name", label: "Po No", apiParam: "job_name", placeholder: "Enter Job name here..." ,hideWhen: {filter: "Alljobname",value: true} },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
+  "shows_report_saleshistory_for_customer_item_with_profit": {
+    key: "shows_report_saleshistory_for_customer_item_with_profit",
+    supports_excel_export: true,
+    filter_config: {
+      filters: [
+        { type: "select", name: "company", label: "Company", apiParam: "compId" },
+        { type: "select", name: "show", label: "ShowName", apiParam: "ShowId", required: true },
+        { type: "select", name: "customer", label: "Customer", apiParam: "custId", required: true },
+        { type: "checkbox", name: "AllPO", label: "ALL PO", defaultValue: "true" },
+        { type: "text", name: "pono", label: "Po No", apiParam: "pono", placeholder: "Enter po number here..." ,hideWhen: {filter: "AllPO",value: true} },
+        { type: "date", name: "fromdate", label: "From Date" },
+        { type: "date", name: "tilldate", label: "Till Date" },
+        { type: "period", name: "timeperiod", label: "Time Period",
+          options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+        }
+      ]
+    }
+  },
 
 
 

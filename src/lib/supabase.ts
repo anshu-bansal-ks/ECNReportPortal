@@ -6,7 +6,9 @@ export type FilterType =
   | "period"
   | "number"
   | "date"
+  | "month"
   | "checkbox"
+  | "radio"
   | "periodStart" 
   | "periodEnd";
 

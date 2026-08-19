@@ -97,6 +97,22 @@ export interface CustomerOption {
     value: string;
     label: string;
   }
+  export interface RolesOption {
+    value: string;
+    label: string;
+  }
+  export interface BuyerOption {
+    value: string;
+    label: string;
+  }
+  export interface PriceLibraryOption {
+    value: string;
+    label: string;
+  }
+  export interface RolesReportsOption {
+    value: string;
+    label: string;
+  }
   
   
 // Fetch companies
@@ -464,6 +480,90 @@ export const fetchProductGroup = async (
     params: {
       compId: companyId,
     },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchRoles = async (
+  token: string,
+  companyId: string
+): Promise<RolesOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/roles`, {
+    params: {
+      compId: companyId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchBuyer = async (
+  token: string,
+  companyId: string
+): Promise<BuyerOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/buyer`, {
+    params: {
+      compId: companyId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchPriceLibrary = async (
+  token: string,
+  companyId: string
+): Promise<PriceLibraryOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/pricelibrary`, {
+    params: {
+      compId: companyId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.value,
+        label: x.label,
+      }))
+    : [];
+};
+
+export const fetchRolesReports = async (
+  token: string
+): Promise<RolesReportsOption[]> => {
+
+  const res = await axios.get(`${API_BASE}/api/Dropdown/rolesrepots`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

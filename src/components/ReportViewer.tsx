@@ -21,7 +21,9 @@ validateCustomer,CompanyOption,VendorOption,SalesRepOption,CustomerOption,Suppli
 fetchShows,fetchPromos,fetchLocations,fetchLocationSupplier,ShowOption,PromoOption,LocationOption,
 LocationSupplierOption,fetchPeriods,PeriodOption,fetchSalsifyMcat,fetchSalsifyScat,fetchItemCategories,
 fetchPricePages,fetchTerms,fetchClassNumbers,fetchClassIds,SalsifyMcatOption,SalsifyScatOption,ItemCategoryOption,
-PricePageOption,TermsOption,ClassNumberOption,ClassIdOption,fetchPurchaseClass,PurchaseClassOption,fetchProductGroup,ProductGroupOption
+PricePageOption,TermsOption,ClassNumberOption,ClassIdOption,fetchPurchaseClass,PurchaseClassOption,fetchProductGroup,
+ProductGroupOption,fetchRoles,RolesOption,fetchBuyer,BuyerOption,fetchPriceLibrary,PriceLibraryOption,
+fetchRolesReports,RolesReportsOption
 } from "../lib/dropdownApi";
 
 interface ReportViewerProps {
@@ -79,6 +81,14 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
   const [selectedPurchaseClass, setSelectedPurchaseClass] = useState<PurchaseClassOption | null>(null);
   const [ProductGroup, setProductGroup] =useState<ProductGroupOption[]>([]);
   const [selectedProductGroup, setSelectedProductGroup] = useState<ProductGroupOption | null>(null);
+  const [roles, setRoles] = useState<RolesOption[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<RolesOption | null>(null);
+  const [buyer, setBuyer] = useState<BuyerOption[]>([]);
+  const [selectedBuyer, setSelectedBuyer] = useState<BuyerOption | null>(null);
+  const [pricelibrary, setPriceLibrary] = useState<PriceLibraryOption[]>([]);
+  const [selectedPriceLibrary, setSelectedPriceLibrary] = useState<PriceLibraryOption | null>(null);
+  const [rolesreports, setRolesReports] = useState<RolesReportsOption[]>([]);
+  const [selectedRolesReports, setSelectedRolesReports] = useState<RolesReportsOption | null>(null);
   const [months, setMonths] = useState<any[]>([]);
   const [autoRun, setAutoRun] = useState(false); 
   const [downloading, setDownloading] = useState(false);
@@ -213,17 +223,95 @@ const formatCellValue = (value: any, type: string) => {
     endpoint.includes("thirteenmonthsales") || 
     endpoint.includes("thirteenmonthvendorsalesforcustomer");
     let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
-    if (reportKey === "backordersforcustomer" ||reportKey === "canceled_items_for_customer") {
-      if (appliedFilters.company === "XG") {
-        columns = columns.filter(
-          (col: any) => !["NJ", "NJ_PO", "FL", "FL_PO", "CA", "CA_PO"].includes(col.key)
-        );
-      } else {
-        columns = columns.filter(
-          (col: any) => !["PA", "PA_PO"].includes(col.key)
-        );
+    const comparison = appliedFilters["ytdcomparison"] || "YTD v LYTD";
+
+    columns = columns.map((col: any) => {
+      if (
+        reportKey === "salesbysupplierforgroupcodeytdcomparison" &&
+        col.key === "SALES_LY"
+      ) {
+        return {
+          ...col,
+          label: comparison === "YTD v LY"
+            ? "Sales LY"
+            : "Sales LYTD"
+        };
       }
-    }
+    
+      return col;
+    });
+if (
+  reportKey === "backordersforcustomer" ||
+  reportKey === "canceled_items_for_customer" ||
+  reportKey === "discitems_for_supplier" ||
+  reportKey === "discontinueditemstats" ||
+  reportKey === "inventory_levels_cost_for_supplier" ||
+  reportKey === "inventory_levels_for_item_prefix" ||
+  reportKey === "inventorylevelsallitemswithcost" ||
+  reportKey === "saleshistory_for_supplier_by_item_location"
+) {
+  if (appliedFilters.company?.toUpperCase() === "XG") {
+    columns = columns.filter((col: any) => {
+      const key = col.key?.toUpperCase();
+
+      return ![
+        "NJ",
+        "NJ_PO",
+        "NJ_QTY",
+        "NJ_ON_ORDER",
+        "FL",
+        "FL_PO",
+        "FL_QTY",
+        "FL_ON_ORDER",
+        "CA",
+        "CA_PO",
+        "CA_QTY",
+        "CA_ON_ORDER"
+      ].includes(key);
+    });
+  } else {
+    columns = columns.filter((col: any) => {
+      const key = col.key?.toUpperCase();
+
+      return ![
+        "PA",
+        "PA_PO",
+        "PA_QTY",
+        "PA_ON_ORDER"
+      ].includes(key);
+    });
+  }
+}
+if (
+  reportKey === "inventory_levels_cost_for_supplier" ||
+  reportKey === "inventory_levels_cost_for_supplier_nocost"
+) {
+  const company = appliedFilters.company?.toUpperCase();
+
+  if (company === "XG") {
+    // XG => PA only
+    columns = columns.filter((col: any) => {
+      const key = col.key?.toUpperCase();
+      return !["LV", "NJ", "FL", "CA"].includes(key);
+    });
+
+  } else if (company === "ADV") {
+    // ADV => LV, NJ, FL, CA
+    // PA hide
+    columns = columns.filter((col: any) => {
+      const key = col.key?.toUpperCase();
+      return key !== "PA";
+    });
+
+  } else {
+    // OTHER => NJ, FL, CA
+    // PA + LV hide
+    columns = columns.filter((col: any) => {
+      const key = col.key?.toUpperCase();
+      return !["PA", "LV"].includes(key);
+    });
+  }
+}
   if (isThirteenMonthReport && months.length > 0) {
     columns = columns.map((col) => {
       if (col.key.startsWith("mon")) {
@@ -488,6 +576,48 @@ useEffect(() => {
     fetchCompanies(token).then(setCompanies).catch(() => setCompanies([]));
   }, [report, token]);
 
+  useEffect(() => {
+    if (!token) return;
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (activeFilters.includes("roles")) {
+      fetchRoles(token, filters.company)
+        .then(setRoles)
+        .catch(() => setRoles([]));
+    }
+  }, [report, token, filters.company]);
+
+useEffect(() => {
+  if (!token || !filters.company) return;
+  const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+
+  if (activeFilters.includes("buyer")) {
+    fetchBuyer(token, filters.company)
+      .then(setBuyer)
+      .catch(() => setBuyer([]));
+  }
+}, [report, token, filters.company]);
+
+useEffect(() => {
+  if (!token || !filters.company) return;
+  const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+
+  if (activeFilters.includes("pricelibrary")) {
+    fetchPriceLibrary(token, filters.company)
+      .then(setPriceLibrary)
+      .catch(() => setPriceLibrary([]));
+  }
+}, [report, token, filters.company]);
+
+useEffect(() => {
+  if (!token) return;
+  const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+
+  if (activeFilters.includes("rolesreports")) {
+    fetchRolesReports(token)
+      .then(setRolesReports)
+      .catch(() => setRolesReports([]));
+  }
+}, [report, token]);
 useEffect(() => {
   if (!filters.company || !token) {
     setSalesReps([]);
@@ -738,18 +868,46 @@ const locationFilter = report?.filter_config?.filters?.find(
 const locationsupplierFilter = report?.filter_config?.filters?.find(
   (f: any) => f.name === "locationsupplier"
 );
+const rolesFilter = report?.filter_config?.filters?.find(
+  (f: any) => f.name === "roles"
+);
+const buyerFilter = report?.filter_config?.filters?.find((
+  f: any) => f.name === "buyer"
+);
+const priceLibraryFilter = report?.filter_config?.filters?.find((
+  f: any) => f.name === "pricelibrary"
+);
+const rolesReportsFilter = report?.filter_config?.filters?.find((
+  f: any) => f.name === "rolesreports"
+);
+
 const allowSalesRepAll = salesRepFilter?.allowAll === true;
 const allowSupplierAll = supplierFilter?.allowAll === true;
 const allowSupplierOPAll = supplierOpFilter?.allowAll === true;
 const allowLocationAll = locationFilter?.allowAll === true ;
 const allowLocationSupplierAll = locationsupplierFilter?.allowAll === true ;
-
+const allowBuyerAll = buyerFilter?.allowAll === true;
+const allowPriceLibraryAll = priceLibraryFilter?.allowAll === true;
+const allowRolesReportsAll = rolesReportsFilter?.allowAll === true;
+const allowRolesAll = rolesFilter?.allowAll === true;
 // ✅ NEW: options with ALL conditionally
 const salesRepOptions = allowSalesRepAll? [{ value: "ALL", label: "ALL" }, ...salesReps]: salesReps;
 const supplierOptions = allowSupplierAll? [{ value: "ALL", label: "ALL" }, ...suppliers]: suppliers;
 const supplierOpOptions = allowSupplierOPAll? [{ value: "ALL", label: "ALL" }, ...suppliersOp]: suppliersOp;
 const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...locations] : locations;
 const locationsupplierOptions = allowLocationSupplierAll ? [{ value: "ALL", label: "ALL" }, ...locationSuppliers] : locationSuppliers;
+const sortedRoles = [...roles].sort((a, b) => {
+  if (String(a.label).toUpperCase() === "ALL") return -1;
+  if (String(b.label).toUpperCase() === "ALL") return 1;
+  return String(a.label).localeCompare(String(b.label));
+});
+
+const rolesOptions = allowRolesAll 
+  ? [{ value: "ALL_ROLE", label: "ALL Role" }, ...sortedRoles] 
+  : sortedRoles;
+const buyerOptions = allowBuyerAll ? [{ value: "ALL", label: "ALL" }, ...buyer] : buyer;
+const priceLibraryOptions = allowPriceLibraryAll ? [{ value: "ALL", label: "ALL" }, ...pricelibrary] : pricelibrary;
+const rolesReportsOptions = allowRolesReportsAll ? [{ value: "ALL", label: "ALL" }, ...rolesreports] : rolesreports;
 
 /* UPDATE FILTER */
   const updateFilter = (name: string, value: string) => {
@@ -764,6 +922,10 @@ const locationsupplierOptions = allowLocationSupplierAll ? [{ value: "ALL", labe
       setSelectedLocationSupplier(null);
       setSelectedPurchaseClass(null);
       setSelectedProductGroup(null);
+      setSelectedRoles(null);
+      setSelectedBuyer(null);
+      setSelectedPriceLibrary(null);
+      setSelectedRolesReports(null);
       setCustomerError("");
       setFilters((prev) => ({
         ...prev,
@@ -775,7 +937,12 @@ const locationsupplierOptions = allowLocationSupplierAll ? [{ value: "ALL", labe
         location: "",
         locationsupplier: "",
         purchaseclass: "",
-        productgroup: ""
+        productgroup: "",
+        roles: "",
+        buyer: "",
+        pricelibrary: "",
+        rolesreports: "",
+        beginDate: "",
 
       }));
     }
@@ -845,7 +1012,26 @@ const fetchData = async (pageNum: number, isInitial = false) => {
         isFetchingRef.current = false;
     }
   };
+  useEffect(() => {
+    if (reportKey !== "divisionlookup") return;
 
+    const strfilter = (filters.strfilter || "").trim();
+
+    if (strfilter === "") {
+        setData([]);
+        setHasMore(false);
+        return;
+    }
+
+    const timer = setTimeout(() => {
+        setPage(1);
+        setHasMore(true);
+        fetchData(1, true);
+    }, 300);
+
+    return () => clearTimeout(timer);
+
+}, [filters.strfilter, reportKey]);
 // 🔹 EXCEL EXPORT LOGIC
 const handleExport = async (type: "excel" | "pdf") => {
   if (!validateFilters()) return;
@@ -1368,7 +1554,34 @@ const buildFilterSummary = (): string => {
                     >
                       {f.label}
                     </label>
-                  </div>                  
+                  </div>  
+                ) : f.type === "radio" ? (
+                    <div key={f.name} className="flex items-center gap-4 mt-2">
+                      {f.options?.map((option: string) => (
+                        <label
+                          key={option}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name={f.name}
+                            value={option}
+                            checked={filters[f.name] === option}
+                            onChange={(e) => {
+                              setFilters((prev: any) => ({
+                                ...prev,
+                                [f.name]: e.target.value
+                              }));
+                            }}
+                            className="w-4 h-4 cursor-pointer"
+                          />
+                  
+                          <span className="text-sm">
+                            {option}
+                          </span>
+                        </label>
+                      ))}
+                    </div>                                 
                 ): f.name === "show" ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2"
@@ -1707,6 +1920,137 @@ const buildFilterSummary = (): string => {
                     }`}
                   />
                 </div>
+                ) : f.name === "roles" ? (
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!filters.company}
+                    value={selectedRoles?.value || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                
+                      const role = rolesOptions.find((r) => r.value === val) || null;
+                
+                      setSelectedRoles(role);
+                      updateFilter("roles", val);
+                    }}
+                  >
+                    <option value="">Select Roles</option>
+                
+                    {rolesOptions.map((role) => (
+                      <option key={role.value} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
+                  </select>
+                  ) : f.name === "buyer" ? (
+                    <select
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={!filters.company}
+                      value={selectedBuyer?.value || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const obj = buyerOptions.find((b) => b.value === val) || null;
+                        setSelectedBuyer(obj);
+                        updateFilter("buyer", val);
+                      }}
+                    >
+                      <option value="">Select Buyer</option>
+                      {buyerOptions.map((b) => (
+                        <option key={b.value} value={b.value}>
+                          {b.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : f.name === "pricelibrary" ? (
+                    <select
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={!filters.company}
+                      value={selectedPriceLibrary?.value || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const obj = priceLibraryOptions.find((p) => p.value === val) || null;
+                        setSelectedPriceLibrary(obj);
+                        updateFilter("pricelibrary", val);
+                      }}
+                    >
+                      <option value="">Select Price Library</option>
+                      {priceLibraryOptions.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : f.name === "rolesreports" ? (
+                    <select
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      //disabled={!filters.company}
+                      value={selectedRolesReports?.value || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const obj = rolesReportsOptions.find((r) => r.value === val) || null;
+                        setSelectedRolesReports(obj);
+                        updateFilter("rolesreports", val);
+                      }}
+                    >
+                      <option value="">Select Roles Reports</option>
+                      {rolesReportsOptions.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                ) : f.type === "month" ? (
+                  <div className="relative w-full custom-datepicker-container">
+                    <DatePicker
+                      portalId="root"
+                
+                      selected={(() => {
+                        const value = filters[f.name];
+                
+                        if (!value) return null;
+                
+                        const parts = value.split("/");
+                
+                        if (parts.length !== 2) return null;
+                
+                        const month = Number(parts[0]);
+                        const year = Number(parts[1]);
+                
+                        if (
+                          !Number.isInteger(month) ||
+                          !Number.isInteger(year) ||
+                          month < 1 ||
+                          month > 12 ||
+                          year < 1900
+                        ) {
+                          return null;
+                        }
+                
+                        return new Date(year, month - 1, 1);
+                      })()}
+                
+                      onChange={(date: Date | null) => {
+                        updateFilter(
+                          f.name,
+                          date ? format(date, "MM/yyyy") : ""
+                        );
+                      }}
+                
+                      placeholderText={f.label?.toUpperCase() || "MM/YY"}
+                
+                      showMonthYearPicker
+                      dateFormat="MM/yyyy"
+                
+                      autoComplete="off"
+                      disabled={isDisabled}
+                
+                      className={`w-full border border-gray-300 rounded px-3 py-2 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                        isDisabled
+                          ? "bg-gray-100 opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    />
+                  </div>
                 ) : f.type === "period" ? (
                   <select
                   disabled={isDisabled}
@@ -1749,6 +2093,14 @@ const buildFilterSummary = (): string => {
                       ))}
                     </select>
                   </div>
+                  ) :f.type === "number" ? (
+                    <input
+                        type="number"
+                        value={filters[f.name] ?? ""}
+                        onChange={(e) => updateFilter(f.name, e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder={f.placeholder || ""}
+                    />
                 ): (
                   <input
                     type="text"
