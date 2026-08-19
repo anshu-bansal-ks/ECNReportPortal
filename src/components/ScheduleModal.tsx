@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { buildApiUrl } from "../lib/supabase";
 import { X, CalendarClock, Send, Users, MessageSquare } from "lucide-react";
+import { showToast } from "../lib/toast";
 
 export default function ScheduleModal({
   show,
@@ -39,7 +40,7 @@ export default function ScheduleModal({
       const email = e.trim();
       if (!email) return;
       if (!isValidEmail(email)) {
-        alert(`Invalid email: ${email}`);
+        showToast(`Invalid email: ${email}`, "warning");
         return;
       }
       if (!list.includes(email)) {
@@ -73,11 +74,11 @@ export default function ScheduleModal({
 
   const handleSubmit = async () => {
     if (emailsTo.length === 0) {
-      alert("Please enter at least one recipient in 'Send Report To'");
+      showToast("Please enter at least one recipient in 'Send Report To'.", "warning");
       return;
     }
     if (!form.frequency || !form.datetime) {
-      alert("Please fill Frequency and Schedule Date Time");
+      showToast("Please fill Frequency and Schedule Date Time.", "warning");
       return;
     }
 
@@ -88,7 +89,7 @@ export default function ScheduleModal({
       const company = localStorage.getItem("company") || companyName || "";
 
       if (!userId) {
-        alert("User ID not found");
+        showToast("User ID not found.", "error");
         return;
       }
 
@@ -185,7 +186,7 @@ export default function ScheduleModal({
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 block">Schedule Date Time</label>
               <DatePicker
                 selected={form.datetime ? new Date(form.datetime) : null}
-                onChange={(date) => {
+                onChange={(date: any) => {
                   if (!date) {
                     setForm({ ...form, datetime: "" });
                     return;
@@ -342,7 +343,7 @@ export default function ScheduleModal({
             onClick={handleSubmit}
             className="px-6 py-2.5 bg-[#4f8bff] hover:bg-[#6b9dff] text-white rounded-lg shadow-sm shadow-[#4f8bff]/30 text-sm font-medium transition-colors"
           >
-            Submit
+            Save
           </button>
         </div>
       </div>

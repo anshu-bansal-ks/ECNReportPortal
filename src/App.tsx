@@ -13,8 +13,10 @@ import { getUser, getAdmin, clearUserSession } from "./lib/auth";
 import api from "./services/api"; 
 import { REPORT_COLUMN_MAP } from "./config/reportColumns";
 import { REPORT_CONFIG } from "./config/reportConfig";
+import ToastContainer from "./components/ToastContainer";
+import { showToast } from "./lib/toast";
 
-function ReportRoute({ reports }: { reports: any[] }) {
+function ReportRoute({ reports, onLogout }: { reports: any[]; onLogout: () => void }) {
   const { key } = useParams();
   const [extraReport, setExtraReport] = useState<any>(null);
   const [fetching, setFetching] = useState(false);
@@ -76,7 +78,7 @@ function ReportRoute({ reports }: { reports: any[] }) {
     );
   }
 
-  return <ReportViewer report={finalReport} onBack={() => window.history.back()} />;
+  return <ReportViewer report={finalReport} onBack={() => window.history.back()} userEmail={user?.name || user?.username} onLogout={onLogout} />;
 }
 
 function App() {
@@ -114,7 +116,7 @@ function App() {
       // but double safety ke liye:
       navigate("/", { replace: true });
     } else {
-      alert(res.message);
+      showToast(res.message || "Login failed. Please check your credentials.", "error");
     }
   };
 
@@ -129,7 +131,9 @@ function App() {
   if (loading && user) return <div className="min-h-screen bg-[#0b0f19] p-10 text-center text-slate-400">Loading reports...</div>;
 
   return (
-    <Routes>
+    <>
+      <ToastContainer />
+      <Routes>
       {/* 🔹 PUBLIC ROUTES */}
       <Route 
         path="/login" 
@@ -167,12 +171,13 @@ function App() {
 
       <Route
         path="/report/:key"
-        element={user ? <ReportRoute reports={reports} /> : <Navigate to="/login" replace />}
+        element={user ? <ReportRoute reports={reports} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
       />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

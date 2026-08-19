@@ -1,3 +1,4 @@
+
 // src/components/ReportViewer.tsx
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -13,6 +14,8 @@ import CustomerInfo, { CustomerApiResponse } from "./CustomerInfo";
 import ItemDetailsBulkTable from "./ItemDetailsBulkTable"; 
 import { REPORT_COLUMN_MAP,FOOTER_TOTAL_CONFIG,DRILL_DOWN_LINKS } from "../config/reportColumns";
 import ScheduleModal from "./ScheduleModal";
+import { showToast } from "../lib/toast";
+import UserMenu from "./UserMenu";
 
 import {fetchCompanies,fetchVendors,fetchSalesReps,fetchSuppliers,fetchSuppliersop, fetchCustomers,
 validateCustomer,CompanyOption,VendorOption,SalesRepOption,CustomerOption,SupplierOption, SupplierOpOption,
@@ -27,9 +30,11 @@ fetchRolesReports,RolesReportsOption
 interface ReportViewerProps {
   report: Report;
   onBack: () => void;
+  userEmail?: string;
+  onLogout?: () => void;
 }
 
-export default function ReportViewer({ report, onBack }: ReportViewerProps) {
+export default function ReportViewer({ report, onBack, userEmail, onLogout }: ReportViewerProps) {
   const token = localStorage.getItem("token") || "";
   const location = useLocation();
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -149,7 +154,7 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
     }
   
     if (missingFields.length > 0) {
-      alert(`Required: Please select ${missingFields.join(" and ")}`);
+      showToast(`Required: Please select ${missingFields.join(" and ")}`, "warning");
       return false;
     }
     return true;
@@ -1128,7 +1133,7 @@ link.click();
 document.body.removeChild(link);
     
   } catch (err) {
-    alert(`${type.toUpperCase()} Export failed`);
+    showToast(`${type.toUpperCase()} export failed. Please try again.`, "error");
   } finally {
     setDownloading(false);
   }
@@ -1382,7 +1387,7 @@ const buildFilterSummary = (): string => {
               );
         
               if (hasCompanyFilter && (!filters?.company || filters.company.trim() === "")) {
-                alert("Please select Company!");
+                showToast("Please select a company first.", "warning");
                 return;
               }
                setShowSchedule(true);
@@ -1392,6 +1397,9 @@ const buildFilterSummary = (): string => {
            >
              <CalendarClock size={18} />
            </button>
+            )}
+            {userEmail && onLogout && (
+              <UserMenu userEmail={userEmail} onLogout={onLogout} />
             )}
           </div>
         </div>

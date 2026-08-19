@@ -1,8 +1,9 @@
 // components/ReportList.tsx
-import { FileText, Search, LogOut, User, AlertCircle, LayoutGrid, List, ChevronRight } from "lucide-react";
+import { FileText, Search, AlertCircle, LayoutGrid, List, ChevronRight } from "lucide-react";
 import { Report } from "../lib/supabase";
 import { useState, useMemo } from "react";
 import { REPORT_CONFIG } from "../config/reportConfig";
+import UserMenu from "./UserMenu";
 
 interface ReportListProps {
   reports: Report[];
@@ -114,17 +115,7 @@ export default function ReportList({
           </div>
 
           <div className="flex items-center space-x-3 shrink-0">
-            <div className="hidden sm:flex items-center space-x-2 bg-[#1e2739] border border-[#26304a] px-3 py-1.5 rounded-lg">
-              <User className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-medium text-slate-200">{userEmail}</span>
-            </div>
-            <button
-              onClick={onLogout}
-              className="flex items-center space-x-2 px-3 py-1.5 text-slate-300 hover:bg-[#1e2739] hover:text-slate-100 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-medium hidden sm:inline">Logout</span>
-            </button>
+            <UserMenu userEmail={userEmail} onLogout={onLogout} />
           </div>
         </div>
       </header>
