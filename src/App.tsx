@@ -56,19 +56,19 @@ function ReportRoute({ reports }: { reports: any[] }) {
   }, [key, report, user?.id]);
 
   // Loading state
-  if (fetching) return <div className="p-20 text-center">Checking hidden report settings...</div>;
+  if (fetching) return <div className="min-h-screen bg-[#0b0f19] p-20 text-center text-slate-400">Checking hidden report settings...</div>;
   
   // Final decision logic
   const finalReport = report || (extraReport !== "NOT_FOUND" ? extraReport : null);
 
   if (!finalReport && !fetching) {
     return (
-      <div className="p-20 text-center">
-        <h2 className="text-red-500 font-bold text-xl mb-4">Report Not Found</h2>
-        <p className="text-gray-600 mb-6">This report is either hidden or you don't have access.</p>
+      <div className="min-h-screen bg-[#0b0f19] p-20 text-center">
+        <h2 className="text-[#f87171] font-bold text-xl mb-4">Report Not Found</h2>
+        <p className="text-slate-400 mb-6">This report is either hidden or you don't have access.</p>
         <button 
           onClick={() => navigate("/")} 
-          className="bg-blue-600 text-white px-6 py-2 rounded"
+          className="bg-[#4f8bff] text-white px-6 py-2 rounded-lg hover:bg-[#6b9dff] transition-colors"
         >
           Back to Portal
         </button>
@@ -126,7 +126,7 @@ function App() {
   };
 
   // Loading screen sirf tab jab user logged in ho aur reports load ho rahi hon
-  if (loading && user) return <div className="p-10 text-center">Loading reports...</div>;
+  if (loading && user) return <div className="min-h-screen bg-[#0b0f19] p-10 text-center text-slate-400">Loading reports...</div>;
 
   return (
     <Routes>

@@ -1,6 +1,146 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =========================================================
+   DARK THEME — Reporting Portal
+   Slate/graphite surfaces, cool-blue accent, amber for warnings.
+   These rules override the Tailwind utility classes already
+   used throughout the app (Login, ReportList, ReportViewer,
+   App) so every screen reskins consistently without having
+   to touch every className by hand.
+   ========================================================= */
+
+:root {
+  --surface-0: #0b0f19;   /* app background */
+  --surface-1: #111827;   /* header / page */
+  --surface-2: #161d2e;   /* cards */
+  --surface-3: #1e2739;   /* raised / hover */
+  --surface-4: #263049;   /* inputs, deeper hover */
+  --border-1: #26304a;
+  --border-2: #323e5c;
+  --text-primary: #e7ebf5;
+  --text-secondary: #a7b0c3;
+  --text-muted: #6b7690;
+  --accent: #4f8bff;
+  --accent-hover: #6b9dff;
+  --accent-soft: #1c2b4d;
+  --danger: #f87171;
+  --danger-soft: #3a1a1e;
+}
+
+html, body, #root {
+  background-color: var(--surface-0);
+  color-scheme: dark;
+}
+
+body {
+  color: var(--text-primary);
+}
+
+/* ---- Backgrounds ---- */
+.bg-white,
+.bg-slate-50,
+.bg-gray-50 { background-color: var(--surface-2) !important; }
+
+.bg-gray-100,
+.bg-slate-100 { background-color: var(--surface-3) !important; }
+
+.bg-gradient-to-br.from-slate-50.to-slate-100,
+.bg-gradient-to-br.from-slate-50 {
+  background-image: linear-gradient(to bottom right, var(--surface-0), var(--surface-1)) !important;
+}
+
+/* Blue accents used as icon tiles / primary buttons keep their hue,
+   but tuned brighter for a dark background */
+.bg-blue-600 { background-color: var(--accent) !important; }
+.hover\:bg-blue-700:hover { background-color: var(--accent-hover) !important; }
+.bg-blue-100 { background-color: var(--accent-soft) !important; }
+.text-blue-600,
+.group-hover\:text-blue-600 { color: var(--accent) !important; }
+.group-hover\:bg-blue-600:hover,
+.group-hover\:bg-blue-600 { background-color: var(--accent) !important; }
+.focus\:ring-blue-500:focus { --tw-ring-color: var(--accent) !important; }
+
+/* Red / error accents */
+.bg-red-500 { background-color: var(--danger) !important; }
+.bg-red-600 { background-color: #dc2626 !important; }
+.hover\:bg-red-700:hover { background-color: #b91c1c !important; }
+.text-red-500 { color: var(--danger) !important; }
+
+/* ---- Text ---- */
+.text-gray-900 { color: var(--text-primary) !important; }
+.text-gray-800 { color: var(--text-primary) !important; }
+.text-gray-700 { color: var(--text-secondary) !important; }
+.text-gray-600 { color: var(--text-secondary) !important; }
+.text-gray-500 { color: var(--text-muted) !important; }
+.text-gray-400 { color: var(--text-muted) !important; }
+.placeholder-gray-400::placeholder { color: var(--text-muted) !important; }
+
+/* ---- Borders / dividers ---- */
+.border-gray-200,
+.border-gray-300,
+.border { border-color: var(--border-1) !important; }
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-1) !important; }
+.hover\:border-blue-500:hover { border-color: var(--accent) !important; }
+
+/* ---- Shadows: soften for dark surfaces ---- */
+.shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 8px 24px -8px rgba(0,0,0,0.65) !important;
+}
+.shadow-blue-600\/30 { box-shadow: 0 10px 25px -8px rgba(79,139,255,0.45) !important; }
+
+/* ---- Hover row / surfaces ---- */
+.hover\:bg-gray-50:hover,
+.hover\:bg-gray-100:hover { background-color: var(--surface-3) !important; }
+.bg-gray-50 { background-color: var(--surface-2) !important; }
+
+/* ---- Inputs / selects ---- */
+input, select, textarea {
+  background-color: var(--surface-4);
+  color: var(--text-primary);
+  border-color: var(--border-2);
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+input[type="text"].border-gray-300,
+input[type="password"].border-gray-300,
+select.border-gray-300 {
+  background-color: var(--surface-4) !important;
+  border-color: var(--border-2) !important;
+  color: var(--text-primary) !important;
+}
+
+/* react-select (AsyncSelect) dark shell — component ships its own inline
+   styles for most states, this covers the outer control shell used before
+   custom styles kick in */
+.react-select-container .react-select__control {
+  background-color: var(--surface-4) !important;
+  border-color: var(--border-2) !important;
+}
+.react-select-container .react-select__menu {
+  background-color: var(--surface-3) !important;
+}
+.react-select-container .react-select__single-value,
+.react-select-container .react-select__input-container {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Table (ReportViewer grid) ---- */
+table.w-full th {
+  background-color: var(--surface-3) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-1) !important;
+}
+table.w-full td { border-color: var(--border-1) !important; }
+table.w-full tbody tr:hover td { background-color: var(--surface-3) !important; }
+table.w-full tfoot td { background-color: var(--surface-3) !important; }
+
+/* Sticky bars sit on the same surface as the page so they don't flash white
+   while scrolling */
+.sticky.top-0, .sticky.bottom-0, [class*="sticky top-["] {
+  background-color: var(--surface-2);
+}
+
 /* 1. Tooti hui dates ko grid mein lane ke liye */
 .react-datepicker__month {
   margin: 0.4rem;
@@ -22,15 +162,17 @@
 
 /* 2. Header (Month/Year Dropdowns) ko sahi karne ke liye */
 .react-datepicker__header {
-  background-color: #f8fafc !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  background-color: var(--surface-3) !important;
+  border-bottom: 1px solid var(--border-1) !important;
   padding: 10px 0 !important;
 }
 .react-datepicker__month-select, 
 .react-datepicker__year-select {
   padding: 2px;
   border-radius: 4px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-2);
+  background-color: var(--surface-4);
+  color: var(--text-primary);
   font-size: 12px;
   outline: none;
 }
@@ -38,6 +180,7 @@
 .react-datepicker__month-read-view, 
 .react-datepicker__year-read-view {
   visibility: visible !important;
+  color: var(--text-primary) !important;
 }
 
 /* 3. Popup shadow aur z-index */
@@ -50,36 +193,59 @@
 }
 
 .react-datepicker {
-  border: 1px solid #cbd5e1 !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  background-color: var(--surface-2) !important;
+  border: 1px solid var(--border-1) !important;
+  box-shadow: 0 8px 24px -8px rgba(0,0,0,0.7) !important;
   font-family: sans-serif !important;
+  color: var(--text-primary) !important;
 }
+.react-datepicker__day, .react-datepicker__day-name {
+  color: var(--text-secondary) !important;
+}
+.react-datepicker__day:hover {
+  background-color: var(--surface-4) !important;
+  border-radius: 4px;
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--accent) !important;
+  color: #fff !important;
+  border-radius: 4px;
+}
+.react-datepicker__day--outside-month { color: var(--text-muted) !important; }
+.react-datepicker__navigation-icon::before { border-color: var(--text-secondary) !important; }
+.react-datepicker__triangle { display: none !important; }
 
   .custom-handsontable {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-size: 13.5px !important;
+    background-color: var(--surface-2) !important;
+    color: var(--text-primary) !important;
   }
   
   .handsontable th {
-    background: #f8fafc !important;
-    color: #374151 !important;
+    background: var(--surface-3) !important;
+    color: var(--text-secondary) !important;
     font-weight: 600 !important;
     height: 36px !important;
   }
   
   .handsontable td {
     padding: 8px 10px !important;
-    border-color: #e2e8f0 !important;
+    border-color: var(--border-1) !important;
+    background-color: var(--surface-2) !important;
+    color: var(--text-primary) !important;
   }
   
-  /* Light blue row highlight */
+  /* Row highlight tuned for dark surfaces */
   .handsontable .wtHolder tr:hover td,
   .handsontable .currentRow td {
-    background-color: #dbeafe !important;
+    background-color: var(--surface-3) !important;
   }
   
   .handsontable .htDimmed {
-    background-color: #f8fafc !important;
+    background-color: var(--surface-1) !important;
+    color: var(--text-muted) !important;
   }
   .ht_clone_to{
     z-index: 0px;
@@ -87,8 +253,8 @@
   .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #e2e8f0;
-    border-top: 4px solid #3b82f6;
+    border: 4px solid var(--border-1);
+    border-top: 4px solid var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
