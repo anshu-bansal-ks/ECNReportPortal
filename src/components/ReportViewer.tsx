@@ -1,4 +1,3 @@
-
 // src/components/ReportViewer.tsx
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -6,10 +5,9 @@ import { format } from "date-fns"; // Date formatting ke liye
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom"; 
 import AsyncSelect from "react-select/async";
-import { ArrowLeft, FileSpreadsheet, FileText, RefreshCw } from "lucide-react";
+import { ArrowLeft, Download, FileText, RefreshCw, CalendarClock } from "lucide-react";
 import axios from "axios";
 import { Report, buildApiUrl } from "../lib/supabase";
-import ReportSubtitle from "./ReportSubtitle";
 import { useTableSorting } from "../hooks/useTableSorting";
 import CustomerInfo, { CustomerApiResponse } from "./CustomerInfo";
 import ItemDetailsBulkTable from "./ItemDetailsBulkTable"; 
@@ -93,6 +91,27 @@ export default function ReportViewer({ report, onBack }: ReportViewerProps) {
   const [autoRun, setAutoRun] = useState(false); 
   const [downloading, setDownloading] = useState(false);
   const [grandTotals, setGrandTotals] = useState<Record<string, number>>({});
+  const stickyHeaderRef = useRef<HTMLElement>(null);
+  const [stickyTopOffset, setStickyTopOffset] = useState(80);
+
+  useEffect(() => {
+    const el = stickyHeaderRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      setStickyTopOffset(el.getBoundingClientRect().height);
+    };
+
+    measure();
+
+    // Re-measure whenever the header's own size changes (e.g. Excel/Schedule
+    // buttons appearing once `report` data finishes loading after a hard
+    // refresh) rather than only on window resize.
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [report]);
 
   const validateFilters = () => {
     
@@ -1295,36 +1314,53 @@ const buildFilterSummary = (): string => {
 
   if (!report) return null;
 
+  const asyncSelectDarkStyles = {
+    control: (base: any, state: any) => ({
+      ...base,
+      backgroundColor: "#1e2739",
+      borderColor: state.isFocused ? "#4f8bff" : "#323e5c",
+      boxShadow: state.isFocused ? "0 0 0 2px rgba(79,139,255,0.35)" : "none",
+      minHeight: "38px",
+      "&:hover": { borderColor: "#4f8bff" },
+    }),
+    singleValue: (base: any) => ({ ...base, color: "#e7ebf5" }),
+    input: (base: any) => ({ ...base, color: "#e7ebf5" }),
+    placeholder: (base: any) => ({ ...base, color: "#6b7690" }),
+    menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+    menu: (base: any) => ({ ...base, zIndex: 9999, backgroundColor: "#1e2739", border: "1px solid #26304a" }),
+    option: (base: any, state: any) => ({
+      ...base,
+      backgroundColor: state.isSelected ? "#4f8bff" : state.isFocused ? "#263049" : "#1e2739",
+      color: state.isSelected ? "#fff" : "#e7ebf5",
+      cursor: "pointer",
+    }),
+    indicatorSeparator: (base: any) => ({ ...base, backgroundColor: "#323e5c" }),
+    dropdownIndicator: (base: any) => ({ ...base, color: "#6b7690" }),
+    clearIndicator: (base: any) => ({ ...base, color: "#6b7690" }),
+    noOptionsMessage: (base: any) => ({ ...base, backgroundColor: "#1e2739", color: "#6b7690" }),
+    loadingMessage: (base: any) => ({ ...base, backgroundColor: "#1e2739", color: "#6b7690" }),
+  };
+
   return (
     <div className="max-h-screen overflow-auto flex flex-col">
-      <header className="sticky top-0 z-50 h-[80px] bg-white border-b">
+      <header ref={stickyHeaderRef} className="sticky top-0 z-50 h-[80px] bg-[#111827]/95 backdrop-blur border-b border-[#26304a]">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <button onClick={onBack} 
-          className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
+          className="flex items-center gap-2 text-slate-300 hover:text-slate-100 transition-colors">
             <ArrowLeft size={18} /> Back
           </button>
           <div className="text-center">
-            <h1 className="text-xl font-bold">{report.name}</h1>
-            <ReportSubtitle
-              report={report}
-              filters={appliedFilters}
-              companies={companies}
-              dropdownOptions={{
-                vendor: selectedVendor ? [selectedVendor] : [],
-                salesrep: selectedSalesRep ? [selectedSalesRep] : [],
-                customer: selectedCustomer ? [selectedCustomer] : [],
-              }}
-            />
+            <h1 className="text-xl font-bold text-slate-100">{report.name}</h1>
           </div>
           <div className="flex gap-3">
             {report.supports_excel_export && (
               <button
                 onClick={() => handleExport("excel")}
                 disabled={downloading}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 shadow-sm"
+                title={downloading ? "Downloading..." : "Download Excel"}
+                className="bg-[#1e2739] hover:bg-[#263049] border border-[#323e5c] text-slate-200 p-2.5 rounded-lg flex items-center justify-center disabled:opacity-60 transition-colors"
               >
-                <FileSpreadsheet size={16} /> 
-                {downloading ? "Downloading..." : "Excel"}
+                <Download size={18} className={downloading ? "animate-pulse" : ""} />
               </button>
             )}
             {report.supports_pdf_export && (
@@ -1351,24 +1387,28 @@ const buildFilterSummary = (): string => {
               }
                setShowSchedule(true);
              }}
-             className="bg-black text-white px-5 py-2 rounded hover:bg-gray-800"
+             title="Schedule Report"
+             className="bg-[#1e2739] hover:bg-[#263049] border border-[#323e5c] text-slate-200 p-2.5 rounded-lg flex items-center justify-center transition-colors"
            >
-             Schedule
+             <CalendarClock size={18} />
            </button>
             )}
           </div>
         </div>
       </header>
-      <main>
-        <div className="bg-white rounded-xl shadow p-3 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-lg">Filters</h2>
+      <main className="px-6 pt-6">
+        <div className="bg-[#161d2e] border border-[#26304a] rounded-2xl shadow-xl shadow-black/30 p-5 mb-6">
+          <div className="flex justify-between items-center mb-5 pb-4 border-b border-[#20293e]">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-[#4f8bff] rounded-full"></span>
+              <h2 className="font-semibold text-base text-slate-100 tracking-tight">Filters</h2>
+            </div>
             <button
               onClick={handleApplyFilters}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded flex items-center gap-2 shadow-sm disabled:opacity-60"
+              className="bg-[#4f8bff] hover:bg-[#6b9dff] text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm shadow-[#4f8bff]/30 disabled:opacity-50 transition-colors"
             >
-              <RefreshCw size={16} className={`${loading ? "animate-spin" : ""}`} />
+              <RefreshCw size={15} className={`${loading ? "animate-spin" : ""}`} />
               Apply Filters
             </button>
           </div>
@@ -1395,7 +1435,7 @@ const buildFilterSummary = (): string => {
               <div key={f.name} className="flex flex-col">
                 <div className="min-h-[24px]">
                 {shouldShowLabel && f.label && (
-                    <label className="block text-xs font-semibold text-gray-600 mb-1 tracking-wider">
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1 tracking-wider uppercase">
                         {f.label}
                     </label>
                 )}
@@ -1437,10 +1477,7 @@ const buildFilterSummary = (): string => {
                     defaultOptions={false}
                     isClearable
                     menuPortalTarget={document.body}
-                    styles={{ 
-                      menuPortal: base => ({ ...base, zIndex: 9999 }),
-                      menu: base => ({ ...base, zIndex: 9999 }) 
-                    }}
+                    styles={asyncSelectDarkStyles}
                     menuPosition={'fixed'}
                     isDisabled={!filters.company}
                     value={selectedVendor}
@@ -1522,10 +1559,7 @@ const buildFilterSummary = (): string => {
                       value={selectedCustomer}
                       menuPortalTarget={document.body} 
                       menuPosition={'fixed'}
-                      styles={{ 
-                        menuPortal: base => ({ ...base, zIndex: 9999 }),
-                        menu: base => ({ ...base, zIndex: 9999 }) 
-                      }}
+                      styles={asyncSelectDarkStyles}
                       loadOptions={(input) => fetchCustomers(token, filters.company, input)}
                       onChange={(v: CustomerOption | null) => {
                         setSelectedCustomer(v);
@@ -2155,16 +2189,16 @@ const buildFilterSummary = (): string => {
               </div>
             ) : (
               <div className="flex-1">
-              <table className="w-full table-fixed border-collapse text-xs">
-              <thead className="bg-gray-100 sticky top-[80px] z-40">
+              <table className="w-full table-fixed text-xs" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
+              <thead className="sticky z-40" style={{ top: stickyTopOffset }}>
                 <tr>
                   {/* {modifiedColumns.map((c) => ( */}
-                  {visibleColumns.map((c) => (
+                  {visibleColumns.map((c, idx) => (
                     <th
-                      key={c.key}
+                      key={`${c.key}-${idx}`}
                       style={{ width: c.width }}
                       onClick={() => handleSort(c.key)}
-                      className={`px-3 py-3 text-xs font-semibold text-gray-700 border-b bg-gray-100 cursor-pointer select-none ${                
+                      className={`px-3 py-3 text-xs font-semibold text-slate-300 cursor-pointer select-none ${                
                         (c.type === "currency" || c.type === "percentage" || c.type === "large_integer" || c.type === "decimal") 
                           ? "text-right" 
                           : "text-left"
@@ -2184,9 +2218,9 @@ const buildFilterSummary = (): string => {
                 {sortedData.map((row, i) => (
                   <tr key={i} className="hover:bg-gray-50 transition-colors">
                     {/* {modifiedColumns.map((c) => ( */}
-                    {visibleColumns.map((c) => (
+                    {visibleColumns.map((c, idx) => (
                       <td
-                        key={c.key}
+                        key={`${c.key}-${idx}`}
                         style={{ width: c.width }}
                         
                         className={`px-3 py-2.5 text-gray-900 border-b  ${
@@ -2209,7 +2243,7 @@ const buildFilterSummary = (): string => {
               {totalColumns.length > 0 && (
                 <tfoot className="bg-gray-100 font-semibold border-t sticky bottom-0 z-10">
                   <tr>
-                    {visibleColumns.map((col:any) => {
+                    {visibleColumns.map((col:any, idx: number) => {
                       const isLabelColumn = col.key === footerConfig.labelColumn;
 
                       // API Total ko preference do, warna UI Total use karo
@@ -2220,7 +2254,7 @@ const buildFilterSummary = (): string => {
 
                       return (
                         <td
-                          key={col.key}
+                          key={`${col.key}-${idx}`}
                           className={`px-3 py-2 font-semibold ${
                             col.type === "currency" ||
                             col.type === "number" ||

@@ -2838,7 +2838,6 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "rep", label: "Rep", type: "text", width: "120px" },
     { key: "customer_id", label: "Customer Id", type: "text", width: "90px" },
     { key: "customer_name", label: "Customer Name", type: "text", width: "120px" },
-    { key: "rep", label: "Rep", type: "text", width: "100px" },
     { key: "mon1", label: "Month 1", type: "number", width: "50px" },
     { key: "mon2", label: "Month 2", type: "number", width: "50px" },
     { key: "mon3", label: "Month 3", type: "number", width: "50px" },

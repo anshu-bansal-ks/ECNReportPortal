@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import { buildApiUrl } from "../lib/supabase";
+import { X, CalendarClock, Send, Users, MessageSquare } from "lucide-react";
 
 export default function ScheduleModal({
   show,
@@ -128,18 +129,27 @@ export default function ScheduleModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-[680px] max-h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-[#161d2e] border border-[#26304a] w-full max-w-[680px] max-h-[92vh] rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Email Schedule Form</h2>
-          <button onClick={onClose} className="text-3xl text-gray-400 hover:text-black">×</button>
+        <div className="px-6 py-4 border-b border-[#26304a] flex justify-between items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-[#1c2b4d] rounded-lg flex items-center justify-center">
+              <CalendarClock size={18} className="text-[#4f8bff]" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-100">Email Schedule Form</h2>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-200 transition-colors">
+            <X size={22} />
+          </button>
         </div>
 
         {message && (
-          <div className={`mx-6 mt-4 px-4 py-2 rounded-lg text-sm ${
-            isError ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+          <div className={`mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium border ${
+            isError
+              ? "bg-[#3a1a1e] text-[#f87171] border-[#5c2a2f]"
+              : "bg-[#12301f] text-[#4ade80] border-[#1f4a30]"
           }`}>
             {message}
           </div>
@@ -147,19 +157,19 @@ export default function ScheduleModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          
+
           {/* Report Info */}
-          <div className="text-sm space-y-1">
-            <div><b>Report Name:</b> {reportName}</div>
-            <div><b>Company Name:</b> {companyName}</div>
+          <div className="bg-[#111827] border border-[#26304a] rounded-xl px-4 py-3 text-sm space-y-1">
+            <div className="text-slate-300"><span className="text-slate-500 font-medium">Report Name:</span> <span className="text-slate-100 font-medium">{reportName}</span></div>
+            <div className="text-slate-300"><span className="text-slate-500 font-medium">Company Name:</span> <span className="text-slate-100 font-medium">{companyName}</span></div>
           </div>
 
           {/* Frequency + Date Time */}
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Frequency</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 block">Frequency</label>
               <select
-                className="border border-gray-300 w-full h-[38px] px-3 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                className="border border-[#323e5c] bg-[#1e2739] text-slate-100 w-full h-[38px] px-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8bff] focus:border-transparent"
                 value={form.frequency}
                 onChange={(e) => setForm({ ...form, frequency: e.target.value })}
               >
@@ -172,7 +182,7 @@ export default function ScheduleModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Schedule Date Time</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 block">Schedule Date Time</label>
               <DatePicker
                 selected={form.datetime ? new Date(form.datetime) : null}
                 onChange={(date) => {
@@ -198,7 +208,7 @@ export default function ScheduleModal({
                 dateFormat="yyyy/MM/dd HH:mm"
                 placeholderText="Click Here..."
                 isClearable
-                className="w-full h-[38px] px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                className="w-full h-[38px] px-3 bg-[#1e2739] border border-[#323e5c] text-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8bff] focus:border-transparent"
                 wrapperClassName="w-full"
                 popperClassName="custom-popper"
               />
@@ -207,19 +217,19 @@ export default function ScheduleModal({
 
           {/* Send Report To */}
           <div>
-            <label className="text-sm font-medium mb-1.5 flex items-center gap-1">
-              Send Report To <span className="text-red-500">*</span>
+            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+              <Send size={12} /> Send Report To <span className="text-[#f87171]">*</span>
             </label>
-            <div className="flex flex-wrap border border-gray-300 p-1 min-h-[38px] rounded-lg bg-white">
+            <div className="flex flex-wrap border border-[#323e5c] p-1 min-h-[38px] rounded-lg bg-[#1e2739] focus-within:ring-2 focus-within:ring-[#4f8bff]">
               {emailsTo.map((email, index) => (
                 <div
                   key={index}
-                  className="bg-gray-200 text-sm px-3 py-1 rounded flex items-center mr-2 mb-1"
+                  className="bg-[#263049] border border-[#3a4664] text-slate-200 text-sm px-3 py-1 rounded-full flex items-center mr-2 mb-1"
                 >
                   <span>{email}</span>
                   <button
                     onClick={() => setEmailsTo((prev) => prev.filter((_, i) => i !== index))}
-                    className="ml-2 text-gray-500 hover:text-red-600 font-medium"
+                    className="ml-2 text-slate-400 hover:text-[#f87171] font-medium"
                   >
                    ✕
                   </button>
@@ -228,7 +238,7 @@ export default function ScheduleModal({
               <input
                 type="text"
                 placeholder="Add recipients (separate with comma or Enter)"
-                className="flex-1 p-1 outline-none min-w-[160px] bg-transparent text-sm"
+                className="flex-1 p-1 outline-none min-w-[160px] bg-transparent text-sm text-slate-100 placeholder-slate-500"
                 value={inputTo}
                 onChange={(e) => setInputTo(e.target.value)}
                 onBlur={() => addEmail(inputTo, emailsTo, setEmailsTo, setInputTo)}
@@ -245,17 +255,19 @@ export default function ScheduleModal({
           {/* CC + Email Subject */}
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">CC</label>
-              <div className="flex flex-wrap border border-gray-300 p-1 min-h-[38px] rounded-lg bg-white">
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                <Users size={12} /> CC
+              </label>
+              <div className="flex flex-wrap border border-[#323e5c] p-1 min-h-[38px] rounded-lg bg-[#1e2739] focus-within:ring-2 focus-within:ring-[#4f8bff]">
                 {emailsCc.map((email, index) => (
                   <div
                     key={index}
-                    className="bg-gray-200 text-sm px-3 py-1 rounded flex items-center mr-2 mb-1"
+                    className="bg-[#263049] border border-[#3a4664] text-slate-200 text-sm px-3 py-1 rounded-full flex items-center mr-2 mb-1"
                   >
                     <span>{email}</span>
                     <button
                       onClick={() => setEmailsCc((prev) => prev.filter((_, i) => i !== index))}
-                      className="ml-2 text-gray-500 hover:text-red-600"
+                      className="ml-2 text-slate-400 hover:text-[#f87171]"
                     >
                       ✕
                     </button>
@@ -264,7 +276,7 @@ export default function ScheduleModal({
                 <input
                   type="text"
                   placeholder="Add CC (separate with comma or Enter)"
-                  className="flex-1 p-1 outline-none min-w-[140px] bg-transparent text-sm"
+                  className="flex-1 p-1 outline-none min-w-[140px] bg-transparent text-sm text-slate-100 placeholder-slate-500"
                   value={inputCc}
                   onChange={(e) => setInputCc(e.target.value)}
                   onBlur={() => addEmail(inputCc, emailsCc, setEmailsCc, setInputCc)}
@@ -279,10 +291,10 @@ export default function ScheduleModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Email Subject</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 block">Email Subject</label>
               <input
                 type="text"
-                className="border border-gray-300 w-full h-[38px] px-3 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                className="border border-[#323e5c] bg-[#1e2739] text-slate-100 w-full h-[38px] px-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8bff] focus:border-transparent placeholder-slate-500"
                 placeholder="Enter email subject..."
                 value={form.subject}
                 onChange={(e) => setForm({ ...form, subject: e.target.value })}
@@ -291,22 +303,26 @@ export default function ScheduleModal({
           </div>
 
           {/* Checkbox */}
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="checkbox"
-              id="outputAsBody"
-              checked={form.outputAsBody}
-              onChange={(e) => setForm({ ...form, outputAsBody: e.target.checked })}
-              className="w-4 h-4 accent-black cursor-pointer"
-            />
-            <label htmlFor="outputAsBody" className="text-sm cursor-pointer">Output As Email Body</label>
+          <div className="flex items-center gap-2 pt-1 border-t border-[#20293e]">
+            <label className="flex items-center gap-2 cursor-pointer pt-3 select-none">
+              <input
+                type="checkbox"
+                id="outputAsBody"
+                checked={form.outputAsBody}
+                onChange={(e) => setForm({ ...form, outputAsBody: e.target.checked })}
+                className="w-4 h-4 accent-[#4f8bff] cursor-pointer"
+              />
+              <span className="text-sm text-slate-300">Output As Email Body</span>
+            </label>
           </div>
 
           {/* Body */}
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Body</label>
+            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+              <MessageSquare size={12} /> Body
+            </label>
             <textarea
-              className="border border-gray-300 p-3 w-full rounded-lg min-h-[110px] text-sm"
+              className="border border-[#323e5c] bg-[#1e2739] text-slate-100 p-3 w-full rounded-lg min-h-[110px] text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8bff] focus:border-transparent placeholder-slate-500"
               placeholder="Write additional message here (optional)..."
               value={form.body}
               onChange={(e) => setForm({ ...form, body: e.target.value })}
@@ -315,16 +331,16 @@ export default function ScheduleModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-5 border-t flex justify-end gap-3">
+        <div className="px-6 py-5 border-t border-[#26304a] flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+            className="px-6 py-2.5 border border-[#323e5c] text-slate-300 rounded-lg hover:bg-[#1e2739] hover:text-slate-100 text-sm font-medium transition-colors"
           >
             Close
           </button>
           <button
             onClick={handleSubmit}
-            className="px-6 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 text-sm font-medium"
+            className="px-6 py-2.5 bg-[#4f8bff] hover:bg-[#6b9dff] text-white rounded-lg shadow-sm shadow-[#4f8bff]/30 text-sm font-medium transition-colors"
           >
             Submit
           </button>
