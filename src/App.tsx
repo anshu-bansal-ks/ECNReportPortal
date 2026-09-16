@@ -23,15 +23,12 @@ function ReportRoute({ reports, onLogout }: { reports: any[]; onLogout: () => vo
   const user = getUser();
   const navigate = useNavigate();
 
-  // 1. Pehle normal list mein dhoondo
   const report = reports.find((r) => r.key.toLowerCase() === key?.toLowerCase());
 
   useEffect(() => {
-    // 2. Agar report list mein nahi mili (Hidden), toh API se keyword search karo
     if (!report && key && user?.id) {
       setFetching(true);
-      // Backend se exact report mangwao keyword use karke
-      api.get(`/api/ReportIndex/${user.id}?keyword=${key}`)
+      api.get(`/ReportIndex/${user.id}?keyword=${key}`)
         .then((res: any) => {
           const found = res.data.find((r: any) => r.url.toLowerCase().trim() === key.toLowerCase());
           if (found) {
@@ -57,10 +54,8 @@ function ReportRoute({ reports, onLogout }: { reports: any[]; onLogout: () => vo
     }
   }, [key, report, user?.id]);
 
-  // Loading state
   if (fetching) return <div className="min-h-screen bg-[#0b0f19] p-20 text-center text-slate-400">Checking hidden report settings...</div>;
   
-  // Final decision logic
   const finalReport = report || (extraReport !== "NOT_FOUND" ? extraReport : null);
 
   if (!finalReport && !fetching) {
@@ -90,7 +85,6 @@ function App() {
   const { reports, loading, error } = useReports(user?.id || null);
   const navigate = useNavigate();
 
-  // 1. Session Restore (Hard Refresh Fix)
   useEffect(() => {
     const storedUser = getUser();
     const storedAdmin = getAdmin();
@@ -103,7 +97,6 @@ function App() {
     
     if (storedUser && userToken) {
       setUser(storedUser);
-      // 🔥 Headers ko restore karein refresh ke baad
       api.defaults.headers.common["Authorization"] = `Bearer ${userToken}`;
     }
   }, []);
@@ -112,8 +105,6 @@ function App() {
     const res = await signIn(username, password);
     if (res.success) {
       setUser(res);
-      // navigate call ki zaroorat nahi hai agar logic niche Navigate component me hai, 
-      // but double safety ke liye:
       navigate("/", { replace: true });
     } else {
       showToast(res.message || "Login failed. Please check your credentials.", "error");
@@ -127,14 +118,12 @@ function App() {
     navigate("/login", { replace: true });
   };
 
-  // Loading screen sirf tab jab user logged in ho aur reports load ho rahi hon
   if (loading && user) return <div className="min-h-screen bg-[#0b0f19] p-10 text-center text-slate-400">Loading reports...</div>;
 
   return (
     <>
       <ToastContainer />
       <Routes>
-      {/* 🔹 PUBLIC ROUTES */}
       <Route 
         path="/login" 
         element={user ? <Navigate to="/" replace /> : <Login onLogin={handleUserLogin} />} 
@@ -143,14 +132,10 @@ function App() {
         path="/admin/login" 
         element={admin ? <Navigate to="/admin/dashboard" replace /> : <AdminLogin />} 
       />
-
-      {/* 🔹 ADMIN AREA (Protected) */}
       <Route 
         path="/admin/dashboard/*" 
         element={admin ? <AdminDashboard onLogout={handleLogout} /> : <Navigate to="/admin/login" replace />} 
       />
-
-      {/* 🔹 USER AREA (Protected) */}
       <Route
         path="/"
         element={
@@ -173,8 +158,6 @@ function App() {
         path="/report/:key"
         element={user ? <ReportRoute reports={reports} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
       />
-
-      {/* Fallback */}
       <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
       </Routes>
     </>

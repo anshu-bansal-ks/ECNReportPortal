@@ -58,10 +58,6 @@ export const DRILL_DOWN_LINKS: Record<string, any> = {
   recentshipments: {targetUrl: "/report/customerinfo",queryParam: "custId",
   keyFields: ["customer_id", "customerid"]
   },
-  salehistoryrepcomparision: {targetUrl: "/report/saleshistory_for_rep_by_customer",queryParam: "repId",
-  keyFields: ["salesrep_id", "salesrepid","rep_id","repid"]
-  
-  },
   salesbylocbycustomer: {targetUrl: "/report/customerinfo",queryParam: "custId",
   keyFields: ["customer_id", "customerid"]
   },
@@ -73,6 +69,14 @@ export const DRILL_DOWN_LINKS: Record<string, any> = {
   },
   unapproved_order: {targetUrl: "/report/customerinfo",queryParam: "custId",
   keyFields: ["customer_id", "customerid"]
+  },
+  salehistoryrepcomparision: {targetUrl: "/report/saleshistory_for_rep_by_customer",queryParam: "repId",
+  keyFields: ["salesrep_id", "salesrepid","rep_id","repid"],
+  carryFilters: [
+    "timeperiod",
+    "fromdate",
+    "tilldate"
+  ]
   },
   saleshistory_for_rep: {targetUrl: "/report/saleshistory_for_rep_by_customer",queryParam: "repId",
   keyFields: ["salesrep_id", "salesrepid","rep_id","repid"],
@@ -107,6 +111,14 @@ export const DRILL_DOWN_LINKS: Record<string, any> = {
   ]
 },
 promo_saleshistory_for_rep_with_profit: {targetUrl: "/report/saleshistory_for_rep_by_customer",queryParam: "repId",
+keyFields: ["salesrep_id", "salesrepid","rep_id","repid"],
+carryFilters: [
+  "timeperiod",
+  "fromdate",
+  "tilldate"
+]
+},
+shows_report_saleshistory_for_rep_with_profit: {targetUrl: "/report/saleshistory_for_rep_by_customer",queryParam: "repId",
 keyFields: ["salesrep_id", "salesrepid","rep_id","repid"],
 carryFilters: [
   "timeperiod",
@@ -289,6 +301,9 @@ export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelC
   invoicedsalescustomertotals: {enabled: false,labelColumn: "rep",
   totalColumns: ["sales"]
   },
+  customertotals: {enabled: false,labelColumn: "customer_name",
+  totalColumns: ["showtot"]
+  },
   invoicedsalescustomertotalswithfreightbreakdown: {enabled: false,labelColumn: "bill2_name",
   totalColumns: ["product_sales","freight","total"]
   },
@@ -394,6 +409,9 @@ export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelC
   saleshistory_for_customer_item: {enabled: false,labelColumn: "item_desc",
   totalColumns: ["qty","SALES"]
   },
+  salesbyitemforcustomerqty: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty"]
+  },
   saleshistory_for_customer_pct: {enabled: false,labelColumn: "bill2_name",
   totalColumns: ["qty","SALES","gross_profit","profit_percent"]
   },
@@ -404,6 +422,9 @@ export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelC
   totalColumns: ["qty","SALES"]
   },
   saleshistory_for_item_prefix_item_totals: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty","SALES"]
+  },
+  saleshistory_for_item_prefix: {enabled: false,labelColumn: "item_desc",
   totalColumns: ["qty","SALES"]
   },
   saleshistory_for_rep: {enabled: false,labelColumn: "Rep",
@@ -541,6 +562,9 @@ export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelC
   salesbycustomerwithprofit: {enabled: false,labelColumn: "rep",
   totalColumns: ["SALES","COST","gross_profit","profit_percent"]
   },
+  saleshistory_by_vendor_details: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["SALES","gross_profit","profit_percent"]
+  },
   saleshistory_by_item_class: {enabled: false,labelColumn: "item_desc",
   totalColumns: ["UNITS","SALES"]
   },
@@ -580,20 +604,57 @@ export const FOOTER_TOTAL_CONFIG: Record<string, {totalColumns: string[]; labelC
   shows_report_saleshistory_for_customer_item: {enabled: false,labelColumn: "item_desc",
   totalColumns: ["qty","SALES"]
   },
+  shows_report_saleshistory_for_customer_item_with_profit: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty","SALES","COST","gross_profit","profit_percent"]
+  },
+  shows_report_saleshistory_for_customer_with_profit: {enabled: false,labelColumn: "rep",
+  totalColumns: ["qty","SALES","COST","gross_profit","profit_percent","SHOW_SALES","show_profit","NON_SHOW_SALES","non_show_profit"]
+  },
+  shows_report_saleshistory_for_rep: {enabled: false,labelColumn: "Rep",
+  totalColumns: ["SALES","SHOW_SALES","NON_SHOW_SALES"]
+  },
+  shows_report_saleshistory_for_rep_with_profit: {enabled: false,labelColumn: "Rep",
+  totalColumns: ["qty","SALES","COST","gross_profit","profit_percent","SHOW_SALES","show_profit","NON_SHOW_SALES","non_show_profit"]
+  },
+  showsreportinvoicedsalesbyitem: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty","SALES"]
+  },
+  showsreportinvoicedsalesbyitemwithprofit: {enabled: false,labelColumn: "item_desc",
+  totalColumns: ["qty","SALES","COST","gross_profit","profit_percent"]
+  },
+  fiveyearsalesbycustomer: {enabled: false,labelColumn: "terms_desc",
+  totalColumns: ["year5","year4","year3","year2","year1","year0"]
+  },
+  fiveyearsalesforgroupcode: {enabled: false,labelColumn: "terms_desc",
+  totalColumns: ["year5","year4","year3","year2","year1","year0"]
+  },
+  fiveyearsalesreportincludeprofit: {enabled: false,labelColumn: "terms_desc",
+  totalColumns: ["year5","year4","year3","year2","year1","year0"]
+  },
+  fiveyearsalesreportytd: {enabled: false,labelColumn: "terms_desc",
+  totalColumns: ["year5","year4","year3","year2","year1","year0"]
+  },
+  fiveyearsalesytdincludingprofit: {enabled: false,labelColumn: "terms_desc",
+  totalColumns: ["year5","year4","year3","year2","year1","year0"]
+  },
+  executivevendorsummary: {enabled: false,labelColumn: "supplier_name",
+  totalColumns: ["NJ_Sales","NJ_Inv_value","NJ_Open_Po","FL_Sales","FL_Inv_value","FL_Open_Po","CA_Sales","CA_Inv_value","CA_Open_Po","Total_Sales","Total_Inv_value","Total_Open_Po"]
+  },
 
 
   
 };
+
 export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
   APDetails: [
-    { key: "invoice_date", label: "Invoice Date", type: "date", width: "158px" },
-    { key: "invoice_no", label: "Invoice No", type: "integer", width: "200px" },
-    { key: "po_no", label: "PO No", type: "text", width: "100px" },
-    { key: "Current", label: "Current", type: "currency", width: "100px" },
-    { key: "Over30", label: "OVER 30", type: "currency", width: "100px" },
-    { key: "Over60", label: "OVER 60", type: "currency" , width: "100px"},
-    { key: "Over90", label: "OVER 90", type: "currency" , width: "100px"},
-    { key: "Total", label: "Amount Due", type: "currency", width: "100px" }
+    { key: "invoice_date", label: "Invoice Date", type: "date" },
+    { key: "invoice_no", label: "Invoice No", type: "integer" },
+    { key: "po_no", label: "PO No", type: "text" },
+    { key: "Current", label: "Current", type: "currency" },
+    { key: "Over30", label: "OVER 30", type: "currency" },
+    { key: "Over60", label: "OVER 60", type: "currency" },
+    { key: "Over90", label: "OVER 90", type: "currency" },
+    { key: "Total", label: "Amount Due", type: "currency" }
   ],
   customertotals: [
     { key: "customer_id", label: "Customer ID", type: "integer" },
@@ -623,46 +684,46 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "PmtHist", label: "Pmts Less Sls", type: "currency" }
   ], 
   thirteenmonthcustomersalesforvendor: [
-    { key: "supplier_id", label: "Supplier Id", type: "text", width: "82px" },
-    { key: "supplier_name", label: "Supplier Name", type: "text", width: "120px" },
-    { key: "customer_id", label: "Customer Id", type: "text", width: "90px" },
-    { key: "customer_name", label: "Customer Name", type: "text", width: "120px" },
-    { key: "rep", label: "Rep", type: "text", width: "100px" },
-    { key: "mon1", label: "Month 1", type: "number", width: "50px" },
-    { key: "mon2", label: "Month 2", type: "number", width: "50px" },
-    { key: "mon3", label: "Month 3", type: "number", width: "50px" },
-    { key: "mon4", label: "Month 4", type: "number", width: "50px" },
-    { key: "mon5",  label: "Month 5", type: "number", width: "50px" },
-    { key: "mon6",  label: "Month 6", type: "number", width: "50px" },
-    { key: "mon7",  label: "Month 7", type: "number", width: "50px" },
-    { key: "mon8",  label: "Month 8", type: "number", width: "50px" },
-    { key: "mon9",  label: "Month 9", type: "number", width: "50px" },
-    { key: "mon10", label: "Month 10", type: "number", width: "50px" },
-    { key: "mon11", label: "Month 11", type: "number", width: "50px" },
-    { key: "mon12", label: "Month 12", type: "number", width: "50px" },
-    { key: "mon13", label: "Month 13", type: "number", width: "50px" },
-    { key: "total", label: "Total", type: "number", width: "50px" },
+    { key: "supplier_id", label: "Supplier Id", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "customer_id", label: "Customer Id", type: "text" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "mon1", label: "Month 1", type: "number" },
+    { key: "mon2", label: "Month 2", type: "number" },
+    { key: "mon3", label: "Month 3", type: "number" },
+    { key: "mon4", label: "Month 4", type: "number" },
+    { key: "mon5",  label: "Month 5", type: "number" },
+    { key: "mon6",  label: "Month 6", type: "number" },
+    { key: "mon7",  label: "Month 7", type: "number" },
+    { key: "mon8",  label: "Month 8", type: "number" },
+    { key: "mon9",  label: "Month 9", type: "number" },
+    { key: "mon10", label: "Month 10", type: "number" },
+    { key: "mon11", label: "Month 11", type: "number" },
+    { key: "mon12", label: "Month 12", type: "number" },
+    { key: "mon13", label: "Month 13", type: "number" },
+    { key: "total", label: "Total", type: "number" },
   ],
   openpo: [
-    { key: "location_id", label: "Loc Id", type: "number", width: "65px" },
-    { key: "location_name", label: "Loc Name", type: "text", width: "100px" },
-    { key: "order_date", label: "Order Date", type: "datetime", width: "100px" },
-    { key: "date_due", label: "Due Date", type: "date", width: "88px" },
-    { key: "po_no", label: "Po#", type: "text", width: "90px" },
-    { key: "external_po_no", label: "External Po", type: "text", width: "87px" },
-    { key: "supplier_id", label: "Supplier Id", type: "number", width: "85px" },
-    { key: "supplier_name", label: "Supplier Name", type: "text", width: "106px" },
-    { key: "item_id", label: "Item Id", type: "text", width: "95px" },
-    { key: "supplier_part_no", label: "Supplier Part#", type: "text", width: "106px" },
-    { key: "item_desc", label: "Description", type: "text", width: "100px" },
-    { key: "qty_ordered", label: "Qty Ordered", type: "number", width: "80px" },
-    { key: "qty_received", label: "Qty Received", type: "number", width: "80px" },
-    { key: "qty_remaining", label: "Qty Remaining", type: "number", width: "80px" },
+    { key: "location_id", label: "Loc Id", type: "number" },
+    { key: "location_name", label: "Loc Name", type: "text" },
+    { key: "order_date", label: "Order Date", type: "datetime" },
+    { key: "date_due", label: "Due Date", type: "date" },
+    { key: "po_no", label: "Po#", type: "text" },
+    { key: "external_po_no", label: "External Po", type: "text" },
+    { key: "supplier_id", label: "Supplier Id", type: "number" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "supplier_part_no", label: "Supplier Part#", type: "text" },
+    { key: "item_desc", label: "Description", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "number" },
+    { key: "qty_received", label: "Qty Received", type: "number" },
+    { key: "qty_remaining", label: "Qty Remaining", type: "number" },
   ],
   binchangelocation: [
     { key: "item_id", label: "Item Id",type:"text" },
     { key: "item_desc", label: "Item Description",type:"text" },
-    { key: "stockable", label: "Stockable", showIf: { stockable: "true" } ,type:"text"},
+    { key: "stockable", label: "Stockable", showIf: { stockable: "true"} ,type:"text"},
     { key: "qty_on_hand", label: "Qty On Hand",type:"number" },
     { key: "primary_bin", label: "Primary Bin",type:"number" },
     { key: "bin", label: "Bin" ,type:"text"}
@@ -680,55 +741,55 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "profit_percent", label: "Profit Percent", type: "percentage" },
   ],
   agingreportsummary: [
-    { key: "customer_id", label: "Customer Id", type: "integer", width: "158px" },
-    { key: "customer_name", label: "Customer Name", type: "text", width: "200px" },
-    { key: "terms_desc", label: "Terms Description", type: "text", width: "100px" },
-    { key: "rep", label: "Rep", type: "text", width: "100px" },
-    { key: "Current", label: "Current", type: "currency", width: "100px" },
-    { key: "30_to_60", label: "30 to 60", type: "currency", width: "100px" },
-    { key: "60_to_90", label: "60 to 90", type: "currency" , width: "100px"},
-    { key: "Over_90", label: "OVER 90", type: "currency" , width: "100px"},
-    { key: "Total_Due", label: "Total Due", type: "currency", width: "100px" }
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "terms_desc", label: "Terms Description", type: "text" },
+    { key: "rep", label: "Rep", type: "text", },
+    { key: "Current", label: "Current", type: "currency" },
+    { key: "30_to_60", label: "30 to 60", type: "currency" },
+    { key: "60_to_90", label: "60 to 90", type: "currency" },
+    { key: "Over_90", label: "OVER 90", type: "currency" },
+    { key: "Total_Due", label: "Total Due", type: "currency" }
   ],
   "itemwithpriceandcost": [
-    { key: "item_id", label: "Item Id", type: "text", width: "150px" },
-    { key: "item_desc", label: "Item Description", type: "text", width: "300px" },
-    { key: "price1", label: "Price", type: "currency", width: "120px" }, 
-    { key: "cost", label: "Cost", type: "currency", width: "120px" }     
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Description", type: "text" },
+    { key: "price1", label: "Price", type: "currency" }, 
+    { key: "cost", label: "Cost", type: "currency" }     
   ],
   "accountwithbouncestatus": [
-    { key: "customer_id", label: "Customer Id", type: "integer", width: "150px" },
-    { key: "customer_name", label: "Customer Name", type: "text", width: "300px" },
-    { key: "credit_terms", label: "Credit Terms", type: "text", width: "300px" }, 
-    { key: "credit_status", label: "Credit Status", type: "text", width: "200px" }     
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "credit_terms", label: "Credit Terms", type: "text" }, 
+    { key: "credit_status", label: "Credit Status", type: "text" }     
   ],
   "accountwithholdterms": [
-    { key: "customer_id", label: "Customer Id", type: "integer", width: "150px" },
-    { key: "customer_name", label: "Customer Name", type: "text", width: "300px" },
-    { key: "credit_terms", label: "Credit Terms", type: "text", width: "300px" }, 
-    { key: "credit_status", label: "Credit Status", type: "text", width: "200px" }     
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "credit_terms", label: "Credit Terms", type: "text" }, 
+    { key: "credit_status", label: "Credit Status", type: "text" }     
   ],
   accountwithnocreditlimit: [
-    { key: "customer_id", label: "Customer Id", type: "integer", width: "158px" },
-    { key: "customer_name", label: "Customer Name", type: "text", width: "200px" },
-    { key: "credit_status", label: "Credit Status", type: "text", width: "100px" },
-    { key: "current", label: "Current", type: "currency", width: "100px" },
-    { key: "31-60", label: "30-60", type: "currency", width: "100px" },
-    { key: "61-90", label: "61-90", type: "currency" , width: "100px"},
-    { key: "Over90", label: "OVER 90", type: "currency" , width: "100px"},
-    { key: "total_due", label: "Total Due", type: "currency", width: "100px" }
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "credit_status", label: "Credit Status", type: "text" },
+    { key: "current", label: "Current", type: "currency" },
+    { key: "31-60", label: "31-60", type: "currency"},
+    { key: "61-90", label: "61-90", type: "currency" },
+    { key: "Over90", label: "OVER 90", type: "currency" },
+    { key: "total_due", label: "Total Due", type: "currency" }
   ],
   ads_allocation: [
-    { key: "location_name", label: "Location Name", type: "text", width: "100px" },
-    { key: "order_no", label: "Order No.", type: "integer", width: "60px" },
-    { key: "customer_id", label: "Customer Id", type: "integer", width: "70px" },
-    { key: "ship2_name", label: "Name", type: "text", width: "150px" },
-    { key: "item_id", label: "Item Id", type: "text", width: "100px" },
-    { key: "item_desc", label: "Item Description", type: "text", width: "120px" },
-    { key: "qty_ordered", label: "Qty Ordered", type: "integer", width: "80px" },
-    { key: "qty_backordered", label: "Qty Backorderd", type: "integer", width: "80px" },
-    { key: "qty_available", label: "Qt Avaiable", type: "text", width: "80px" },
-    { key: "Fillable", label: "Fillable", type: "text", width: "100px" }
+    { key: "location_name", label: "Location Name", type: "text" },
+    { key: "order_no", label: "Order No.", type: "integer" },
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Name", type: "text" },
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Description", type: "text" },
+    { key: "qty_ordered", label: "Qty Ordered", type: "integer" },
+    { key: "qty_backordered", label: "Qty Backorderd", type: "integer" },
+    { key: "qty_available", label: "Qt Avaiable", type: "text" },
+    { key: "Fillable", label: "Fillable", type: "text" }
   ],
   adsdailytotalshipped: [
     { key: "location_id", label: "Location Id",type:"integer" },
@@ -1054,7 +1115,7 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "customer_id", label: "Customer Id", type: "integer" },
     { key: "customer_name", label: "Customer Name", type: "text" },
     { key: "credit_status", label: "Credit Status", type: "text" },
-    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "credit_terms", label: "Credit Terms", type: "text" },
     { key: "last_sale", label: "Last Sale", type: "date" }
   ],
   diffprice1tocostusage: [
@@ -1078,7 +1139,7 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "item_desc", label: "Item Desc", type: "text" },
     { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
     { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
-    { key: "order_quantity", label: "Order Quantity", type: "large_integer" },
+    { key: "qty_on_po", label: "Qty On Po", type: "large_integer" },
   ],
   duebycutoff_cutoff: [
     { key: "customer_id", label: "Customer Id", type: "integer" },
@@ -1153,6 +1214,7 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "CA_Inv_value", label: "CA Inv Value", type: "currency" },
     { key: "CA_Open_Po", label: "CA Open Po", type: "currency" },
     { key: "Total_Sales", label: "Total Sales", type: "currency" },
+    { key: "profit", label: "Profit", type: "percentage" },
     { key: "Total_Inv_value", label: "Total Inv Value", type: "currency" },
     { key: "Total_Open_Po", label: "Total Open Po", type: "currency" }
   ],
@@ -1276,6 +1338,7 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "price1", label: "Price1", type: "currency" },
     { key: "cost", label: "Cost", type: "currency" },
     { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "special_field", label: "Release Date / MSDS", type: "text" },
     { key: "class_id4", label: "class_id4", type: "text" },
     { key: "upc", label: "UPC", type: "text" }
   ],
@@ -1592,10 +1655,14 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "supplier_name", label: "Supplier Name", type: "text" },
     { key: "item_id", label: "Item Id", type: "text" },
     { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "upc", label: "Upc", type: "number" },
+    { key: "price1", label: "Price1", type: "currency" },
     { key: "release_date", label: "Release Date", type: "datetime" },
     { key: "date_created", label: "Date Created", type: "datetime" },
     { key: "created_by", label: "Created By", type: "text" },
-    { key: "last_maintained_by", label: "Last Maintained By", type: "text" }
+    { key: "last_maintained_by", label: "Last Maintained By", type: "text" },
+    { key: "suppress_web", label: "Suppress Web", type: "text" },
+    { key: "suppress_feed", label: "Suppress Feed", type: "text" },
   ],
   njmixeswithcost: [
     { key: "item_id", label: "Item Id", type: "text" },
@@ -2387,7 +2454,7 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
   saleshistory_by_vendor_details: [
     { key: "supplier_id", label: "Supplier Id", type: "integer" },
     { key: "supplier_name", label: "Supplier Name", type: "text" },
-    { key: "UNITS", label: "Units", type: "large_integer" },
+    { key: "qty", label: "Qty", type: "large_integer" },
     { key: "SALES", label: "Sales", type: "currency" },
     { key: "gross_profit", label: "Gross Profit", type: "currency" },
     { key: "profit_percent", label: "Profit Percent", type: "percentage" }
@@ -3440,6 +3507,19 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "price1", label: "Price1", type: "currency" },
     { key: "cost", label: "Cost", type: "currency" }
   ],
+  inventory_levels_cost_for_supplier_nocost: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "upc", label: "Upc", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "PA", label: "PA", type: "large_integer" },
+    { key: "NJ", label: "NJ", type: "large_integer" },
+    { key: "FL", label: "FL", type: "large_integer" },
+    { key: "CA", label: "CA", type: "large_integer" },
+    { key: "LV", label: "LV", type: "large_integer" },
+    { key: "total", label: "Total", type: "large_integer" },
+    { key: "price1", label: "Price1", type: "currency" },
+    { key: "MAP", label: "MAP", type: "currency" }
+  ],
   inventory_levels_for_item_prefix: [
     { key: "item_id", label: "Item Id", type: "text" },
     { key: "item_desc", label: "Item Desc", type: "text" },
@@ -3589,7 +3669,192 @@ export const REPORT_COLUMN_MAP: Record<string, Column[]> = {
     { key: "qty", label: "Qty", type: "large_integer" },
     { key: "SALES", label: "Sales", type: "currency" }
   ],
-
+  shows_report_saleshistory_for_customer_item_with_profit: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "COST", label: "Cost", type: "currency" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency" },
+    { key: "profit_percent", label: "Profit Percent", type: "percentage" }
+  ],
+  shows_report_saleshistory_for_customer_with_profit: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "bill2_name", label: "Bill2 Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "COST", label: "Cost", type: "currency" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency" },
+    { key: "profit_percent", label: "Profit Percent", type: "percentage" },
+    { key: "SHOW_SALES", label: "Show Sales", type: "currency" },
+    { key: "show_profit", label: "Show Profit", type: "percentage" },
+    { key: "NON_SHOW_SALES", label: "Non Show Sales", type: "currency" },
+    { key: "non_show_profit", label: "Non Show profit", type: "percentage" }
+  ],
+  shows_report_saleshistory_for_rep: [
+    { key: "rep_id", label: "Customer Id", type: "integer" },
+    { key: "Rep", label: "Rep", type: "text" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "SHOW_SALES", label: "Show Sales", type: "currency" },
+    { key: "NON_SHOW_SALES", label: "Non Show Sales", type: "currency" }
+  ],
+  shows_report_saleshistory_for_rep_with_profit: [
+    { key: "rep_id", label: "Rep Id", type: "integer" },
+    { key: "Rep", label: "Rep", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "COST", label: "Cost", type: "currency" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency" },
+    { key: "profit_percent", label: "Profit Percent", type: "percentage" },
+    { key: "SHOW_SALES", label: "Show Sales", type: "currency" },
+    { key: "show_profit", label: "Show Profit", type: "percentage" },
+    { key: "NON_SHOW_SALES", label: "Non Show Sales", type: "currency" },
+    { key: "non_show_profit", label: "Non Show profit", type: "percentage" }
+  ],
+  showsreportinvoicedsalesbyitem: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "SALES", label: "Sales", type: "currency" }
+  ],
+  showsreportinvoicedsalesbyitemwithprofit: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "qty", label: "Qty", type: "large_integer" },
+    { key: "SALES", label: "Sales", type: "currency" },
+    { key: "COST", label: "Cost", type: "currency" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency" },
+    { key: "profit_percent", label: "Profit Percent", type: "percentage" }
+  ],
+  testersreport: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "supplier_id", label: "Supplier Id", type: "integer" },
+    { key: "supplier_name", label: "Supplier Name", type: "text" },
+    { key: "PA", label: "PA", type: "large_integer" },
+    { key: "NJ", label: "NJ", type: "large_integer" },
+    { key: "FL", label: "FL", type: "large_integer" },
+    { key: "CA", label: "CA", type: "large_integer" },
+    { key: "total", label: "Total", type: "large_integer" }
+  ],
+  fiveyearsalesbycustomer: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "last_sales_date", label: "Last Sales Date", type: "date" },
+    { key: "year5", label: "Year 5", type: "currency" },
+    { key: "year4", label: "Year 4", type: "currency" },
+    { key: "year3", label: "Year 3", type: "currency" },
+    { key: "year2", label: "Year 2", type: "currency" },
+    { key: "year1",  label: "Year 1", type: "currency" },
+    { key: "year0",  label: "Year 0", type: "currency" }
+  ],
+  fiveyearsalesforgroupcode: [
+    { key: "customer_id", label: "Customer Id", type: "text" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "last_sales_date", label: "Last Sale Date", type: "date" },
+    { key: "year5", label: "Year", type: "currency" },
+    { key: "year4", label: "Year", type: "currency" },
+    { key: "year3", label: "Year", type: "currency" },
+    { key: "year2", label: "Year", type: "currency" },
+    { key: "year1", label: "Year", type: "currency" },
+    { key: "year0", label: "Year", type: "currency" },
+  ],
+  fiveyearsalesreportincludeprofit: [
+    { key: "customer_id", label: "Customer Id", type: "text" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "last_sales_date", label: "Last Date", type: "date" },
+    { key: "year5", label: "Year", type: "currency" },
+    { key: "year5_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year4", label: "Year", type: "currency" },
+    { key: "year4_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year3", label: "Year", type: "currency" },
+    { key: "year3_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year2", label: "Year", type: "currency" },
+    { key: "year2_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year1", label: "Year", type: "currency" },
+    { key: "year1_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year0", label: "Year", type: "currency" },
+    { key: "year0_GP_PCT", label: "Profit", type: "percentage" },
+  ],
+  fiveyearsalesreportytd: [
+    { key: "customer_id", label: "Customer Id", type: "text" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "last_sales_date", label: "Last Sale Date", type: "date" },
+    { key: "year5", label: "Year", type: "currency" },
+    { key: "year4", label: "Year", type: "currency" },
+    { key: "year3", label: "Year", type: "currency" },
+    { key: "year2", label: "Year", type: "currency" },
+    { key: "year1", label: "Year", type: "currency" },
+    { key: "year0", label: "Year", type: "currency" },
+  ],
+  fiveyearsalesytdincludingprofit: [
+    { key: "customer_id", label: "Customer Id", type: "text" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "terms_desc", label: "Terms Desc", type: "text" },
+    { key: "last_sales_date", label: "Last Date", type: "date" },
+    { key: "year5", label: "Year", type: "currency" },
+    { key: "year5_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year4", label: "Year", type: "currency" },
+    { key: "year4_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year3", label: "Year", type: "currency" },
+    { key: "year3_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year2", label: "Year", type: "currency" },
+    { key: "year2_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year1", label: "Year", type: "currency" },
+    { key: "year1_GP_PCT", label: "Profit", type: "percentage" },
+    { key: "year0", label: "Year", type: "currency" },
+    { key: "year0_GP_PCT", label: "Profit", type: "percentage" },
+  ],
+  invoicetotalsforwarehouse: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "ship2_name", label: "Ship To Name", type: "text" },
+    { key: "order_date", label: "Order date", type: "date" },
+    { key: "invoice_date", label: "Invoice date", type: "date" },
+    { key: "sales_location_id", label: "Sales Location Id", type: "text" },
+    { key: "location_id", label: "Location Id", type: "text" },
+    { key: "po_no", label: "Po No", type: "text" },
+    { key: "total_amount", label: "Total Amount", type: "currency" }
+  ],
+  forecastreportforxgen: [
+    { key: "item_id", label: "Item Id", type: "text" },
+    { key: "item_desc", label: "Item Desc", type: "text" },
+    { key: "cost", label: "Cost", type: "currency" },
+    { key: "qty_on_hand", label: "Qty On Hand", type: "large_integer" },
+    { key: "order_quantity", label: "Qty Quantity", type: "large_integer" },
+    { key: "qty_allocated", label: "Qty Allocated", type: "large_integer" },
+    { key: "release_date", label: "Release date", type: "date" },
+    { key: "AVG", label: "Sales Location Id", type: "text" },
+    { key: "years_usage", label: "Years Usages", type: "large_integer" },
+    { key: "primary_bin", label: "Primary Bin", type: "text" }
+  ],
+  pricing_lib_for_customers: [
+    { key: "customer_id", label: "Customer Id", type: "integer" },
+    { key: "customer_name", label: "Customer Name", type: "text" },
+    { key: "rep", label: "Rep", type: "text" },
+    { key: "price_library_id", label: "Price Library Id", type: "text" },
+    { key: "description", label: "Description", type: "text" },
+    { key: "Last_SI", label: "Last SI", type: "date" },
+  ],
+  salesbybrandforvendor: [
+    { key: "supplier_id", label: "Supplier ID", type: "text" },
+    { key: "supplier_name", label: "Supplier Name", type: "text", width: "200px" },
+    { key: "str_brandName", label: "Brand Name", type: "text", width: "180px" },
+    { key: "units", label: "Units", type: "number", width: "100px" },
+    { key: "sales", label: "Sales", type: "currency", width: "120px" },
+    { key: "cost", label: "Cost", type: "currency", width: "120px" },
+    { key: "gross_profit", label: "Gross Profit", type: "currency", width: "120px" },
+    { key: "profit_percent", label: "Profit %", type: "percentage", width: "100px" },
+  ],
 
 
   

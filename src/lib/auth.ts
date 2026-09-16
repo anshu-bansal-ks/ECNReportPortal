@@ -29,7 +29,6 @@ export function clearUserSession() {
   delete api.defaults.headers.common["Authorization"];
 }
 
-// Pehle wale functions ke niche ye add karein
 export function saveAdminSession(admin: any, token: string) {
   localStorage.setItem("adminUser", JSON.stringify(admin));
   localStorage.setItem("adminToken", token);

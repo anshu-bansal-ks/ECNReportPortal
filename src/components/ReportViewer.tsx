@@ -2,7 +2,7 @@
 // src/components/ReportViewer.tsx
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns"; // Date formatting ke liye
+import { format } from "date-fns"; 
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom"; 
 import AsyncSelect from "react-select/async";
@@ -12,19 +12,20 @@ import { Report, buildApiUrl } from "../lib/supabase";
 import { useTableSorting } from "../hooks/useTableSorting";
 import CustomerInfo, { CustomerApiResponse } from "./CustomerInfo";
 import ItemDetailsBulkTable from "./ItemDetailsBulkTable"; 
-import { REPORT_COLUMN_MAP,FOOTER_TOTAL_CONFIG,DRILL_DOWN_LINKS } from "../config/reportColumns";
+import { REPORT_COLUMN_MAP, FOOTER_TOTAL_CONFIG, DRILL_DOWN_LINKS } from "../config/reportColumns";
 import ScheduleModal from "./ScheduleModal";
 import { showToast } from "../lib/toast";
 import UserMenu from "./UserMenu";
 
-import {fetchCompanies,fetchVendors,fetchSalesReps,fetchSuppliers,fetchSuppliersop, fetchCustomers,
-validateCustomer,CompanyOption,VendorOption,SalesRepOption,CustomerOption,SupplierOption, SupplierOpOption,
-fetchShows,fetchPromos,fetchLocations,fetchLocationSupplier,ShowOption,PromoOption,LocationOption,
-LocationSupplierOption,fetchPeriods,PeriodOption,fetchSalsifyMcat,fetchSalsifyScat,fetchItemCategories,
-fetchPricePages,fetchTerms,fetchClassNumbers,fetchClassIds,SalsifyMcatOption,SalsifyScatOption,ItemCategoryOption,
-PricePageOption,TermsOption,ClassNumberOption,ClassIdOption,fetchPurchaseClass,PurchaseClassOption,fetchProductGroup,
-ProductGroupOption,fetchRoles,RolesOption,fetchBuyer,BuyerOption,fetchPriceLibrary,PriceLibraryOption,
-fetchRolesReports,RolesReportsOption
+import {
+  fetchCompanies, fetchVendors, fetchSalesReps, fetchSuppliers, fetchSuppliersop, fetchCustomers,
+  validateCustomer, CompanyOption, VendorOption, SalesRepOption, CustomerOption, SupplierOption, SupplierOpOption,
+  fetchShows, fetchPromos, fetchLocations, fetchLocationSupplier, ShowOption, PromoOption, LocationOption,
+  LocationSupplierOption, fetchPeriods, PeriodOption, fetchSalsifyMcat, fetchSalsifyScat, fetchItemCategories,
+  fetchPricePages, fetchTerms, fetchClassNumbers, fetchClassIds, SalsifyMcatOption, SalsifyScatOption, ItemCategoryOption,
+  PricePageOption, TermsOption, ClassNumberOption, ClassIdOption, fetchPurchaseClass, PurchaseClassOption, fetchProductGroup,
+  ProductGroupOption, fetchRoles, RolesOption, fetchBuyer, BuyerOption, fetchPriceLibrary, PriceLibraryOption,
+  fetchRolesReports, RolesReportsOption,fetchSupplierCustomerBrands, BrandOption
 } from "../lib/dropdownApi";
 
 interface ReportViewerProps {
@@ -78,11 +79,11 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   const [selectedTerms, setSelectedTerms] = useState<TermsOption | null>(null);
   const [classNumbers, setClassNumbers] = useState<ClassNumberOption[]>([]);
   const [selectedClassNumber, setSelectedClassNumber] = useState<ClassNumberOption | null>(null);
-  const [classIds, setClassIds] =useState<ClassIdOption[]>([]);
+  const [classIds, setClassIds] = useState<ClassIdOption[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<ClassIdOption | null>(null);
-  const [PurchaseClass, setPurchaseClass] =useState<PurchaseClassOption[]>([]);
+  const [PurchaseClass, setPurchaseClass] = useState<PurchaseClassOption[]>([]);
   const [selectedPurchaseClass, setSelectedPurchaseClass] = useState<PurchaseClassOption | null>(null);
-  const [ProductGroup, setProductGroup] =useState<ProductGroupOption[]>([]);
+  const [ProductGroup, setProductGroup] = useState<ProductGroupOption[]>([]);
   const [selectedProductGroup, setSelectedProductGroup] = useState<ProductGroupOption | null>(null);
   const [roles, setRoles] = useState<RolesOption[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<RolesOption | null>(null);
@@ -92,12 +93,15 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   const [selectedPriceLibrary, setSelectedPriceLibrary] = useState<PriceLibraryOption | null>(null);
   const [rolesreports, setRolesReports] = useState<RolesReportsOption[]>([]);
   const [selectedRolesReports, setSelectedRolesReports] = useState<RolesReportsOption | null>(null);
+  const [brands, setBrands] = useState<BrandOption[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<BrandOption | null>(null);
   const [months, setMonths] = useState<any[]>([]);
   const [autoRun, setAutoRun] = useState(false); 
   const [downloading, setDownloading] = useState(false);
   const [grandTotals, setGrandTotals] = useState<Record<string, number>>({});
   const stickyHeaderRef = useRef<HTMLElement>(null);
   const [stickyTopOffset, setStickyTopOffset] = useState(80);
+  const [currYear, setCurrYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
     const el = stickyHeaderRef.current;
@@ -109,9 +113,6 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
 
     measure();
 
-    // Re-measure whenever the header's own size changes (e.g. Excel/Schedule
-    // buttons appearing once `report` data finishes loading after a hard
-    // refresh) rather than only on window resize.
     const observer = new ResizeObserver(measure);
     observer.observe(el);
 
@@ -119,15 +120,12 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   }, [report]);
 
   const validateFilters = () => {
-    
     const missingFields: string[] = [];
     const configFilters = report?.filter_config?.filters || [];
   
-    // 1. Pehle normal fields check karein (Company, Customer etc.)
     configFilters.forEach((f) => {
       const isDateRelated = ["fromdate", "tilldate", "timeperiod"].includes(f.name);
       
-      // Agar Date related nahi hai aur required hai, toh normal check
       if (!isDateRelated && (f.name === "company" || (f as any).required)) {
         const val = filters[f.name];
         if (!val || val.toString().trim() === "") {
@@ -136,7 +134,6 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
       }
     });
   
-    // 2. SMART DATE VALIDATION (Credits Issued jaise reports ke liye)
     const hasDateConfig = configFilters.some(f => ["fromdate", "tilldate", "timeperiod"].includes(f.name));
     
     if (hasDateConfig) {
@@ -144,7 +141,6 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
       const hasTillDate = !!filters.tilldate;
       const hasPeriod = !!filters.timeperiod;
   
-      // Logic: (From aur Till dono hone chahiye) YA (Timeperiod hona chahiye)
       const isDateRangeComplete = hasFromDate && hasTillDate;
       const isPeriodSelected = hasPeriod;
   
@@ -160,182 +156,193 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
     return true;
   };
   
-const companyFilter = report?.filter_config?.filters?.find(
-  (f: any) => f.name === "company"
-);
-const getVisibleColumns = (columns: any[], filters: any) => {
-  return columns.filter((col) => {
-    if (!col.showIf) return true;
+  const companyFilter = report?.filter_config?.filters?.find(
+    (f: any) => f.name === "company"
+  );
 
-    return Object.entries(col.showIf).every(
-      ([key, val]) => filters[key] === val
-    );
-  });
-};
-
-const companyOptions = companies.filter((c) => {
-  if (!companyFilter?.show) return true;
-  if (companyFilter.show === "ALL") return true;
-  const allowed = companyFilter.show
-  .split(",")
-  .map((x: string) => x.trim().toUpperCase());
-
-return allowed.includes(c.value.toUpperCase());
-});
-
-const formatCellValue = (value: any, type: string) => {
-  if (value === undefined || value === null || value === "") return "—";
-  if (type === "text") {
-    return String(value);
-  }
-
-  const num = parseFloat(value);
-
-  if (isNaN(num)) return String(value);
-  if (type === "currency") {
-    if (num === 0) return "$0.00";
-
-    const formatted = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Math.abs(num));
-    return num < 0 ? `(${formatted})` : formatted;
-  }
-  if (type === "large_number" || type === "large_integer") {
-    return new Intl.NumberFormat("en-US").format(Math.round(num));
-  }
-  if (type === "number" || type === "integer") {
-    return String(Math.round(num));
-  }
-  if (type === "date") {
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return String(value);
-  
-    return d.toLocaleDateString("en-US",{
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric"
+  const getVisibleColumns = (columns: any[], filters: any) => {
+    return columns.filter((col) => {
+      if (!col.showIf) return true;
+      return Object.entries(col.showIf).every(
+        ([key, val]) => String(filters[key]) === String(val)
+      );
     });
-  }
-  
-  if (type === "datetime") {
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return String(value);
-  
-    return d.toLocaleDateString("en-US") + " " +
-      d.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true
-      });
-  }
-  if (type === "percentage") {
-    return num.toFixed(1) + "%";
-  }
-  if (type === "decimal") {
-    return Number(value).toFixed(2);
-  }
+  };
 
-  return String(value);
-};
+  const companyOptions = companies.filter((c) => {
+    if (!companyFilter?.show) return true;
+    if (companyFilter.show === "ALL") return true;
+    const allowed = companyFilter.show
+      .split(",")
+      .map((x: string) => x.trim().toUpperCase());
+    return allowed.includes(c.value.toUpperCase());
+  });
+
+  const formatCellValue = (value: any, type: string) => {
+    if (value === undefined || value === null || value === "") return "—";
+    if (type === "text") {
+      return String(value);
+    }
+
+    const num = parseFloat(value);
+
+    if (isNaN(num)) return String(value);
+    if (type === "currency") {
+      if (num === 0) return "$0.00";
+
+      const formatted = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Math.abs(num));
+      return num < 0 ? `(${formatted})` : formatted;
+    }
+    if (type === "currency_rounded") {
+      if (num === 0) return "$0";
+
+      const formatted = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(Math.abs(num));
+      return num < 0 ? `(${formatted})` : formatted;
+    }
+    if (type === "large_number" || type === "large_integer") {
+      return new Intl.NumberFormat("en-US").format(Math.round(num));
+    }
+    if (type === "number" || type === "integer") {
+      return String(Math.round(num));
+    }
+    if (type === "date") {
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return String(value);
+  
+      return d.toLocaleDateString("en-US",{
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric"
+      });
+    }
+  
+    if (type === "datetime") {
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return String(value);
+  
+      return d.toLocaleDateString("en-US") + " " +
+        d.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        });
+    }
+    if (type === "percentage") {
+      return num.toFixed(2) + "%";
+    }
+    if (type === "decimal") {
+      return Number(value).toFixed(2);
+    }
+
+    return String(value);
+  };
+
   const reportKey = report.key || report.name?.toLowerCase().trim();
   const endpoint = report.api_endpoint?.toLowerCase() || "";
   const isThirteenMonthReport = 
     endpoint.includes("thirteenmonthcustomersalesforvendor") || 
     endpoint.includes("thirteenmonthsales") || 
     endpoint.includes("thirteenmonthvendorsalesforcustomer");
-    let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
-    const comparison = appliedFilters["ytdcomparison"] || "YTD v LYTD";
-
-    columns = columns.map((col: any) => {
-      if (
-        reportKey === "salesbysupplierforgroupcodeytdcomparison" &&
-        col.key === "SALES_LY"
-      ) {
-        return {
-          ...col,
-          label: comparison === "YTD v LY"
-            ? "Sales LY"
-            : "Sales LYTD"
-        };
-      }
     
+  let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
+  if (reportKey === "inventorylocationsupplier") {
+    const compId = (filters.company || "").toUpperCase();
+    let dynamicLabel = "special_field";
+    
+    if (compId === "ECN") {
+      dynamicLabel = "Release Date";
+    } else {
+      dynamicLabel = "MSDS";     
+    }
+  
+    columns = columns.map((col: any) => {
+      if (col.key === "special_field") {
+        return { ...col, label: dynamicLabel };
+      }
       return col;
     });
-if (
-  reportKey === "backordersforcustomer" ||
-  reportKey === "canceled_items_for_customer" ||
-  reportKey === "discitems_for_supplier" ||
-  reportKey === "discontinueditemstats" ||
-  reportKey === "inventory_levels_cost_for_supplier" ||
-  reportKey === "inventory_levels_for_item_prefix" ||
-  reportKey === "inventorylevelsallitemswithcost" ||
-  reportKey === "saleshistory_for_supplier_by_item_location"
-) {
-  if (appliedFilters.company?.toUpperCase() === "XG") {
-    columns = columns.filter((col: any) => {
-      const key = col.key?.toUpperCase();
-
-      return ![
-        "NJ",
-        "NJ_PO",
-        "NJ_QTY",
-        "NJ_ON_ORDER",
-        "FL",
-        "FL_PO",
-        "FL_QTY",
-        "FL_ON_ORDER",
-        "CA",
-        "CA_PO",
-        "CA_QTY",
-        "CA_ON_ORDER"
-      ].includes(key);
-    });
-  } else {
-    columns = columns.filter((col: any) => {
-      const key = col.key?.toUpperCase();
-
-      return ![
-        "PA",
-        "PA_PO",
-        "PA_QTY",
-        "PA_ON_ORDER"
-      ].includes(key);
-    });
   }
-}
-if (
-  reportKey === "inventory_levels_cost_for_supplier" ||
-  reportKey === "inventory_levels_cost_for_supplier_nocost"
-) {
-  const company = appliedFilters.company?.toUpperCase();
+  const comparison = appliedFilters["ytdcomparison"] || "YTD v LYTD";
 
-  if (company === "XG") {
-    // XG => PA only
-    columns = columns.filter((col: any) => {
-      const key = col.key?.toUpperCase();
-      return !["LV", "NJ", "FL", "CA"].includes(key);
-    });
+  columns = columns.map((col: any) => {
+    if (
+      reportKey === "salesbysupplierforgroupcodeytdcomparison" &&
+      col.key === "SALES_LY"
+    ) {
+      return {
+        ...col,
+        label: comparison === "YTD v LY"
+          ? "Sales LY"
+          : "Sales LYTD"
+      };
+    }
+    return col;
+  });
 
-  } else if (company === "ADV") {
-    // ADV => LV, NJ, FL, CA
-    // PA hide
-    columns = columns.filter((col: any) => {
-      const key = col.key?.toUpperCase();
-      return key !== "PA";
-    });
-
-  } else {
-    // OTHER => NJ, FL, CA
-    // PA + LV hide
-    columns = columns.filter((col: any) => {
-      const key = col.key?.toUpperCase();
-      return !["PA", "LV"].includes(key);
-    });
+  if (
+    reportKey === "backordersforcustomer" ||
+    reportKey === "canceled_items_for_customer" ||
+    reportKey === "discitems_for_supplier" ||
+    reportKey === "discontinueditemstats" ||
+    reportKey === "inventory_levels_cost_for_supplier" ||
+    reportKey === "inventory_levels_for_item_prefix" ||
+    reportKey === "inventorylevelsallitemswithcost" ||
+    reportKey === "saleshistory_for_supplier_by_item_location" ||
+    reportKey === "testersreport" 
+  ) {
+    if (appliedFilters.company?.toUpperCase() === "XG") {
+      columns = columns.filter((col: any) => {
+        const key = col.key?.toUpperCase();
+        return ![
+          "NJ", "NJ_PO", "NJ_QTY", "NJ_ON_ORDER",
+          "FL", "FL_PO", "FL_QTY", "FL_ON_ORDER",
+          "CA", "CA_PO", "CA_QTY", "CA_ON_ORDER"
+        ].includes(key);
+      });
+    } else {
+      columns = columns.filter((col: any) => {
+        const key = col.key?.toUpperCase();
+        return ![
+          "PA", "PA_PO", "PA_QTY", "PA_ON_ORDER"
+        ].includes(key);
+      });
+    }
   }
-}
+
+  if (
+    reportKey === "inventory_levels_cost_for_supplier" ||
+    reportKey === "inventory_levels_cost_for_supplier_nocost"
+  ) {
+    const company = appliedFilters.company?.toUpperCase();
+
+    if (company === "XG") {
+      columns = columns.filter((col: any) => {
+        const key = col.key?.toUpperCase();
+        return !["LV", "NJ", "FL", "CA"].includes(key);
+      });
+    } else if (company === "ADV") {
+      columns = columns.filter((col: any) => {
+        const key = col.key?.toUpperCase();
+        return key !== "PA";
+      });
+    } else {
+      columns = columns.filter((col: any) => {
+        const key = col.key?.toUpperCase();
+        return !["PA", "LV"].includes(key);
+      });
+    }
+  }
+
   if (isThirteenMonthReport && months.length > 0) {
     columns = columns.map((col) => {
       if (col.key.startsWith("mon")) {
@@ -347,12 +354,40 @@ if (
           cleanLabel = monthInfo.month
             .toString()
             .trim()
-            .replace(/\s+\d+$/, '')   
-            .replace(/\s+/g, '-')       
+            .replace(/\s+\d+$/, '')    
+            .replace(/\s+/g, '-')        
             .toUpperCase();
         }
 
         return { ...col, label: cleanLabel };
+      }
+      return col;
+    });
+  }
+
+  if (reportKey === "fiveyearsalesbycustomer" || reportKey === "fiveyearsalesforgroupcode" || reportKey === "fiveyearsalesreportytd" || reportKey === "fiveyearsalesytdincludingprofit") {
+    columns = columns.map((col: any) => {
+      if (col.key.startsWith("year") && col.key.length === 5) {
+        const i = parseInt(col.key.replace("year", ""), 10);
+        if (!isNaN(i)) {
+          return { ...col, label: (currYear - i).toString() };
+        }
+      }
+      return col;
+    });
+  }
+
+  if (reportKey === "fiveyearsalesreportincludeprofit" || reportKey === "fiveyearsalesytdincludingprofit") {
+    columns = columns.map((col: any) => {
+      const salesMatch = col.key.match(/^year(\d)$/);
+      if (salesMatch) {
+        const i = parseInt(salesMatch[1], 10);
+        return { ...col, label: `${currYear - i} Sales` };
+      }
+      const gpMatch = col.key.match(/^year(\d)_GP_PCT$/);
+      if (gpMatch) {
+        const i = parseInt(gpMatch[1], 10);
+        return { ...col, label: `${currYear - i} Profit` };
       }
       return col;
     });
@@ -367,10 +402,7 @@ if (
     extraParams?: Record<string, string>,
     carryFilters?: string[]
   ) => {
-  
     const Comp_id = filters.company || "";
-  
-    // main clicked value
     const targetVal = idField
       ? row[idField]
       : keyFields
@@ -378,79 +410,72 @@ if (
           .find(v => v !== undefined && v !== null);
   
     if (!targetVal) return;
-  
-    const separator = targetUrl.includes("?") ? "&" : "?";
-  
-    // base url
-    let finalUrl =
-      `${targetUrl}${separator}Comp_id=${encodeURIComponent(Comp_id)}` +
-      `&${queryParam}=${encodeURIComponent(targetVal)}`;
+    const basePrefix = "/ReportingPortal_v3";
+    const normalizedTarget = targetUrl.startsWith(basePrefix)
+      ? targetUrl
+      : `${basePrefix}${targetUrl.startsWith("/") ? targetUrl : `/${targetUrl}`}`;
 
-    // extra params add
+    const separator = normalizedTarget.includes("?") ? "&" : "?";
+    let finalUrl =
+      `${normalizedTarget}${separator}Comp_id=${encodeURIComponent(Comp_id)}` +
+      `&${queryParam}=${encodeURIComponent(targetVal)}`;
+    // const separator = targetUrl.includes("?") ? "&" : "?";
+    // let finalUrl =
+    //   `${targetUrl}${separator}Comp_id=${encodeURIComponent(Comp_id)}` +
+    //   `&${queryParam}=${encodeURIComponent(targetVal)}`;
+
     if (extraParams) {
       Object.entries(extraParams).forEach(([urlParam, rowField]) => {
-  
         const extraValue = row[rowField];
-  
         if (
           extraValue !== undefined &&
           extraValue !== null &&
           extraValue !== ""
         ) {
-          finalUrl +=
-            `&${urlParam}=${encodeURIComponent(extraValue)}`;
+          finalUrl += `&${urlParam}=${encodeURIComponent(extraValue)}`;
         }
       });
     }
+
     carryFilters?.forEach(filterName => {
-
       const value = filters[filterName];
-
       if (value) {
           finalUrl += `&${filterName}=${encodeURIComponent(value)}`;
       }
-  });
-    console.log("FINAL URL:", finalUrl);
-  
-    window.open(
-      finalUrl,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    });
+
+    window.open(finalUrl, "_blank", "noopener,noreferrer");
   };
   
   const modifiedColumns = columns.map((col) => {
-  const colKeyLower = col.key.toLowerCase();
-  if (colKeyLower === "tracking_no") {
-    return {
-      ...col,
-      render: (row: any) => {
-        const tNo = row[col.key];
-        if (!tNo || tNo === "—" || tNo === "") return "—";
-        
-        return (
-          <a
-            href={`https://wwwapps.ups.com/etracking/tracking.cgi?InquiryNumber1=${tNo.toString().trim()}&TypeOfInquiryNumber=T&AcceptUPSLicenseAgreement=yes&submit=Track`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
-          >
-            {tNo}
-          </a>
-        );
-      }
-    };
-  }
+    const colKeyLower = col.key.toLowerCase();
+    if (colKeyLower === "tracking_no") {
+      return {
+        ...col,
+        render: (row: any) => {
+          const tNo = row[col.key];
+          if (!tNo || tNo === "—" || tNo === "") return "—";
+          return (
+            <a
+              href={`https://wwwapps.ups.com/etracking/tracking.cgi?InquiryNumber1=${tNo.toString().trim()}&TypeOfInquiryNumber=T&AcceptUPSLicenseAgreement=yes&submit=Track`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+            >
+              {tNo}
+            </a>
+          );
+        }
+      };
+    }
     const apiEndpointLower = report.api_endpoint?.toLowerCase() || "";
-    const reportKey = apiEndpointLower.split("?")[0].split("/").pop()?.toLowerCase() || "";
+    const currentReportKey = apiEndpointLower.split("?")[0].split("/").pop()?.toLowerCase() || "";
     const activeReportConfigKey = Object.keys(DRILL_DOWN_LINKS).find(
-      // key => apiEndpointLower.includes(key)
-      key => key.toLowerCase() === reportKey
-      );
+      key => key.toLowerCase() === currentReportKey
+    );
 
     if (activeReportConfigKey) {
       const rawConfig = DRILL_DOWN_LINKS[activeReportConfigKey];
-      // const linkConfigs: any[] = Array.isArray(rawConfig) ? rawConfig : [rawConfig];
       const linkConfigs = Array.isArray(rawConfig) ? rawConfig : [rawConfig];
       const matchedConfig = linkConfigs.find((config: any) => 
         config.keyFields.some((field: string) => field.toLowerCase() === colKeyLower)
@@ -487,14 +512,14 @@ if (
               </a>
             );
           }
-        }      
-     }
+        }; 
+      }
     }
     return col;
   });
 
   const isCustomerInfo = report.api_endpoint?.toLowerCase().includes("customerinfo");
-  const isItemDetailsReport =report.api_endpoint?.toLowerCase().includes("itemdetails"); 
+  const isItemDetailsReport = report.api_endpoint?.toLowerCase().includes("itemdetails"); 
   
   const tableData = isCustomerInfo ? [] : (Array.isArray(data) ? data : []);
   const visibleColumns = getVisibleColumns(modifiedColumns, filters);
@@ -507,91 +532,63 @@ if (
   
   useEffect(() => {
     if (!report?.filter_config?.filters) return;
-  
     const init: Record<string, any> = {};
-  
     report.filter_config.filters.forEach((f) => {
       if (f.type === "checkbox") {
-        init[f.name] = f.defaultValue === "true" ;
-  
+        init[f.name] = f.defaultValue === "true";
       } else {
         init[f.name] = f.defaultValue || "";
       }
     });
-  
     setFilters(init);
   }, [report.key]);
-  
-// 📂 Path: src/components/ReportViewer.tsx
 
-useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  
-  if (params.size > 0) {
-    const newFilters: Record<string, string> = {};
-    let hasValidParams = false;
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.size > 0) {
+      const newFilters: Record<string, string> = {};
+      let hasValidParams = false;
 
-    // 1. Dynamic Parameter Mapping Dictionary
-    const keyMap: Record<string, string> = {
-      comp_id: "company", compid: "company",company: "company",
-      vendorid: "vendor", vendor_id: "vendor",
-      custid: "customer", customerid: "customer", customer_id: "customer",
-      repid: "salesrep", salesrepid: "salesrep", salesrep_id: "salesrep",
-      payment_no: "payment_no", paymentno: "payment_no",
-      timeperiod: "timeperiod",
-      period: "timeperiod",
-    
-      fromdate: "fromdate",
-      from_date: "fromdate",
-    
-      tilldate: "tilldate",
-      todate: "tilldate",
-      till_date: "tilldate"
-    };
+      const keyMap: Record<string, string> = {
+        comp_id: "company", compid: "company", company: "company",
+        vendorid: "vendor", vendor_id: "vendor",
+        custid: "customer", customerid: "customer", customer_id: "customer",
+        repid: "salesrep", salesrepid: "salesrep", salesrep_id: "salesrep",
+        payment_no: "payment_no", paymentno: "payment_no",
+        timeperiod: "timeperiod", period: "timeperiod",
+        fromdate: "fromdate", from_date: "fromdate",
+        tilldate: "tilldate", todate: "tilldate", till_date: "tilldate"
+      };
 
-    // 2. Loop through all URL parameters
-    params.forEach((value, urlKey) => {
-      const cleanUrlKey = urlKey.toLowerCase().trim();
-      
-      // Check karenge ki kya ye key hamare map me defined hai
-      const stateKey = keyMap[cleanUrlKey];
-      
-      if (stateKey && value) {
-        newFilters[stateKey] =  decodeURIComponent(value);;
-        hasValidParams = true;
-
-        // 3. Dropdowns ko bhi automatically state parameters ke sath update karo
-        if (stateKey === "vendor") {
-          setSelectedVendor({ value, label: value });
-        } else if (stateKey === "customer") {
-          setSelectedCustomer({ value, label: value });
-        } else if (stateKey === "salesrep") {
-          setSelectedSalesRep({ value, label: value });
+      params.forEach((value, urlKey) => {
+        const cleanUrlKey = urlKey.toLowerCase().trim();
+        const stateKey = keyMap[cleanUrlKey];
+        if (stateKey && value) {
+          newFilters[stateKey] = decodeURIComponent(value);
+          hasValidParams = true;
+          if (stateKey === "vendor") {
+            setSelectedVendor({ value, label: value });
+          } else if (stateKey === "customer") {
+            setSelectedCustomer({ value, label: value });
+          } else if (stateKey === "salesrep") {
+            setSelectedSalesRep({ value, label: value });
+          }
         }
+      });
+
+      if (hasValidParams) {
+        setFilters((prev) => ({ ...prev, ...newFilters }));
+        setAutoRun(true);
       }
-    });
-
-    // 4. Agar koi valid parameters mile, toh state set karke auto-run execute karo
-    if (hasValidParams) {
-      setFilters((prev) => ({
-        ...prev,
-        ...newFilters
-      }));
-      
-      setAutoRun(true);
     }
-  }
-}, [location.search]);
+  }, [location.search]);
 
-useEffect(() => {
-  if (!autoRun) return;
-
-  if (!filters.company) return;
-
-  handleApplyFilters();
-  setAutoRun(false);
-
-}, [autoRun, filters]);
+  useEffect(() => {
+    if (!autoRun) return;
+    if (!filters.company) return;
+    handleApplyFilters();
+    setAutoRun(false);
+  }, [autoRun, filters]);
 
   useEffect(() => {
     if (!token) return;
@@ -604,336 +601,196 @@ useEffect(() => {
     if (!token) return;
     const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
     if (activeFilters.includes("roles")) {
-      fetchRoles(token, filters.company)
-        .then(setRoles)
-        .catch(() => setRoles([]));
+      fetchRoles(token, filters.company).then(setRoles).catch(() => setRoles([]));
     }
   }, [report, token, filters.company]);
 
-useEffect(() => {
-  if (!token || !filters.company) return;
-  const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+  useEffect(() => {
+    if (!token || !filters.company) return;
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (activeFilters.includes("buyer")) {
+      fetchBuyer(token, filters.company).then(setBuyer).catch(() => setBuyer([]));
+    }
+  }, [report, token, filters.company]);
 
-  if (activeFilters.includes("buyer")) {
-    fetchBuyer(token, filters.company)
-      .then(setBuyer)
-      .catch(() => setBuyer([]));
-  }
-}, [report, token, filters.company]);
+  useEffect(() => {
+    if (!token || !filters.company) return;
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (activeFilters.includes("pricelibrary")) {
+      fetchPriceLibrary(token, filters.company).then(setPriceLibrary).catch(() => setPriceLibrary([]));
+    }
+  }, [report, token, filters.company]);
 
-useEffect(() => {
-  if (!token || !filters.company) return;
-  const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+  useEffect(() => {
+    if (!token) return;
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (activeFilters.includes("rolesreports")) {
+      fetchRolesReports(token).then(setRolesReports).catch(() => setRolesReports([]));
+    }
+  }, [report, token]);
 
-  if (activeFilters.includes("pricelibrary")) {
-    fetchPriceLibrary(token, filters.company)
-      .then(setPriceLibrary)
-      .catch(() => setPriceLibrary([]));
-  }
-}, [report, token, filters.company]);
-
-useEffect(() => {
-  if (!token) return;
-  const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
-
-  if (activeFilters.includes("rolesreports")) {
-    fetchRolesReports(token)
-      .then(setRolesReports)
-      .catch(() => setRolesReports([]));
-  }
-}, [report, token]);
-useEffect(() => {
-  if (!filters.company || !token) {
-    setSalesReps([]);
-    setSelectedSalesRep(null);
-    setShows([]);
-    setPromos([]);
-    setLocations([]);
-    setLocationSuppliers([]);
-    return;
-  }
-
-  const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
-
-  if (activeFilters.includes("salesrep")) {
-    fetchSalesReps(token, filters.company, "")
-      .then((data) => {
-        setSalesReps(data);
-  
-        // URL se repId aya hua ho to usko select karo
-        if (filters.salesrep) {
-          const rep = data.find(
-            (x: any) => String(x.value) === String(filters.salesrep)
-          );
-  
-          if (rep) {
-            setSelectedSalesRep(rep);
-          }
-        }
-      })
-      .catch(() => setSalesReps([]));
-  }
-  if (activeFilters.includes("show")) {
-    fetchShows(token, filters.company).then(setShows);
-  }
-  if (activeFilters.includes("promo")) {
-    fetchPromos(token, filters.company).then(setPromos);
-  }
-  if (activeFilters.includes("location")) {
-    const locType = report?.locationType ?? "WAREHOUSE";
-    fetchLocations(token, filters.company,locType).then((data) => {
-      setLocations(data);
-      const conf = report?.filter_config?.filters.find((f: any) => f.name === "location");
-      if (conf?.defaultSelect) {
-        const defLoc = data.find((l: any) => l.value === conf.defaultSelect);
-        if (defLoc) {
-          setSelectedLocation(defLoc); 
-          setFilters(prev => ({ ...prev, location: defLoc.value })); 
-        }
-      }
-    });
-  }
-  
-  if (activeFilters.includes("locationsupplier")) {
-    fetchLocationSupplier(token, filters.company).then(setLocationSuppliers);
-  }
-}, [filters.company, token, report]); 
-
-useEffect(() => {
-  if (!filters.company || !token) {
-    setSuppliers([]);
-    setSelectedSupplier(null);
-    return;
-  }
-
-  const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
-
-  if (activeFilters.includes("supplier")) {
-    fetchSuppliers(token, filters.company, "")
-      .then(setSuppliers)
-      .catch(() => setSuppliers([]));
-  }
-}, [filters.company, token, report]);
-
-useEffect(() => {
-  if (!filters.company || !token) {
-    setSuppliersOp([]);
-    setSelectedSupplierOp(null);
-    return;
-  }
-
-  const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
-
-  if (activeFilters.includes("supplierop")) {
-    fetchSuppliersop(token, filters.company, "")
-      .then(setSuppliersOp)
-      .catch(() => setSuppliersOp([]));
-  }
-}, [filters.company, token, report]);
-
-useEffect(() => {
-
-  if (!token) return;
-
-  const activeFilters =
-    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
-
-  // MCAT
-  if (activeFilters.includes("mcat")) {
-    fetchSalsifyMcat(token)
-      .then(setSalsifyMcats)
-      .catch(() => setSalsifyMcats([]));
-  }
-
-  // SCAT only report (without MCAT)
-  if (activeFilters.includes("scat") && !activeFilters.includes("mcat")) {
-    fetchSalsifyScat(token)
-      .then(setSalsifyScats)
-      .catch(() => setSalsifyScats([]));
-  }
-
-  // Item Category
-  if (activeFilters.includes("itemcategory") && filters.company) {
-    fetchItemCategories(token, filters.company)
-      .then(setItemCategories)
-      .catch(() => setItemCategories([]));
-  }
-
-  // Terms
-  if (activeFilters.includes("terms") && filters.company) {
-    fetchTerms(token, filters.company)
-      .then(setTerms)
-      .catch(() => setTerms([]));
-  }
-
-  // Class Number
-  if (activeFilters.includes("classnumber") && filters.company) {
-    fetchClassNumbers(token, filters.company)
-      .then(setClassNumbers)
-      .catch(() => setClassNumbers([]));
-  }
-
-}, [filters.company, report, token]);
-
-useEffect(() => {
-
-  if (!token) return;
-
-  const activeFilters =
-    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
-
-  // Report me SCAT hi nahi hai
-  if (!activeFilters.includes("scat")) return;
-
-  // Report me MCAT bhi hai
-  if (activeFilters.includes("mcat")) {
-
-    // MCAT select nahi hua
-    if (!selectedSalsifyMcat) {
-      fetchSalsifyScat(token)
-        .then(setSalsifyScats)
-        .catch(() => setSalsifyScats([]));
+  useEffect(() => {
+    if (!filters.company || !token) {
+      setSalesReps([]);
+      setSelectedSalesRep(null);
+      setShows([]);
+      setPromos([]);
+      setLocations([]);
+      setLocationSuppliers([]);
       return;
     }
 
-    // MCAT select ho gaya
-    fetchSalsifyScat(token, selectedSalsifyMcat.value)
-      .then(setSalsifyScats)
-      .catch(() => setSalsifyScats([]));
+    const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
 
-    return;
-  }
+    if (activeFilters.includes("salesrep")) {
+      fetchSalesReps(token, filters.company, "")
+        .then((data) => {
+          setSalesReps(data);
+          if (filters.salesrep) {
+            const rep = data.find((x: any) => String(x.value) === String(filters.salesrep));
+            if (rep) setSelectedSalesRep(rep);
+          }
+        })
+        .catch(() => setSalesReps([]));
+    }
+    if (activeFilters.includes("show")) fetchShows(token, filters.company).then(setShows);
+    if (activeFilters.includes("promo")) fetchPromos(token, filters.company).then(setPromos);
+    if (activeFilters.includes("location")) {
+      const locType = report?.locationType ?? "WAREHOUSE";
+      fetchLocations(token, filters.company, locType).then((data) => {
+        setLocations(data);
+        const conf = report?.filter_config?.filters.find((f: any) => f.name === "location");
+        if (conf?.defaultSelect) {
+          const defLoc = data.find((l: any) => l.value === conf.defaultSelect);
+          if (defLoc) {
+            setSelectedLocation(defLoc); 
+            setFilters(prev => ({ ...prev, location: defLoc.value })); 
+          }
+        }
+      });
+    }
+    if (activeFilters.includes("locationsupplier")) {
+      fetchLocationSupplier(token, filters.company).then(setLocationSuppliers);
+    }
+  }, [filters.company, token, report]); 
 
-  // Report me sirf SCAT hai
-  fetchSalsifyScat(token)
-    .then(setSalsifyScats)
-    .catch(() => setSalsifyScats([]));
+  useEffect(() => {
+    if (!filters.company || !token) {
+      setSuppliers([]);
+      setSelectedSupplier(null);
+      return;
+    }
+    const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
+    if (activeFilters.includes("supplier")) {
+      fetchSuppliers(token, filters.company, "").then(setSuppliers).catch(() => setSuppliers([]));
+    }
+  }, [filters.company, token, report]);
 
-}, [token, report, selectedSalsifyMcat]);
+  useEffect(() => {
+    if (!filters.company || !token) {
+      setSuppliersOp([]);
+      setSelectedSupplierOp(null);
+      return;
+    }
+    const activeFilters = report?.filter_config?.filters.map((f: any) => f.name.toLowerCase()) || [];
+    if (activeFilters.includes("supplierop")) {
+      fetchSuppliersop(token, filters.company, "").then(setSuppliersOp).catch(() => setSuppliersOp([]));
+    }
+  }, [filters.company, token, report]);
 
-useEffect(()=>{
+  useEffect(() => {
+    if (!token) return;
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (activeFilters.includes("mcat")) fetchSalsifyMcat(token).then(setSalsifyMcats).catch(() => setSalsifyMcats([]));
+    if (activeFilters.includes("scat") && !activeFilters.includes("mcat")) fetchSalsifyScat(token).then(setSalsifyScats).catch(() => setSalsifyScats([]));
+    if (activeFilters.includes("itemcategory") && filters.company) fetchItemCategories(token, filters.company).then(setItemCategories).catch(() => setItemCategories([]));
+    if (activeFilters.includes("terms") && filters.company) fetchTerms(token, filters.company).then(setTerms).catch(() => setTerms([]));
+    if (activeFilters.includes("classnumber") && filters.company) fetchClassNumbers(token, filters.company).then(setClassNumbers).catch(() => setClassNumbers([]));
+  }, [filters.company, report, token]);
 
-  if(!filters.company) return;
-  if(!selectedClassNumber) return;
+  useEffect(() => {
+    if (!token) return;
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (!activeFilters.includes("scat")) return;
+    if (activeFilters.includes("mcat")) {
+      if (!selectedSalsifyMcat) {
+        fetchSalsifyScat(token).then(setSalsifyScats).catch(() => setSalsifyScats([]));
+        return;
+      }
+      fetchSalsifyScat(token, selectedSalsifyMcat.value).then(setSalsifyScats).catch(() => setSalsifyScats([]));
+      return;
+    }
+    fetchSalsifyScat(token).then(setSalsifyScats).catch(() => setSalsifyScats([]));
+  }, [token, report, selectedSalsifyMcat]);
 
-  fetchClassIds(
-     token,
-     filters.company,
-     selectedClassNumber.value
-  )
-  .then(setClassIds)
-  .catch(()=>setClassIds([]));
+  useEffect(() => {
+    if (!filters.company || !selectedClassNumber) return;
+    fetchClassIds(token, filters.company, selectedClassNumber.value).then(setClassIds).catch(() => setClassIds([]));
+  }, [selectedClassNumber]);
 
-},[selectedClassNumber]);
+  useEffect(() => {
+    if (!filters.company || !token) {
+      setPurchaseClass([]);
+      setSelectedPurchaseClass(null);
+      return;
+    }
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (!activeFilters.includes("purchaseclass")) return;
+    fetchPurchaseClass(token, filters.company).then(setPurchaseClass).catch(() => setPurchaseClass([]));
+  }, [filters.company, token, report]);
 
-useEffect(() => {
-  if (!filters.company || !token) {
-    setPurchaseClass([]);
-    setSelectedPurchaseClass(null);
-    return;
-  }
+  useEffect(() => {
+    if (!filters.company || !token) {
+      setProductGroup([]);
+      setSelectedProductGroup(null);
+      return;
+    }
+    const activeFilters = report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+    if (!activeFilters.includes("productgroup")) return;
+    fetchProductGroup(token, filters.company).then(setProductGroup).catch(() => setProductGroup([]));
+  }, [filters.company, token, report]);
 
-  const activeFilters =
-    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+  useEffect(() => {
+    if (!filters.company || !selectedSupplier) return;
+    fetchPricePages(token, filters.company, selectedSupplier.value).then(setPricePages).catch(() => setPricePages([]));
+  }, [selectedSupplier]);
 
-  if (!activeFilters.includes("purchaseclass")) return;
+  const salesRepFilter = report?.filter_config?.filters?.find((f: any) => f.name === "salesrep");
+  const supplierFilter = report?.filter_config?.filters?.find((f: any) => f.name === "supplier");
+  const supplierOpFilter = report?.filter_config?.filters?.find((f: any) => f.name === "supplierop");
+  const locationFilter = report?.filter_config?.filters?.find((f: any) => f.name === "location");
+  const locationsupplierFilter = report?.filter_config?.filters?.find((f: any) => f.name === "locationsupplier");
+  const rolesFilter = report?.filter_config?.filters?.find((f: any) => f.name === "roles");
+  const buyerFilter = report?.filter_config?.filters?.find((f: any) => f.name === "buyer");
+  const priceLibraryFilter = report?.filter_config?.filters?.find((f: any) => f.name === "pricelibrary");
+  const rolesReportsFilter = report?.filter_config?.filters?.find((f: any) => f.name === "rolesreports");
 
-  fetchPurchaseClass(token, filters.company)
-    .then(setPurchaseClass)
-    .catch(() => setPurchaseClass([]));
+  const allowSalesRepAll = salesRepFilter?.allowAll === true;
+  const allowSupplierAll = supplierFilter?.allowAll === true;
+  const allowSupplierOPAll = supplierOpFilter?.allowAll === true;
+  const allowLocationAll = locationFilter?.allowAll === true;
+  const allowLocationSupplierAll = locationsupplierFilter?.allowAll === true;
+  const allowBuyerAll = buyerFilter?.allowAll === true;
+  const allowPriceLibraryAll = priceLibraryFilter?.allowAll === true;
+  const allowRolesReportsAll = rolesReportsFilter?.allowAll === true;
+  const allowRolesAll = rolesFilter?.allowAll === true;
 
-}, [filters.company, token, report]);
+  const salesRepOptions = allowSalesRepAll ? [{ value: "ALL", label: "ALL" }, ...salesReps] : salesReps;
+  const supplierOptions = allowSupplierAll ? [{ value: "ALL", label: "ALL" }, ...suppliers] : suppliers;
+  const supplierOpOptions = allowSupplierOPAll ? [{ value: "ALL", label: "ALL" }, ...suppliersOp] : suppliersOp;
+  const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...locations] : locations;
+  const locationsupplierOptions = allowLocationSupplierAll ? [{ value: "ALL", label: "ALL" }, ...locationSuppliers] : locationSuppliers;
+  const sortedRoles = [...roles].sort((a, b) => {
+    if (String(a.label).toUpperCase() === "ALL") return -1;
+    if (String(b.label).toUpperCase() === "ALL") return 1;
+    return String(a.label).localeCompare(String(b.label));
+  });
 
-useEffect(() => {
-  if (!filters.company || !token) {
-    setProductGroup([]);
-    setSelectedProductGroup(null);
-    return;
-  }
+  const rolesOptions = allowRolesAll ? [{ value: "ALL_ROLE", label: "ALL Role" }, ...sortedRoles] : sortedRoles;
+  const buyerOptions = allowBuyerAll ? [{ value: "ALL", label: "ALL" }, ...buyer] : buyer;
+  const priceLibraryOptions = allowPriceLibraryAll ? [{ value: "ALL", label: "ALL" }, ...pricelibrary] : pricelibrary;
+  const rolesReportsOptions = allowRolesReportsAll ? [{ value: "ALL", label: "ALL" }, ...rolesreports] : rolesreports;
 
-  const activeFilters =
-    report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
-
-  if (!activeFilters.includes("productgroup")) return;
-
-  fetchProductGroup(token, filters.company)
-    .then(setProductGroup)
-    .catch(() => setProductGroup([]));
-
-}, [filters.company, token, report]);
-
-useEffect(()=>{
-
-  if(!filters.company) return;
-  if(!selectedSupplier) return;
-
-  fetchPricePages(
-     token,
-     filters.company,
-     selectedSupplier.value
-  )
-  .then(setPricePages)
-  .catch(()=>setPricePages([]));
-
-},[selectedSupplier]);
-
-const salesRepFilter = report?.filter_config?.filters?.find(
-  (f: any) => f.name === "salesrep"
-);
-const supplierFilter = report?.filter_config?.filters?.find(
-  (f: any) => f.name === "supplier"
-);
-const supplierOpFilter = report?.filter_config?.filters?.find(
-  (f: any) => f.name === "supplierop"
-);
-const locationFilter = report?.filter_config?.filters?.find(
-  (f: any) => f.name === "location"
-);
-const locationsupplierFilter = report?.filter_config?.filters?.find(
-  (f: any) => f.name === "locationsupplier"
-);
-const rolesFilter = report?.filter_config?.filters?.find(
-  (f: any) => f.name === "roles"
-);
-const buyerFilter = report?.filter_config?.filters?.find((
-  f: any) => f.name === "buyer"
-);
-const priceLibraryFilter = report?.filter_config?.filters?.find((
-  f: any) => f.name === "pricelibrary"
-);
-const rolesReportsFilter = report?.filter_config?.filters?.find((
-  f: any) => f.name === "rolesreports"
-);
-
-const allowSalesRepAll = salesRepFilter?.allowAll === true;
-const allowSupplierAll = supplierFilter?.allowAll === true;
-const allowSupplierOPAll = supplierOpFilter?.allowAll === true;
-const allowLocationAll = locationFilter?.allowAll === true ;
-const allowLocationSupplierAll = locationsupplierFilter?.allowAll === true ;
-const allowBuyerAll = buyerFilter?.allowAll === true;
-const allowPriceLibraryAll = priceLibraryFilter?.allowAll === true;
-const allowRolesReportsAll = rolesReportsFilter?.allowAll === true;
-const allowRolesAll = rolesFilter?.allowAll === true;
-// ✅ NEW: options with ALL conditionally
-const salesRepOptions = allowSalesRepAll? [{ value: "ALL", label: "ALL" }, ...salesReps]: salesReps;
-const supplierOptions = allowSupplierAll? [{ value: "ALL", label: "ALL" }, ...suppliers]: suppliers;
-const supplierOpOptions = allowSupplierOPAll? [{ value: "ALL", label: "ALL" }, ...suppliersOp]: suppliersOp;
-const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...locations] : locations;
-const locationsupplierOptions = allowLocationSupplierAll ? [{ value: "ALL", label: "ALL" }, ...locationSuppliers] : locationSuppliers;
-const sortedRoles = [...roles].sort((a, b) => {
-  if (String(a.label).toUpperCase() === "ALL") return -1;
-  if (String(b.label).toUpperCase() === "ALL") return 1;
-  return String(a.label).localeCompare(String(b.label));
-});
-
-const rolesOptions = allowRolesAll 
-  ? [{ value: "ALL_ROLE", label: "ALL Role" }, ...sortedRoles] 
-  : sortedRoles;
-const buyerOptions = allowBuyerAll ? [{ value: "ALL", label: "ALL" }, ...buyer] : buyer;
-const priceLibraryOptions = allowPriceLibraryAll ? [{ value: "ALL", label: "ALL" }, ...pricelibrary] : pricelibrary;
-const rolesReportsOptions = allowRolesReportsAll ? [{ value: "ALL", label: "ALL" }, ...rolesreports] : rolesreports;
-
-/* UPDATE FILTER */
   const updateFilter = (name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
     if (name === "company") {
@@ -967,355 +824,315 @@ const rolesReportsOptions = allowRolesReportsAll ? [{ value: "ALL", label: "ALL"
         pricelibrary: "",
         rolesreports: "",
         beginDate: "",
-
       }));
     }
   };
-  // 🔹 DATA FETCH LOGIC
-const fetchData = async (pageNum: number, isInitial = false) => {
-  if (!report) return;
-  if (isFetchingRef.current) return;
-  if (isCustomerInfo && !isInitial) return;
-  isFetchingRef.current = true;
-  if (isInitial) {
-    setLoading(true);
-    setData([]);
-  }
-
-  try {
   
-    const url = new URL(buildApiUrl(`/api/MasterReport/${reportKey}`));
-    // const isSummary = reportKey.toLowerCase().includes("summary") || reportKey.toLowerCase().includes("totals");
-    const usePagination = report?.pagination ?? true;
-    Object.entries(filters).forEach(([k, v]) => {
-      if (!v) return;
-      const filterDef = report.filter_config.filters.find(f => f.name === k);
-      const paramName = filterDef?.apiParam || k;
-      url.searchParams.append(paramName, v);
-    });
-    if (!isCustomerInfo && usePagination) {
-      url.searchParams.append("pageNumber", pageNum.toString());
-      url.searchParams.append("pageSize", PAGE_SIZE.toString());
-    }
-    const res = await axios.get(url.toString(), {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    
-    let newItems = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-    if (isCustomerInfo) { 
-      setCustomerData(res.data);
+  const fetchData = async (pageNum: number, isInitial = false) => {
+    if (!report) return;
+    if (isFetchingRef.current) return;
+    if (isCustomerInfo && !isInitial) return;
+    isFetchingRef.current = true;
+    if (isInitial) {
+      setLoading(true);
       setData([]);
-      setHasMore(false);
-    } else if (isThirteenMonthReport) {
-      newItems = res.data.data || [];
-      setData(newItems);
-      setHasMore(false);
-      if (isInitial && res.data?.months) setMonths(res.data.months);
-    } else {
-      newItems = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      if (isInitial) {
-        setData(newItems);
-        if (res.data?.totals) {
-          setGrandTotals(res.data.totals);
-          console.log("API Totals:", res.data.totals);
-      }
-        // Agar summary hai toh scroll permanently band
-        setHasMore(usePagination && newItems.length === PAGE_SIZE);
-      
-      } else {
-        // Sirf scroll hone par append
-        setData((prev) => [...prev, ...newItems]);
-        setHasMore(usePagination &&newItems.length === PAGE_SIZE);
-      }
     }
-    setAppliedFilters({ ...filters });
+
+    try {
+      const url = new URL(buildApiUrl(`/MasterReport/${reportKey}`), window.location.origin);
+      const usePagination = report?.pagination ?? true;
+      Object.entries(filters).forEach(([k, v]) => {
+        if (!v) return;
+        const filterDef = report.filter_config.filters.find(f => f.name === k);
+        const paramName = filterDef?.apiParam || k;
+        url.searchParams.append(paramName, v);
+      });
+      if (!isCustomerInfo && usePagination) {
+        url.searchParams.append("pageNumber", pageNum.toString());
+        url.searchParams.append("pageSize", PAGE_SIZE.toString());
+      }
+      const res = await axios.get(url.toString(), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      let newItems = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.Data || []);
+
+      if (isCustomerInfo) { 
+        setCustomerData(res.data);
+        setData([]);
+        setHasMore(false);
+      } else if (isThirteenMonthReport) {
+        newItems = res.data.data || res.data.Data || [];
+        setData(newItems);
+        setHasMore(false);
+        if (isInitial && res.data?.months) setMonths(res.data.months);
+      } else {
+        newItems = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.Data || []);
+        if ((reportKey === "fiveyearsalesbycustomer" || reportKey === "fiveyearsalesforgroupcode" || reportKey === "fiveyearsalesreportincludeprofit") && isInitial) {
+          if (res.data?.curryear || res.data?.Curryear) {
+            setCurrYear(res.data.curryear || res.data.Curryear);
+          }
+        }
+
+        if (isInitial) {
+          setData(newItems);
+          const fetchedTotals = res.data?.totals || res.data?.Totals;
+          if (fetchedTotals) setGrandTotals(fetchedTotals);
+          setHasMore(usePagination && newItems.length === PAGE_SIZE);
+        } else {
+          setData((prev) => [...prev, ...newItems]);
+          setHasMore(usePagination && newItems.length === PAGE_SIZE);
+        }
+      }
+      setAppliedFilters({ ...filters });
     } catch (err) {
-        console.error(err);
+      console.error(err);
     } finally {
-        setLoading(false);
-        isFetchingRef.current = false;
+      setLoading(false);
+      isFetchingRef.current = false;
     }
   };
+
   useEffect(() => {
     if (reportKey !== "divisionlookup") return;
-
     const strfilter = (filters.strfilter || "").trim();
-
     if (strfilter === "") {
         setData([]);
         setHasMore(false);
         return;
     }
-
     const timer = setTimeout(() => {
         setPage(1);
         setHasMore(true);
         fetchData(1, true);
     }, 300);
-
     return () => clearTimeout(timer);
+  }, [filters.strfilter, reportKey]);
 
-}, [filters.strfilter, reportKey]);
-// 🔹 EXCEL EXPORT LOGIC
-const handleExport = async (type: "excel" | "pdf") => {
-  if (!validateFilters()) return;
-  setDownloading(true);
-  try {
-    const exportUrl = buildApiUrl(`/api/MasterReport/${reportKey}/${type}`);
-    
-    const footerConfig = FOOTER_TOTAL_CONFIG[reportKey] || { 
-      totalColumns: [], 
-      labelColumn: undefined 
-    };
-    const mappedFilters: Record<string, string> = {};
+  useEffect(() => {
+    if (reportKey !== "customerlookupbyemailaddress") return;
+    const emailfilter = (filters.emailaddress || "").trim();
+    if (emailfilter.length <= 3) {
+        setData([]);
+        setHasMore(false);
+        return;
+    }
+    const timer = setTimeout(() => {
+        setPage(1);
+        setHasMore(true);
+        fetchData(1, true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filters.emailaddress, reportKey]);
+
+  useEffect(() => {
+    if (!filters.company || !selectedSupplier) {
+      setBrands([]);
+      setSelectedBrand(null);
+      return;
+    }
+  
+    const activeFilters =
+      report?.filter_config?.filters.map((x: any) => x.name.toLowerCase()) || [];
+  
+    if (!activeFilters.includes("brand")) return;
+  
+    fetchSupplierCustomerBrands(token, filters.company, selectedSupplier.value)
+      .then(setBrands)
+      .catch(() => setBrands([]));
+  }, [selectedSupplier, filters.company, token, report]);
+
+  const handleExport = async (type: "excel" | "pdf") => {
+    if (!validateFilters()) return;
+    setDownloading(true);
+    try {
+      const exportUrl = buildApiUrl(`/MasterReport/${reportKey}/${type}`);
+      const footerConfig = FOOTER_TOTAL_CONFIG[reportKey] || { totalColumns: [], labelColumn: undefined };
+      const mappedFilters: Record<string, string> = {};
       Object.entries(filters).forEach(([k, v]) => {
         const filterDef = report.filter_config.filters.find(f => f.name === k);
         const paramName = filterDef?.apiParam || k;
-        mappedFilters[paramName] =
-        typeof v === "boolean" ? String(v) : v;
+        mappedFilters[paramName] = typeof v === "boolean" ? String(v) : v;
       });
       const reportTitle = `${report.name} (${buildFilterSummary()})`;
-    const payload = {
-      reportName: report.name,
-      reportTitle: reportTitle,
-      compId: filters.company,
-      // filters: { ...filters, isExport: "true" },
-      filters: { ...mappedFilters, isExport: "true" },
-      filterSummary: buildFilterSummary(),
-      totalColumns: footerConfig.totalColumns, 
-      labelColumn: footerConfig.labelColumn 
-    };
-    const res = await axios.post(exportUrl, payload, {
-      responseType: "blob", // Important for downloading binary files
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const mimeType = type === "excel" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
-    const blob = new Blob( [res.data], { type: mimeType } );
-    
-    // 🔹 handleExport ke andar create download link wala part
-const generateFormattedFileName = () => {
-  const reportName = report.name;
-  const parts: string[] = [];
+      const columnNames = visibleColumns.map((c: any) => c.key);
+      const columnLabels = visibleColumns.map((c: any) => c.label);
+      const columnDataTypes = visibleColumns.map((c: any) => c.type || "text");
+      const payload = {
+        reportName: report.name,
+        reportTitle: reportTitle,
+        compId: filters.company,
+        filters: { ...mappedFilters, isExport: "true" },
+        filterSummary: buildFilterSummary(),
+        totalColumns: footerConfig.totalColumns, 
+        labelColumn: footerConfig.labelColumn ,
+        columnNames: columnNames,
+        columnLabels: columnLabels,
+        columnDataTypes: columnDataTypes
+      };
+      const res = await axios.post(exportUrl, payload, {
+        responseType: "blob",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const mimeType = type === "excel" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
+      const blob = new Blob([res.data], { type: mimeType });
+      
+      const generateFormattedFileName = () => {
+        const reportName = report.name;
+        const parts: string[] = [];
+        if (filters.company) parts.push(filters.company);
+        const mainFilter = selectedVendor?.label || selectedCustomer?.label?.replace(" - AR", "").trim() || selectedSalesRep?.label || selectedSupplier?.label;
+        if (mainFilter && mainFilter !== "ALL") parts.push(mainFilter);
+        if (filters.fromdate && filters.tilldate) {
+          parts.push(`${filters.fromdate}-${filters.tilldate}`);
+        } else if (filters.timeperiod) {
+          parts.push(filters.timeperiod);
+        } else {
+          const today = new Date().toISOString().split('T')[0];
+          parts.push(today);
+        }
+        const filterString = parts.length > 0 ? `(${parts.join("-")})` : "";
+        const extension = type === "excel" ? "xlsx" : "pdf";
+        return `${reportName}${filterString}.${extension}`.replace(/\s+/g, " "); 
+      };
 
-  // 1. Pehle Company ID (ECN, IVD etc.)
-  if (filters.company) parts.push(filters.company);
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = generateFormattedFileName();
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      showToast(`${type.toUpperCase()} export failed. Please try again.`, "error");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
-  // 2. Phir baaki filters (Vendor, Customer etc.) agar Date ke alawa kuch hai
-  const mainFilter = selectedVendor?.label || selectedCustomer?.label ?.replace(" - AR", "") .trim() || selectedSalesRep?.label || selectedSupplier?.label;
-  if (mainFilter && mainFilter !== "ALL") parts.push(mainFilter);
-
-  // 3. Date Range (From aur Till date ko dash se jodna)
-  if (filters.fromdate && filters.tilldate) {
-    parts.push(`${filters.fromdate}-${filters.tilldate}`);
-  } else if (filters.timeperiod) {
-    parts.push(filters.timeperiod);
-  } else {
-    // Agar dates select nahi hain toh current date (YYYY-MM-DD)
-    const today = new Date().toISOString().split('T')[0];
-    parts.push(today);
-  }
-
-  // 4. Bracket ke andar saare parts ko join karna
-  const filterString = parts.length > 0 ? `(${parts.join("-")})` : "";
-
-  const extension = type === "excel" ? "xlsx" : "pdf";
-  return `${reportName}${filterString}.${extension}` .replace(/\s+/g, " "); 
-};
-
-const link = document.createElement("a");
-link.href = window.URL.createObjectURL(blob);
-
-// 🔥 Exactly aapke bataye huye format me download hoga
-link.download = generateFormattedFileName();
-
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
-    
-  } catch (err) {
-    showToast(`${type.toUpperCase()} export failed. Please try again.`, "error");
-  } finally {
-    setDownloading(false);
-  }
-};
   const handleApplyFilters = () => {
     if (!validateFilters()) return;
     setPage(1);
     setHasMore(true);
     fetchData(1, true); 
   };
+
   useEffect(() => {
     const handleScroll = (e: any) => {
-      if (isCustomerInfo || isItemDetailsReport|| loading || !hasMore) return;
-
+      if (isCustomerInfo || isItemDetailsReport || loading || !hasMore) return;
       const target = e.target as HTMLElement;
       if (target.classList.contains('overflow-auto') || target.tagName === 'DIV') {
         const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
-        
-        if (scrollHeight - scrollTop <= clientHeight + 100 ) {
+        if (scrollHeight - scrollTop <= clientHeight + 100) {
           const nextPage = page + 1;
           setPage(nextPage);
           fetchData(nextPage);
         }
       }
     };
-
-    window.addEventListener("scroll", handleScroll,true);
-    return () => window.removeEventListener("scroll", handleScroll , true);
-  }, [loading, hasMore, page,isCustomerInfo]);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [loading, hasMore, page, isCustomerInfo]);
   
+  const footerConfig = FOOTER_TOTAL_CONFIG[reportKey] || { totalColumns: [], labelColumn: undefined, dbTotalKeys: {} };
+  const totalColumns = footerConfig.totalColumns || [];
+  const dbTotalKeys = footerConfig.dbTotalKeys || {};
+  const totals: Record<string, number> = {};
+  const firstRow = sortedData[0] || {};
   
-// ✅ FOOTER CONFIG with column name support
-const footerConfig = FOOTER_TOTAL_CONFIG[reportKey] || { 
-  totalColumns: [], 
-  labelColumn: undefined ,
-  dbTotalKeys: {} // new
-};
+  totalColumns.forEach((colKey) => {
+    visibleColumns.find(c => c.key === colKey)?.type === "percentage";
+  });
 
-const totalColumns = footerConfig.totalColumns || [];
-const dbTotalKeys = footerConfig.dbTotalKeys || {};
- const totals: Record<string, number> = {};
-const firstRow = sortedData[0] || {};
-totalColumns.forEach((colKey) => {
-  visibleColumns.find(c => c.key === colKey)?.type === "percentage";
-});
+  totalColumns.forEach((colKey) => {
+    const colKeyLower = colKey.toLowerCase();
+    const dbMappedKey = dbTotalKeys[colKey];
+    const isPercentageCol = colKeyLower.includes("percent") || visibleColumns.find(c => c.key === colKey)?.type === "percentage";
 
-
-// 1. FIRST PASS: Saare normal columns aur Gross Profit ka direct SUM
-totalColumns.forEach((colKey) => {
-  const colKeyLower = colKey.toLowerCase();
-  const dbMappedKey = dbTotalKeys[colKey];
-  const isPercentageCol = colKeyLower.includes("percent") || 
-                          visibleColumns.find(c => c.key === colKey)?.type === "percentage";
-
-  if (dbMappedKey && firstRow[dbMappedKey] !== undefined) {
-    totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
-  } 
-  else if (!isPercentageCol) {
-    totals[colKey] = sortedData.reduce((sum: number, row: any) => {
-      const val = parseFloat(String(row[colKey] || "0"));
-      return sum + (isNaN(val) ? 0 : val);
-    }, 0);
-  }
-});
-
-// 2. SECOND PASS: Percentage calculation (ADS vs Closeout safe logic)
-visibleColumns.forEach((col) => {
-  if (!totalColumns.includes(col.key)) return;
-  const colKeyLower = col.key.toLowerCase();
-
-  if (col.type === "percentage" || colKeyLower.includes("percent")) {
-    if (reportKey === "saleshistory_customer_ytd" || reportKey === "saleshistory_customer_ytd_rep" 
-    || reportKey ==="saleshistory_for_supplier_by_customer_ytd_lytd" || reportKey =="saleshistory_rep_ytd" 
-    || reportKey ==="ydtvslytdsalesexcludingfreight") {
-
-      const lytdTotal = totals["lytd"] || 0;
-      const ytdTotal = totals["ytd"] || 0;
-      const changeTotal = totals["Change"] || (ytdTotal - lytdTotal);
-  
-      if (lytdTotal !== 0) {
-          totals[col.key] = (changeTotal / lytdTotal) * 100;
-      } else {
-          totals[col.key] = 0;
-      }
-  
-      return;
-  }
-    const salesKey = visibleColumns.find(c => 
-      ["total_merch", "sales", "merch", "extended_price"].some(k => c.key.toLowerCase() === k)
-    )?.key;
-    const costKey = visibleColumns.find(c => 
-      ["total_cost", "cost", "cogs"].some(k => c.key.toLowerCase() === k)
-    )?.key;
-    const profitKey = visibleColumns.find(c => 
-      ["gross_profit", "gross", "profit_amt", "gp"].some(k => c.key.toLowerCase() === k)
-    )?.key;
-
-    const sTotal = salesKey ? (totals[salesKey] || 0) : 0;
-    const cTotal = costKey ? (totals[costKey] || 0) : 0;
-    const pTotal = profitKey ? (totals[profitKey] || 0) : (sTotal - cTotal);
-
-    // Final Percentage Math: (Total Profit / Total Sales) * 100
-    if (sTotal !== 0) {
-      totals[col.key] = (pTotal / sTotal) * 100;
-    } else {
-      totals[col.key] = 0;
+    if (dbMappedKey && firstRow[dbMappedKey] !== undefined) {
+      totals[colKey] = parseFloat(String(firstRow[dbMappedKey]));
+    } else if (!isPercentageCol) {
+      totals[colKey] = sortedData.reduce((sum: number, row: any) => {
+        const val = parseFloat(String(row[colKey] || "0"));
+        return sum + (isNaN(val) ? 0 : val);
+      }, 0);
     }
-  }
-});
+  });
 
-  /* CUSTOMER VALIDATION */
+  visibleColumns.forEach((col) => {
+    if (!totalColumns.includes(col.key)) return;
+    const colKeyLower = col.key.toLowerCase();
+    if (col.type === "percentage" || colKeyLower.includes("percent")) {
+      if (reportKey === "eventreportinvoicesalesvendortotalswithprofitforeventsuppliers") {
+        const showSalesTotal = totals["SHOW_SALES"] || 0;
+        const nonShowSalesTotal = totals["NON_SHOW_SALES"] || 0;
+  
+        if (col.key === "show_profit") {
+          const totalShowGP = sortedData.reduce((acc: number, r: any) => {
+            const sales = parseFloat(r.SHOW_SALES) || 0;
+            const pct = parseFloat(r.show_profit) || 0;
+            return acc + (sales * pct / 100);
+          }, 0);
+  
+          totals[col.key] = showSalesTotal !== 0 ? (totalShowGP / showSalesTotal) * 100 : 0;
+        } 
+        else if (col.key === "non_show_profit") {
+          const totalNonShowGP = sortedData.reduce((acc: number, r: any) => {
+            const sales = parseFloat(r.NON_SHOW_SALES) || 0;
+            const pct = parseFloat(r.non_show_profit) || 0;
+            return acc + (sales * pct / 100);
+          }, 0);
+  
+          totals[col.key] = nonShowSalesTotal !== 0 ? (totalNonShowGP / nonShowSalesTotal) * 100 : 0;
+        }
+        return;
+      }
+      if (reportKey === "saleshistory_customer_ytd" || reportKey === "saleshistory_customer_ytd_rep" || reportKey === "saleshistory_for_supplier_by_customer_ytd_lytd" || reportKey === "saleshistory_rep_ytd" || reportKey === "ydtvslytdsalesexcludingfreight") {
+        const lytdTotal = totals["lytd"] || 0;
+        const ytdTotal = totals["ytd"] || 0;
+        const changeTotal = totals["Change"] || (ytdTotal - lytdTotal);
+        totals[col.key] = lytdTotal !== 0 ? (changeTotal / lytdTotal) * 100 : 0;
+        return;
+      }
+      const salesKey = visibleColumns.find(c => ["total_merch", "sales", "merch", "extended_price"].some(k => c.key.toLowerCase() === k))?.key;
+      const costKey = visibleColumns.find(c => ["total_cost", "cost", "cogs"].some(k => c.key.toLowerCase() === k))?.key;
+      const profitKey = visibleColumns.find(c => ["gross_profit", "gross", "profit_amt", "gp"].some(k => c.key.toLowerCase() === k))?.key;
+
+      const sTotal = salesKey ? (totals[salesKey] || 0) : 0;
+      const cTotal = costKey ? (totals[costKey] || 0) : 0;
+      const pTotal = profitKey ? (totals[profitKey] || 0) : (sTotal - cTotal);
+
+      totals[col.key] = sTotal !== 0 ? (pTotal / sTotal) * 100 : 0;
+    }
+  });
+
   const handleCustomerBlur = async () => {
     if (!filters.customer || !filters.company) return;
     const result = await validateCustomer(token, filters.company, filters.customer);
     setCustomerError(result ? "" : "Invalid Customer ID");
   };
 
-const buildFilterSummary = (): string => {
-
-  const parts: string[] = [];
-
-  // Company
-  if (filters.company) {
-
-    const companyName =
-      companies.find(
-        c => c.value === filters.company
-      )?.label || filters.company;
-
-    parts.push(companyName.toUpperCase());
-  }
-
-  // Customer
-  if (
-    filters.customer &&
-    selectedCustomer?.label
-  ) {
-
-    parts.push(
-      selectedCustomer.label
-        .replace(" - AR", "")
-        .trim()
-    );
-  }
-
-  // Vendor
-  if (
-    filters.vendor &&
-    selectedVendor?.label
-  ) {
-
-    parts.push(selectedVendor.label);
-  }
-
-  // Supplier
-  if (
-    filters.supplier &&
-    selectedSupplier?.label
-  ) {
-
-    parts.push(selectedSupplier.label);
-  }
-
-  // Time Period
-  if (filters.timeperiod) {
-
-    parts.push(filters.timeperiod);
-  }
-
-  // Date Range
-  else if (
-    filters.fromdate &&
-    filters.tilldate
-  ) {
-
-    parts.push(
-      `${filters.fromdate} To ${filters.tilldate}`
-    );
-  }
-
-  return parts.join(" - ");
-};
+  const buildFilterSummary = (): string => {
+    const parts: string[] = [];
+    if (filters.company) {
+      const companyName = companies.find(c => c.value === filters.company)?.label || filters.company;
+      parts.push(companyName.toUpperCase());
+    }
+    if (filters.customer && selectedCustomer?.label) {
+      parts.push(selectedCustomer.label.replace(" - AR", "").trim());
+    }
+    if (filters.vendor && selectedVendor?.label) {
+      parts.push(selectedVendor.label);
+    }
+    if (filters.supplier && selectedSupplier?.label) {
+      parts.push(selectedSupplier.label);
+    }
+    if (filters.timeperiod) {
+      parts.push(filters.timeperiod);
+    } else if (filters.fromdate && filters.tilldate) {
+      parts.push(`${filters.fromdate} To ${filters.tilldate}`);
+    }
+    return parts.join(" - ");
+  };
 
   if (!report) return null;
 
@@ -1371,7 +1188,6 @@ const buildFilterSummary = (): string => {
             {report.supports_pdf_export && (
               <button
                  onClick={() => handleExport("pdf")}
-                
                 disabled={downloading}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2 shadow-sm"
               >
@@ -1425,28 +1241,34 @@ const buildFilterSummary = (): string => {
                if (
                 f.hideWhen &&
                 filters[f.hideWhen.filter] === f.hideWhen.value
-              ) {
-                return null;
-              }
-              // ================== MUTUAL DISABLE LOGIC ==================
-              let isDisabled = false;
-              const shouldShowLabel = f.hideLabel === false ? true : false;
-              const fName = f.name.toLowerCase();
+               ) {
+                 return null;
+               }
+               if (f.name.toLowerCase() === "prefix") {
+                const currentSupplier = filters["supplier"] || "";
+                if (currentSupplier !== "ALL") {
+                    return null; // Text box hide ho jayega agar ALL select nahi hai
+                }
+            }
+               // ================== MUTUAL DISABLE LOGIC ==================
+               let isDisabled = false;
+               const shouldShowLabel = f.hideLabel === false ? true : false;
+               const fName = f.name.toLowerCase();
 
-              if (fName === "fromdate" || fName === "tilldate") {
-                if (filters.timeperiod) isDisabled = true;
-              }
-              if (fName === "timeperiod") {
-                if (filters.fromdate || filters.tilldate) isDisabled = true;
-              }
-              return (
-              <div key={f.name} className="flex flex-col">
-                <div className="min-h-[24px]">
-                {shouldShowLabel && f.label && (
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1 tracking-wider uppercase">
-                        {f.label}
-                    </label>
-                )}
+               if (fName === "fromdate" || fName === "tilldate") {
+                 if (filters.timeperiod) isDisabled = true;
+               }
+               if (fName === "timeperiod") {
+                 if (filters.fromdate || filters.tilldate) isDisabled = true;
+               }
+               return (
+               <div key={f.name} className="flex flex-col">
+                 <div className="min-h-[24px]">
+                 {shouldShowLabel && f.label && (
+                     <label className="block text-[11px] font-semibold text-slate-400 mb-1 tracking-wider uppercase">
+                         {f.label}
+                     </label>
+                 )}
             </div>
                 {f.type === "select" && f.options && f.options.length > 0 ? (
                   <select
@@ -1465,7 +1287,7 @@ const buildFilterSummary = (): string => {
                       </option>
                     ))}
                   </select>
-                ): f.name === "company" ? (
+                ) : f.name === "company" ? (
                   <select
                     value={filters.company || ""}
                     onChange={(e) => updateFilter("company", e.target.value)}
@@ -1574,7 +1396,7 @@ const buildFilterSummary = (): string => {
                         updateFilter("customer", v?.value || "");
                       }}
                       onBlur={handleCustomerBlur}
-                      placeholder="Search customer..."
+                      placeholder="customer id..."
                     />
                     {customerError && <p className="text-red-500 text-xs mt-1">{customerError}</p>}
                     </div>
@@ -1617,14 +1439,14 @@ const buildFilterSummary = (): string => {
                             }}
                             className="w-4 h-4 cursor-pointer"
                           />
-                  
+      
                           <span className="text-sm">
                             {option}
                           </span>
                         </label>
                       ))}
-                    </div>                                 
-                ): f.name === "show" ? (
+                    </div>                            
+                ) : f.name === "show" ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2"
                     disabled={!filters.company}
@@ -1641,7 +1463,7 @@ const buildFilterSummary = (): string => {
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
-                ): f.name === "promo" ? (
+                ) : f.name === "promo" ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2"
                     disabled={!filters.company}
@@ -1658,7 +1480,7 @@ const buildFilterSummary = (): string => {
                       <option key={p.value} value={p.value}>{p.label}</option>
                     ))}
                   </select>
-                ): f.name === "location" ? (
+                ) : f.name === "location" ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2"
                     disabled={!filters.company}
@@ -1672,12 +1494,12 @@ const buildFilterSummary = (): string => {
                   >
                    <option value="">Select Location</option>
                    {locationOptions.map((l) => (
-                      <option key={l.value} value={l.value}>
-                        {l.label}
-                      </option>
-                    ))}
+                        <option key={l.value} value={l.value}>
+                          {l.label}
+                        </option>
+                      ))}
                   </select>
-                ): f.name === "locationsupplier" ? (
+                ) : f.name === "locationsupplier" ? (
                   <select
                     className="w-full border border-gray-300 rounded px-3 py-2"
                     disabled={!filters.company}
@@ -1723,7 +1545,7 @@ const buildFilterSummary = (): string => {
                     </select>
                 ) : f.name==="scat" ? (
                     
-                  <select
+                   <select
                     value={selectedSalsifyScat?.value||""}
                     onChange={(e)=>{
                     
@@ -1775,7 +1597,7 @@ const buildFilterSummary = (): string => {
                     
                     )}
                     
-                  </select>
+                </select>
                 ) : f.name==="pricepage" ? (
                     
                     <select
@@ -1857,8 +1679,8 @@ const buildFilterSummary = (): string => {
                     )}
                     
                     </select>
-                ) : f.name==="classid" ? (                   
-                  <select
+                ) : f.name==="classid" ? (                    
+                    <select
                     value={selectedClassId?.value||""}
                     onChange={(e)=>{
                     
@@ -1882,9 +1704,9 @@ const buildFilterSummary = (): string => {
                     
                     )}
                     
-                  </select>
-                ) : f.name==="purchaseclass" ? (                   
-                  <select
+                </select>
+                ) : f.name==="purchaseclass" ? (                    
+                    <select
                     value={selectedPurchaseClass?.value||""}
                     onChange={(e)=>{
                     
@@ -1908,9 +1730,9 @@ const buildFilterSummary = (): string => {
                     
                     )}
                     
-                  </select>
-                ) : f.name==="productgroup" ? (                   
-                  <select
+                </select>
+                ) : f.name==="productgroup" ? (                    
+                    <select
                     value={selectedProductGroup?.value||""}
                     onChange={(e)=>{
                     
@@ -1934,6 +1756,25 @@ const buildFilterSummary = (): string => {
                     
                     )}
                     
+                </select>
+                ) : f.name === "brand" ? (
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!filters.company || !selectedSupplier}
+                    value={selectedBrand?.value || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const obj = brands.find((b) => b.value === val) || null;
+                      setSelectedBrand(obj);
+                      updateFilter("brand", val);
+                    }}
+                  >
+                    <option value="">Select Brand</option>
+                    {brands.map((b) => (
+                      <option key={b.value} value={b.value}>
+                        {b.label}
+                      </option>
+                    ))}
                   </select>
                 ) : f.type === "date" ? (
                   <div className="relative w-full custom-datepicker-container">
@@ -1969,15 +1810,15 @@ const buildFilterSummary = (): string => {
                     value={selectedRoles?.value || ""}
                     onChange={(e) => {
                       const val = e.target.value;
-                
+              
                       const role = rolesOptions.find((r) => r.value === val) || null;
-                
+              
                       setSelectedRoles(role);
                       updateFilter("roles", val);
                     }}
                   >
                     <option value="">Select Roles</option>
-                
+              
                     {rolesOptions.map((role) => (
                       <option key={role.value} value={role.value}>
                         {role.label}
@@ -2045,19 +1886,19 @@ const buildFilterSummary = (): string => {
                   <div className="relative w-full custom-datepicker-container">
                     <DatePicker
                       portalId="root"
-                
+              
                       selected={(() => {
                         const value = filters[f.name];
-                
+              
                         if (!value) return null;
-                
+              
                         const parts = value.split("/");
-                
+              
                         if (parts.length !== 2) return null;
-                
+              
                         const month = Number(parts[0]);
                         const year = Number(parts[1]);
-                
+              
                         if (
                           !Number.isInteger(month) ||
                           !Number.isInteger(year) ||
@@ -2067,25 +1908,25 @@ const buildFilterSummary = (): string => {
                         ) {
                           return null;
                         }
-                
+              
                         return new Date(year, month - 1, 1);
                       })()}
-                
+              
                       onChange={(date: Date | null) => {
                         updateFilter(
                           f.name,
                           date ? format(date, "MM/yyyy") : ""
                         );
                       }}
-                
+              
                       placeholderText={f.label?.toUpperCase() || "MM/YY"}
-                
+              
                       showMonthYearPicker
                       dateFormat="MM/yyyy"
-                
+              
                       autoComplete="off"
                       disabled={isDisabled}
-                
+              
                       className={`w-full border border-gray-300 rounded px-3 py-2 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                         isDisabled
                           ? "bg-gray-100 opacity-50 cursor-not-allowed"
@@ -2135,7 +1976,7 @@ const buildFilterSummary = (): string => {
                       ))}
                     </select>
                   </div>
-                  ) :f.type === "number" ? (
+                ) :f.type === "number" ? (
                     <input
                         type="number"
                         value={filters[f.name] ?? ""}
@@ -2143,7 +1984,7 @@ const buildFilterSummary = (): string => {
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder={f.placeholder || ""}
                     />
-                ): (
+                ) : (
                   <input
                     type="text"
                     value={filters[f.name] || ""}
@@ -2155,7 +1996,7 @@ const buildFilterSummary = (): string => {
                 )}
               </div>
               );
-                })}
+              })}
           </div>
         </div>
 
@@ -2166,12 +2007,12 @@ const buildFilterSummary = (): string => {
               <div className="p-20 text-center">
                 <RefreshCw className="animate-spin mx-auto text-blue-600" size={32} />
               </div>
-              ) : !customerData ? (
+            ) : !customerData ? (
               <div className="p-20 text-center text-gray-500">
                 No customer data available. Please select customer and apply filters.
               </div>
             ) : (
-              <CustomerInfo data={customerData} />
+              <CustomerInfo data={customerData} compId={filters.company} />
             )}
           </div>
         ) : isItemDetailsReport ? (
@@ -2196,9 +2037,9 @@ const buildFilterSummary = (): string => {
                 No records found. Check filters or API response.
               </div>
             ) : (
-              <div className="flex-1">
-              <table className="w-full table-fixed text-xs" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
-              <thead className="sticky z-40" style={{ top: stickyTopOffset }}>
+              <div className={`flex-1 ${report?.enableHorizontalScroll ? 'overflow-x-auto max-h-[550px]' : ''}`}>
+              <table className={`w-full text-xs ${!report?.enableHorizontalScroll ? 'table-fixed' : ''}`} style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: report?.minWidth || "100%" }}>
+              <thead className="sticky z-40 bg-white" style={{ top: report?.enableHorizontalScroll ? 0 : stickyTopOffset }}>
                 <tr>
                   {/* {modifiedColumns.map((c) => ( */}
                   {visibleColumns.map((c, idx) => (
@@ -2206,7 +2047,7 @@ const buildFilterSummary = (): string => {
                       key={`${c.key}-${idx}`}
                       style={{ width: c.width }}
                       onClick={() => handleSort(c.key)}
-                      className={`px-3 py-3 text-xs font-semibold text-slate-300 cursor-pointer select-none ${                
+                      className={`px-3 py-3 text-xs font-semibold text-slate-300 bg-[#161d2e] cursor-pointer select-none ${report?.enableHorizontalScroll ? 'whitespace-nowrap' : ''} ${ 
                         (c.type === "currency" || c.type === "percentage" || c.type === "large_integer" || c.type === "decimal") 
                           ? "text-right" 
                           : "text-left"
@@ -2231,10 +2072,10 @@ const buildFilterSummary = (): string => {
                         key={`${c.key}-${idx}`}
                         style={{ width: c.width }}
                         
-                        className={`px-3 py-2.5 text-gray-900 border-b  ${
+                        className={`px-3 py-2.5 text-gray-900 border-b ${report?.enableHorizontalScroll ? 'whitespace-nowrap' : 'break-words'} ${
                           (c.type === "currency" || c.type === "percentage" || c.type === "large_integer" ||  c.type === "decimal")
                             ? "text-right font-medium tabular-nums"
-                            : "text-left break-words"
+                            : "text-left"
                         }`}
                       >
                         {c.render 
@@ -2243,7 +2084,7 @@ const buildFilterSummary = (): string => {
                         }
                       </td>
                     ))}
-                    
+                  
                   </tr>
                 ))}
               </tbody>
@@ -2263,7 +2104,7 @@ const buildFilterSummary = (): string => {
                       return (
                         <td
                           key={`${col.key}-${idx}`}
-                          className={`px-3 py-2 font-semibold ${
+                          className={`px-3 py-2 font-semibold bg-gray-100 ${report?.enableHorizontalScroll ? 'whitespace-nowrap' : ''} ${
                             col.type === "currency" ||
                             col.type === "number" ||
                             col.type === "percentage" ||
@@ -2277,7 +2118,7 @@ const buildFilterSummary = (): string => {
                             <span className="font-bold">Total</span>
                           ) : totalValue !== undefined ? (
                             col.type === "percentage" ? (
-                              `${Number(totalValue).toFixed(1)}%`
+                              `${Number(totalValue).toFixed(2)}%`
                             ) : col.type === "currency" ? (
                               new Intl.NumberFormat("en-US", {
                                 style: "currency",
@@ -2287,7 +2128,7 @@ const buildFilterSummary = (): string => {
                               }).format(Number(totalValue))
                             ) : col.type === "decimal" ? (
                               Number(totalValue).toFixed(2)
-                            ): (
+                            ) : (
                               Math.round(Number(totalValue)).toLocaleString()
                             )
                           ) : (
@@ -2299,20 +2140,20 @@ const buildFilterSummary = (): string => {
                   </tr>
                 </tfoot>
               )}
-            </table>
+              </table>
+              </div>
+              )}
             </div>
-            )}
-          </div>
-        )}
-      </main>
-      <ScheduleModal
-      show={showSchedule}
-      onClose={() => setShowSchedule(false)}
-       reportName={report?.name}
-       companyName={filters?.company}
-       filterData={filters}
-    />
-    </div>
+          )}
+        </main>
+        <ScheduleModal
+        show={showSchedule}
+        onClose={() => setShowSchedule(false)}
+         reportName={report?.name}
+         companyName={filters?.company}
+         filterData={filters}
+     />
+     </div>
     
   );
 }

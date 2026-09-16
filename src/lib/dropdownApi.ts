@@ -1,7 +1,7 @@
 //lib/drpdownapi
 import axios from "axios";
 
-const API_BASE = "http://localhost:5278";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 export interface CompanyOption {
   value: string;
@@ -113,11 +113,13 @@ export interface CustomerOption {
     value: string;
     label: string;
   }
-  
-  
-// Fetch companies
+  export interface BrandOption {
+    value: string;
+    label: string;
+  }
+ 
 export const fetchCompanies = async (token: string): Promise<CompanyOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/companies`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/companies`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const allowed = ["ADV", "IVD", "ECN", "XG"];
@@ -126,13 +128,12 @@ export const fetchCompanies = async (token: string): Promise<CompanyOption[]> =>
     : [];
 };
 
-// Fetch vendors
 export const fetchVendors = async (
   token: string,
   companyId: string,
   search: string
 ): Promise<VendorOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/vendors`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/vendors`, {
     params: { compId: companyId, search },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -141,13 +142,12 @@ export const fetchVendors = async (
     : [];
 };
 
-// Fetch sales reps
 export const fetchSalesReps = async (
   token: string,
   companyId: string,
   search: string
 ): Promise<SalesRepOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/salesreps`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/salesreps`, {
     params: { compId: companyId, search },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -156,13 +156,12 @@ export const fetchSalesReps = async (
     : [];
 };
 
-// 🔹 Fetch suppliers (NEW)
 export const fetchSuppliers = async (
   token: string,
   companyId: string,
   search: string
 ): Promise<SupplierOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/suppliers`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/suppliers`, {
     params: { compId: companyId, search },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -174,13 +173,12 @@ export const fetchSuppliers = async (
     : [];
 };
 
-// 🔹 Search Customers
 export const fetchCustomers = async (
   token: string,
   companyId: string,
   search: string
 ): Promise<CustomerOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/customers`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/customers`, {
     params: { compId: companyId, search },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -193,13 +191,12 @@ export const fetchCustomers = async (
     : [];
 };
 
-// 🔹 Validate Customer ID
 export const validateCustomer = async (
   token: string,
   companyId: string,
   customerId: string
 ) => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/customers/validate`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/customers/validate`, {
     params: { compId: companyId, custId: customerId },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -207,13 +204,12 @@ export const validateCustomer = async (
   return res.data?.length > 0 ? res.data[0] : null;
 };
 
-// 🔹 Fetch suppliersop (NEW)
 export const fetchSuppliersop = async (
   token: string,
   companyId: string,
   search: string
 ): Promise<SupplierOpOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/suppliers/op`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/suppliers/op`, {
     params: { compId: companyId, search },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -229,7 +225,7 @@ export const fetchShows = async (
   token: string,
   companyId: string
 ): Promise<ShowOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/shows`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/shows`, {
     params: { compId: companyId },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -246,7 +242,7 @@ export const fetchPromos = async (
   token: string,
   companyId: string
 ): Promise<PromoOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/promos`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/promos`, {
     params: { compId: companyId },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -264,7 +260,7 @@ export const fetchLocations = async (
   companyId: string,
   locType: string = "WAREHOUSE"
 ): Promise<LocationOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/locations`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/locations`, {
     params: { compId: companyId,locType: locType },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -281,7 +277,7 @@ export const fetchLocationSupplier = async (
   token: string,
   companyId: string
 ): Promise<LocationSupplierOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/location-supplier`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/location-supplier`, {
     params: { compId: companyId },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -295,7 +291,7 @@ export const fetchLocationSupplier = async (
 };
 
 export const fetchPeriods = async (token: string): Promise<PeriodOption[]> => {
-  const res = await axios.get(`${API_BASE}/api/Dropdown/periods`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/periods`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return Array.isArray(res.data) ? res.data : [];
@@ -305,7 +301,7 @@ export const fetchSalsifyMcat = async (
   token: string
 ): Promise<SalsifyMcatOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/salsify/mcat`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/salsify/mcat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return Array.isArray(res.data)
@@ -327,7 +323,7 @@ export const fetchSalsifyScat = async (
     params.mcat = mcat;
   }
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/salsify/scat`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/salsify/scat`, {
     params,
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -344,7 +340,7 @@ export const fetchItemCategories = async (
   companyId: string
 ): Promise<ItemCategoryOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/itemcategories`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/itemcategories`, {
     params: { compId: companyId },
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -363,7 +359,7 @@ export const fetchPricePages = async (
   supplierId: string
 ): Promise<PricePageOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/pricepages`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/pricepages`, {
     params: {
       compId: companyId,
       supplierId,
@@ -386,7 +382,7 @@ export const fetchTerms = async (
   companyId: string
 ): Promise<TermsOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/terms`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/terms`, {
     params: {
       compId: companyId,
     },
@@ -408,7 +404,7 @@ export const fetchClassNumbers = async (
   companyId: string
 ): Promise<ClassNumberOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/classnumbers`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/classnumbers`, {
     params: {
       compId: companyId,
     },
@@ -431,7 +427,7 @@ export const fetchClassIds = async (
   classNumber: string
 ): Promise<ClassIdOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/classid`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/classid`, {
     params: {
       compId: companyId,
       classNumber,
@@ -454,7 +450,7 @@ export const fetchPurchaseClass = async (
   companyId: string
 ): Promise<PurchaseClassOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/purchaseclass`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/purchaseclass`, {
     params: {
       compId: companyId,
     },
@@ -476,7 +472,7 @@ export const fetchProductGroup = async (
   companyId: string
 ): Promise<ProductGroupOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/productgroup`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/productgroup`, {
     params: {
       compId: companyId,
     },
@@ -498,7 +494,7 @@ export const fetchRoles = async (
   companyId: string
 ): Promise<RolesOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/roles`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/roles`, {
     params: {
       compId: companyId,
     },
@@ -520,7 +516,7 @@ export const fetchBuyer = async (
   companyId: string
 ): Promise<BuyerOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/buyer`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/buyer`, {
     params: {
       compId: companyId,
     },
@@ -542,7 +538,7 @@ export const fetchPriceLibrary = async (
   companyId: string
 ): Promise<PriceLibraryOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/pricelibrary`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/pricelibrary`, {
     params: {
       compId: companyId,
     },
@@ -563,7 +559,7 @@ export const fetchRolesReports = async (
   token: string
 ): Promise<RolesReportsOption[]> => {
 
-  const res = await axios.get(`${API_BASE}/api/Dropdown/rolesrepots`, {
+  const res = await axios.get(`${API_BASE}/Dropdown/rolesrepots`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -573,6 +569,33 @@ export const fetchRolesReports = async (
     ? res.data.map((x: any) => ({
         value: x.value,
         label: x.label,
+      }))
+    : [];
+};
+
+export const fetchSupplierCustomerBrands = async (
+  token: string,
+  companyId: string,
+  supplierId: string
+): Promise<BrandOption[]> => {
+  if (!companyId || !supplierId) return [];
+
+  const res = await axios.get(`${API_BASE}/Dropdown/suppliercustomerbrands`, {
+    params: {
+      compId: companyId,
+      supplierId,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Array.isArray(res.data)
+    ? res.data.map((x: any) => ({
+        value: x.str_brandCode || x.value,
+        label: x.str_brandName
+          ? `${x.str_brandName} (${x.str_brandCode})`
+          : (x.str_brandCode || x.value),
       }))
     : [];
 };

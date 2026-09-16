@@ -5,7 +5,7 @@ import { saveUserSession,saveAdminSession } from "../lib/auth";
 export function useAuth() {
   async function signIn(username: string, password: string) {
     try {
-      const res = await api.post("/api/Auth/login", {
+      const res = await api.post("/Auth/login", {
         username,
         password,
       });
@@ -23,7 +23,6 @@ export function useAuth() {
         name: data.name,
       };
 
-      // 🔥 Save session here ONLY
       saveUserSession(user, data.token);
 
       return {
@@ -46,7 +45,7 @@ export function useAuth() {
       if (!data.token) return { success: false, message: "Invalid Admin login" };
 
       const admin = { username: data.username, role: 'admin' };
-      saveAdminSession(admin, data.token); // Admin session save kiya
+      saveAdminSession(admin, data.token); 
 
       return { success: true, ...admin };
     } catch (error: any) {

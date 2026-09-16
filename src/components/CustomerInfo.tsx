@@ -1,4 +1,4 @@
-// // src/components/CustomerInfo.tsx
+// src/components/CustomerInfo.tsx
 
 import { REPORT_COLUMN_MAP } from "../config/reportColumns";
 
@@ -28,7 +28,7 @@ export interface BasicInfo {
   first_name?: string;
   last_name?: string;
   date_acct_opened?: string;
-  corp_address_id?: any; // Changed to any for safety
+  corp_address_id?: any; 
   note?: string;
   sf_account_id?: string;
 }
@@ -64,7 +64,6 @@ const formatDate = (dateStr?: string): string => {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
 
-  // Exact Format: 10/11/2006 12:00:00 AM
   return d.toLocaleString('en-US', {
     month: '2-digit',
     day: '2-digit',
@@ -73,7 +72,7 @@ const formatDate = (dateStr?: string): string => {
     minute: '2-digit',
     second: '2-digit',
     hour12: true
-  }).replace(',', ''); // Comma hatane ke liye
+  }).replace(',', '');
 };
 
 const dueLabels: Record<string, string> = {
@@ -95,7 +94,7 @@ const columns = REPORT_COLUMN_MAP?.CustomerInfo || [
 ];
 
 export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
-  if (!data) return <div className="text-center py-10 text-gray-500">No data received from API</div>;
+  if (!data) return <div className="text-center py-10 text-gray-400">No data received from API</div>;
 
   const basic = data.basic?.[0] || {};
   const group = data.groupCode?.[0]?.groupcode || "";
@@ -103,15 +102,14 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
   const summary = data.salesSummary?.[0] || {};
   const details = data.salesDetails || [];
 
-  const Comp_id_upper = (compId || "ECN").toString().toUpperCase();
+  const comp_id = compId?.toString() || "";
 
   const showPage = (id: number) => {
     const customerid = basic.customer_id || ""; 
-    const Comp_id = Comp_id_upper;
-    if (!Comp_id) {
+    if (!comp_id) {
       alert("Company ID not found!");
       return;
-  }
+    }
 
     let reportKey = "";
     switch (id) {
@@ -122,15 +120,15 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
         case 5: reportKey = "creditamountrma"; break;
         default: return;
     }
-    const url = `/report/${reportKey}?Comp_id=${Comp_id}&custId=${customerid}`;
+    const url = `/report/${reportKey}?comp_id=${comp_id}&custId=${customerid}`;
     window.open(url, "_blank");
   };
 
   return (
-    <div className="space-y-6 p-6 bg-white text-sm ">
+    <div className="space-y-4 p-4 bg-[#111827] text-gray-200 text-xs font-sans min-h-screen">
 
       {/* HEADER */}
-      <div className="text-center text-lg">
+      <div className="text-center font-semibold text-sm text-white">
         <div>{basic.customer_id}</div>
         <div>
           {basic.customer_id} - {basic.sf_account_id ? (
@@ -138,7 +136,7 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
               href={`https://eastcoastnews.lightning.force.com/lightning/r/Account/${basic.sf_account_id}/view`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 underline"
+              className="text-blue-400 underline hover:text-blue-300"
             >
               {basic.name}
             </a>
@@ -149,24 +147,24 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
       </div>
 
       {/* SALES REP */}
-      <div>
+      <div className="border border-gray-700 bg-[#1F2937]">
         <table className="w-full">
           <tbody>
-            <tr>
-              <td className="w-[20%] ">Sales Rep:</td>
-              <td>
+            <tr className="border-b border-gray-700/50">
+              <td className="w-[20%] font-semibold py-2 px-3 text-gray-300">Sales Rep:</td>
+              <td className="py-2 px-3 text-gray-200">
                 {basic.salesrep_name || `${basic.first_name ?? ""} ${basic.last_name ?? ""}`.trim() || "—"}
               </td>
             </tr>
-            <tr>
-              <td>Group Code:</td>
-              <td>
+            <tr className="border-b border-gray-700/50">
+              <td className="font-semibold py-2 px-3 text-gray-300">Group Code:</td>
+              <td className="py-2 px-3">
                 {group ? (
                   <a
                     href={`/repot/groupcodes?groupcode=${group}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600"
+                    className="text-blue-400 underline hover:text-blue-300"
                   >
                     {group}
                   </a>
@@ -174,45 +172,45 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
               </td>
             </tr>
             <tr>
-              <td className="">Note:</td>
-              <td>{basic.note || "—"}</td>
+              <td className="font-semibold py-2 px-3 text-gray-300">Note:</td>
+              <td className="py-2 px-3 text-gray-200">{basic.note || "—"}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* ADDRESS */}
-      <div className="border p-4">
+      <div className="border border-gray-700 bg-[#1F2937]">
         <table className="w-full">
           <thead>
-            <tr>
-              <th className="text-left">Physical Address</th>
-              <th className="text-left border-l pl-4">Mailing Address</th>
+            <tr className="bg-[#111827] border-b border-gray-700 text-gray-300">
+              <th className="text-left font-semibold py-2 px-3">Physical Address</th>
+              <th className="text-left border-l border-gray-700 py-2 px-3 font-semibold">Mailing Address</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>{basic.customer_id}</td>
-              <td className="border-l pl-4">{basic.customer_id}</td>
+            <tr className="border-b border-gray-700/40">
+              <td className="py-1.5 px-3 text-gray-200">{basic.customer_id}</td>
+              <td className="border-l border-gray-700 py-1.5 px-3 text-gray-200">{basic.customer_id}</td>
+            </tr>
+            <tr className="border-b border-gray-700/40">
+              <td className="py-1.5 px-3 text-gray-200">{basic.name}</td>
+              <td className="border-l border-gray-700 py-1.5 px-3 text-gray-200">{basic.name}</td>
+            </tr>
+            <tr className="border-b border-gray-700/40">
+              <td className="py-1.5 px-3 text-gray-200">{basic.phys_address1}</td>
+              <td className="border-l border-gray-700 py-1.5 px-3 text-gray-200">{basic.mail_address1}</td>
+            </tr>
+            <tr className="border-b border-gray-700/40">
+              <td className="py-1.5 px-3 text-gray-200">{basic.phys_address2}</td>
+              <td className="border-l border-gray-700 py-1.5 px-3 text-gray-200">{basic.mail_address2}</td>
             </tr>
             <tr>
-              <td>{basic.name}</td>
-              <td className="border-l pl-4">{basic.name}</td>
-            </tr>
-            <tr>
-              <td>{basic.phys_address1}</td>
-              <td className="border-l pl-4">{basic.mail_address1}</td>
-            </tr>
-            <tr>
-              <td>{basic.phys_address2}</td>
-              <td className="border-l pl-4">{basic.mail_address2}</td>
-            </tr>
-            <tr>
-              <td>
+              <td className="py-1.5 px-3 text-gray-200">
                 {[basic.phys_city, basic.phys_state].filter(Boolean).join(", ")}{" "}
                 {basic.phys_postal_code}
               </td>
-              <td className="border-l pl-4">
+              <td className="border-l border-gray-700 py-1.5 px-3 text-gray-200">
                 {[basic.mail_city, basic.mail_state].filter(Boolean).join(", ")}{" "}
                 {basic.mail_postal_code}
               </td>
@@ -222,31 +220,31 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
       </div>
 
       {/* AGING */}
-      <div className="border p-4">
+      <div className="border border-gray-700 bg-[#1F2937]">
         <table className="w-full text-center">
           <thead>
-            <tr>
+            <tr className="bg-[#111827] border-b border-gray-700 text-gray-300">
               {dueColumns.map((k) => (
-                <th key={k}>{dueLabels[k]}</th>
+                <th key={k} className="font-semibold py-2 px-2">{dueLabels[k]}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-          <tr>
+            <tr>
               {dueColumns.map(k =>
                 k === "TOTALDUE" && due[k] ? (
-                  <td key={k}>
+                  <td key={k} className="py-2.5 px-2">
                     <a
-                      href={`/report/ecnstatement?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                      href={`/report/ecnstatement?comp_id=${comp_id}&customerid=${basic.customer_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600"
+                      className="text-blue-400 underline hover:text-blue-300 font-medium"
                     >
                       {formatCurrency(due[k])}
                     </a>
                   </td>
                 ) : (
-                  <td key={k}>{formatCurrency(due[k] || 0)}</td>
+                  <td key={k} className="py-2.5 px-2 text-gray-200">{formatCurrency(due[k] || 0)}</td>
                 )
               )}
             </tr>
@@ -256,92 +254,90 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
 
       {/* SALES DETAILS TABLE */}
       {details.length > 0 && (
-        <div>
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-100">
+        <div className="border border-gray-700 overflow-hidden bg-[#1F2937]">
+          <table className="w-full text-xs">
+            <thead className="bg-[#111827] border-b border-gray-700 text-gray-300">
               <tr>
                 {columns.map((c) => (
-                  <th key={c.key} className="p-2 border">{c.label}</th>
+                  <th key={c.key} className="p-2 border-r border-gray-700 last:border-r-0 text-center font-semibold">{c.label}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-        {details.map((row: any, i: number) => {
-          const pmtLessSls = parseFloat(row.PmtHist || 0);
-          return (
-            <tr key={i} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#F2F2F2]'} border-b border-gray-200`}>
-              <td className="p-2 border-r border-gray-300 text-center">{row.month_invoicedname}</td>
-              <td className="p-2 border-r border-gray-300 text-center">{row.year_invoiced}</td>
-              <td className="p-2 border-r border-gray-300 text-right">{formatCurrency(row.invoiced_sales)}</td>
-              <td className="p-2 border-r border-gray-300 text-right">{formatCurrency(row.amount_paid)}</td>
-              <td className={`p-2 text-right font-medium ${pmtLessSls < 0 ? 'text-black' : 'text-black'}`}>
-                {/* Image logic: Negative values in brackets () */}
-                {pmtLessSls < 0 
-                  ? `(${formatCurrency(Math.abs(pmtLessSls))})` 
-                  : formatCurrency(pmtLessSls)}
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-      {/* TOTAL ROW - Matches Image */}
-      <tfoot className="bg-white font-bold border-t border-gray-400">
-        <tr>
-          <td className="p-2 text-center border-r border-gray-300"></td>
-          <td className="p-2 text-right border-r border-gray-300 pr-4 italic">Total:</td>
-          <td className="p-2 text-right border-r border-gray-300">
-            {formatCurrency(details.reduce((s: number, r: any) => s + parseFloat(r.invoiced_sales || 0), 0))}
-          </td>
-          <td className="p-2 text-right border-r border-gray-300">
-            {formatCurrency(details.reduce((s: number, r: any) => s + parseFloat(r.amount_paid || 0), 0))}
-          </td>
-          <td className="p-2 text-right">
-            {formatCurrency(details.reduce((s: number, r: any) => s + parseFloat(r.PmtHist || 0), 0))}
-          </td>
-        </tr>
-      </tfoot>
+              {details.map((row: any, i: number) => {
+                const pmtLessSls = parseFloat(row.PmtHist || 0);
+                return (
+                  <tr key={i} className={`${i % 2 === 0 ? 'bg-[#1F2937]' : 'bg-[#17202E]'} border-b border-gray-700/50 text-gray-200`}>
+                    <td className="p-2 border-r border-gray-700 text-center">{row.month_invoicedname}</td>
+                    <td className="p-2 border-r border-gray-700 text-center">{row.year_invoiced}</td>
+                    <td className="p-2 border-r border-gray-700 text-right">{formatCurrency(row.invoiced_sales)}</td>
+                    <td className="p-2 border-r border-gray-700 text-right">{formatCurrency(row.amount_paid)}</td>
+                    <td className="p-2 text-right font-medium text-gray-200">
+                      {pmtLessSls < 0 
+                        ? `(${formatCurrency(Math.abs(pmtLessSls))})` 
+                        : formatCurrency(pmtLessSls)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot className="bg-[#111827] font-bold border-t border-gray-700 text-gray-200">
+              <tr>
+                <td className="p-2 text-center border-r border-gray-700"></td>
+                <td className="p-2 text-right border-r border-gray-700 pr-4 italic">Total:</td>
+                <td className="p-2 text-right border-r border-gray-700">
+                  {formatCurrency(details.reduce((s: number, r: any) => s + parseFloat(r.invoiced_sales || 0), 0))}
+                </td>
+                <td className="p-2 text-right border-r border-gray-700">
+                  {formatCurrency(details.reduce((s: number, r: any) => s + parseFloat(r.amount_paid || 0), 0))}
+                </td>
+                <td className="p-2 text-right">
+                  {formatCurrency(details.reduce((s: number, r: any) => s + parseFloat(r.PmtHist || 0), 0))}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
 
       {/* SALES SUMMARY */}
-      <div className="border p-4">
+      <div className="border border-gray-700 bg-[#1F2937]">
         <table className="w-full">
           <tbody>
-            <tr>
-              <td><b>First Sale</b></td>
-              <td>{formatDate(summary.FirstSl)}</td>
-              <td><b>Last Sale</b></td>
-              <td>{formatDate(summary.LastSl)}</td>
+            <tr className="border-b border-gray-700/50">
+              <td className="py-2 px-3 font-semibold text-gray-300 w-[20%]">First Sale</td>
+              <td className="py-2 px-3 text-gray-200 w-[30%]">{formatDate(summary.FirstSl)}</td>
+              <td className="py-2 px-3 font-semibold text-gray-300 w-[20%]">Last Sale</td>
+              <td className="py-2 px-3 text-gray-200 w-[30%]">{formatDate(summary.LastSl)}</td>
+            </tr>
+            <tr className="border-b border-gray-700/50">
+              <td className="py-2 px-3 font-semibold text-gray-300">Avg Sale</td>
+              <td className="py-2 px-3 text-gray-200">{formatCurrency(summary.AvgSl)}</td>
+              <td className="py-2 px-3 font-semibold text-gray-300">Number of Sales</td>
+              <td className="py-2 px-3 text-gray-200">{summary.CountSls || 0}</td>
             </tr>
             <tr>
-              <td><b>Avg Sale</b></td>
-              <td>{formatCurrency(summary.AvgSl)}</td>
-              <td><b>Number of Sales</b></td>
-              <td>{summary.CountSls || 0}</td>
-            </tr>
-            <tr>
-              <td><b>YTD Sales</b></td>
-              <td>
+              <td className="py-2 px-3 font-semibold text-gray-300">YTD Sales</td>
+              <td className="py-2 px-3">
                 {summary.ytd_sales ? (
                   <a
-                    href={`/report/saleshistoryytd?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                    href={`/report/saleshistoryytd?comp_id=${comp_id}&customerid=${basic.customer_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600"
+                    className="text-blue-400 underline hover:text-blue-300"
                   >
                     {formatCurrency(summary.ytd_sales)}
                   </a>
                 ) : "—"}
               </td>
-              <td><b>Last Year Sales</b></td>
-              <td>
+              <td className="py-2 px-3 font-semibold text-gray-300">Last Year Sales</td>
+              <td className="py-2 px-3">
                 {summary.ly_sales ? (
                   <a
-                    href={`/report/saleshistorylastyear?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                    href={`/report/saleshistorylastyear?comp_id=${comp_id}&customerid=${basic.customer_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600"
+                    className="text-blue-400 underline hover:text-blue-300"
                   >
                     {formatCurrency(summary.ly_sales)}
                   </a>
@@ -353,44 +349,44 @@ export default function CustomerInfo({ data, compId }: CustomerInfoProps) {
       </div>
 
       {/* CUSTOMER DETAILS */}
-      <div className="border p-4">
+      <div className="border border-gray-700 bg-[#1F2937]">
         <table className="w-full">
           <tbody>
-            <tr><td>Contact:</td><td>{basic.central_watts_number || "—"}</td></tr>
-            <tr><td>Phone:</td><td>{basic.central_phone_number || "—"}</td></tr>
-            <tr><td>Fax:</td><td>{basic.central_fax_number || "—"}</td></tr>
-            <tr><td>Email:</td><td>{basic.email_address || "—"}</td></tr>
-            <tr><td>Other:</td><td>{basic.url || "—"}</td></tr>
-            <tr><td>Terms:</td><td>{basic.terms_desc || "—"}</td></tr>
-            <tr><td>Status:</td><td>{basic.credit_status || "—"}</td></tr>
-            <tr>
-              <td>Credit Limit:</td>
-              <td>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300 w-[20%]">Contact:</td><td className="py-1.5 px-3 text-gray-200">{basic.central_watts_number || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300">Phone:</td><td className="py-1.5 px-3 text-gray-200">{basic.central_phone_number || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300">Fax:</td><td className="py-1.5 px-3 text-gray-200">{basic.central_fax_number || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300">Email:</td><td className="py-1.5 px-3 text-gray-200">{basic.email_address || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300">Other:</td><td className="py-1.5 px-3 text-gray-200">{basic.url || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300">Terms:</td><td className="py-1.5 px-3 text-gray-200">{basic.terms_desc || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300">Status:</td><td className="py-1.5 px-3 text-gray-200">{basic.credit_status || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40">
+              <td className="py-1.5 px-3 font-semibold text-gray-300">Credit Limit:</td>
+              <td className="py-1.5 px-3">
                 {basic.credit_limit ? (
                   <a
-                    href={`/report/creditlimithistoryforcustomer?Comp_id=${Comp_id_upper}&customerid=${basic.customer_id}`}
+                    href={`/report/creditlimithistoryforcustomer?comp_id=${comp_id}&customerid=${basic.customer_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600"
+                    className="text-blue-400 underline hover:text-blue-300"
                   >
                     {formatCurrency(basic.credit_limit)}
                   </a>
                 ) : "—"}
               </td>
             </tr>
-            <tr><td>Date Opened:</td><td>{formatDate(basic.date_acct_opened)}</td></tr>
-            <tr><td>Corporate:</td><td>{basic.corp_address_id || "—"}</td></tr>
+            <tr className="border-b border-gray-700/40"><td className="py-1.5 px-3 font-semibold text-gray-300">Date Opened:</td><td className="py-1.5 px-3 text-gray-200">{formatDate(basic.date_acct_opened)}</td></tr>
+            <tr><td className="py-1.5 px-3 font-semibold text-gray-300">Corporate:</td><td className="py-1.5 px-3 text-gray-200">{basic.corp_address_id || "—"}</td></tr>
           </tbody>
         </table>
       </div>
 
       {/* FOOTER LINKS */}
-      <div className="border-t pt-4 flex flex-wrap gap-4 text-blue-600 underline">
-        <button onClick={() => showPage(1)}>AR Notes</button>
-        <button onClick={() => showPage(2)}>Sales Notes</button>
-        <button onClick={() => showPage(3)}>Payments</button>
-        <button onClick={() => showPage(4)}>Statement By Ship To</button>
-        <button onClick={() => showPage(5)}>RMA's</button>
+      <div className="border-t border-gray-700 pt-3 flex flex-wrap gap-4 text-blue-400 text-xs">
+        <button onClick={() => showPage(1)} className="underline hover:text-blue-300">AR Notes</button>
+        <button onClick={() => showPage(2)} className="underline hover:text-blue-300">Sales Notes</button>
+        <button onClick={() => showPage(3)} className="underline hover:text-blue-300">Payments</button>
+        <button onClick={() => showPage(4)} className="underline hover:text-blue-300">Statement By Ship To</button>
+        <button onClick={() => showPage(5)} className="underline hover:text-blue-300">RMA's</button>
       </div>
 
     </div>

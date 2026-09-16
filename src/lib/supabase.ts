@@ -14,7 +14,7 @@ export type FilterType =
 
 export interface Column {
   key: string;
-label: string;
+  label: string;
   type:
   | "text"
   | "currency"
@@ -26,11 +26,10 @@ label: string;
   | "date"
   | "datetime"
   | "decimal";
-    width?: string; // ✅ ADD THIS
-    format?: string;
-    render?: (row: any) => React.ReactNode; // ✅ IMPORTANT
-    showIf?: Record<string, string>;
-    
+  width?: string; 
+  format?: string;
+  render?: (row: any) => React.ReactNode; 
+  showIf?: Record<string, string>;
 }
 
 export interface FilterConfig {
@@ -72,11 +71,12 @@ export interface Report {
   columns?: Column[];
   locationType?: string;
   pagination?: boolean;
+  enableHorizontalScroll?: boolean;
+  minWidth?: string;
 }
 
-export const API_BASE_URL = "http://localhost:5278";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const buildApiUrl = (endpoint: string) => {
-  if (endpoint.startsWith("http")) return endpoint;
   return `${API_BASE_URL}${endpoint}`;
 };

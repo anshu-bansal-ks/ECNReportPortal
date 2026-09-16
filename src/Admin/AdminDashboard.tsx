@@ -128,7 +128,6 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  // ✅ 1. Default tab 'report-mgmt' fix kiya
   const [activeTab, setActiveTab] = useState("report-mgmt");
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -147,14 +146,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   return (
     <div className="flex h-screen bg-[#F4F7FE] overflow-hidden font-sans">
       
-      {/* 🟢 SIDEBAR: Width kam ki (w-64) aur Scroll hataya (overflow-hidden) */}
       <aside className={`${isCollapsed ? "w-15" : "w-50"} bg-[#0B1437] text-white flex flex-col shadow-2xl relative z-10 transition-all duration-300 overflow-hidden`}>
         
-        {/* Toggle Button */}
         <button 
   onClick={() => setIsCollapsed(!isCollapsed)} 
   className="absolute -right-3 top-10 bg-blue-500 text-white rounded-full shadow-xl hover:scale-110 z-50 border-2 border-[#F4F7FE] flex items-center justify-center transition-transform"
-  style={{ height: '25px', width: '25px' }} // ✅ Exact height and width
+  style={{ height: '25px', width: '25px' }} 
 >
   {isCollapsed ? (
     <ChevronRight size={18} strokeWidth={3} /> 
@@ -163,7 +160,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   )}
 </button>
 
-        {/* Logo Section */}
         <div className={`p-6 mb-2 border-b border-white/10 flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
           <div className="bg-blue-600 p-2 rounded-xl shadow-lg shrink-0">
             <ShieldCheck size={20} className="text-white" />
@@ -175,7 +171,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           )}
         </div>
 
-        {/* ✅ Navigation: Scroll hatane ke liye overflow-hidden rakha hai */}
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-hidden">
           {menuItems.map((item) => {
             const isActive = activeTab === item.id;
@@ -199,10 +194,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         </nav>
       </aside>
 
-      {/* ⚪ MAIN CONTENT: Width badha di (flex-1) */}
       <main className="flex-1 flex flex-col overflow-hidden">
         
-        {/* HEADER */}
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0 shadow-sm">
           <div>
             <h2 className="text-xl font-bold text-[#1B2559] capitalize">
@@ -226,11 +219,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
         </header>
 
-        {/* CONTENT AREA: Right side space maximize ki gayi hai */}
         <div className="flex-1 overflow-auto p-1">
           <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 min-h-full w-full">
-            
-            {/* 🔥 REPORT MANAGEMENT: Ab ye login karte hi samne aayega */}
+           
             {activeTab === "report-mgmt" && (
               <div className="space-y-4 animate-in fade-in duration-500">
                 <div className="flex justify-between items-center border-b pb-4">
@@ -245,7 +236,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
             )}
 
-            {/* Role Management */}
             {activeTab === "role-mgmt" && (
               <div className="animate-in fade-in">
                 <h3 className="text-lg font-bold mb-4 text-slate-800">Role Management System</h3>
@@ -253,7 +243,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
             )}
 
-            {/* Other tabs placeholder */}
             {activeTab !== "role-mgmt" && activeTab !== "report-mgmt" && (
               <div className="flex flex-col items-center justify-center h-[400px] text-slate-300">
                 <LayoutDashboard size={48} className="mb-4 opacity-20" />

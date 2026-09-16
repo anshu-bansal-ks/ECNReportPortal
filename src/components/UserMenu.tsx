@@ -16,8 +16,6 @@ export default function UserMenu({ userEmail, onLogout }: UserMenuProps) {
     setOpen(true);
   };
 
-  // Small delay before closing so moving the cursor from the icon to the
-  // dropdown doesn't cause it to disappear mid-transit.
   const scheduleClose = () => {
     closeTimer.current = setTimeout(() => setOpen(false), 150);
   };

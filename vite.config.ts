@@ -7,11 +7,13 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      "@": "/src",   // ← Ye bhi 100% chalega
+      "@": "/src",   
     },
   },
 
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  
+  base: '/ReportingPortal_v3/',
 });

@@ -19,9 +19,6 @@ interface ExcelExportOptions {
   totals?: Record<string, number>;
 }
 
-/**
- * Excel Export Helper - Direct Grid Data se Excel banata hai
- */
 export const exportReportToExcel = ({
   data,
   columns,
@@ -37,10 +34,9 @@ export const exportReportToExcel = ({
   }
 
   try {
-    // ✅ Header mein $ sign add karo jahan type "currency" ho
     const headers = columns.map((col) => {
         if (col.type === "currency") {
-          return `${col.label} ($)`;        // ← Yeh line header mein $ add karegi
+          return `${col.label} ($)`;       
         }
         return col.label;
       });
@@ -60,7 +56,6 @@ export const exportReportToExcel = ({
       });
     });
 
-    // Total Row (Vendor Name ke neeche "Total")
     if (totalColumns.length > 0 && footerConfig?.labelColumn !== undefined) {
       const totalRow = columns.map((col, index) => {
         if (index === footerConfig.labelColumn) {
@@ -76,16 +71,13 @@ export const exportReportToExcel = ({
       rows.push(totalRow);
     }
 
-    // Excel Worksheet
     const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
 
-    // Column Width
     worksheet["!cols"] = columns.map(() => ({ wch: 20 }));
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
-    // File Name
     const date = new Date().toISOString().split("T")[0];
     const cleanName = reportName.replace(/[^a-zA-Z0-9]/g, "_");
     const fileName = `${cleanName}_${date}.xlsx`;

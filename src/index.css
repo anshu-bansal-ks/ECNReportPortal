@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,6 +38,17 @@ html, body, #root {
 
 body {
   color: var(--text-primary);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular figures for numeric/currency table columns so digits align
+   vertically in the report grid — Inter supports this natively. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "cv11", "ss01";
 }
 
 /* ---- Backgrounds ---- */
@@ -204,7 +217,7 @@ table.w-full tfoot td { background-color: var(--surface-3) !important; }
   background-color: var(--surface-2) !important;
   border: 1px solid var(--border-1) !important;
   box-shadow: 0 8px 24px -8px rgba(0,0,0,0.7) !important;
-  font-family: sans-serif !important;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif !important;
   color: var(--text-primary) !important;
   border-radius: 10px !important;
   overflow: hidden;
@@ -281,7 +294,7 @@ table.w-full tfoot td { background-color: var(--surface-3) !important; }
 }
 
   .custom-handsontable {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-size: 13.5px !important;
     background-color: var(--surface-2) !important;
     color: var(--text-primary) !important;

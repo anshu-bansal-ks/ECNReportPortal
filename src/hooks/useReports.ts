@@ -26,7 +26,7 @@ export function useReports(userId: number | null) {
     const fetchReports = async () => {
       try {
         const res = await api.get<ApiReport[]>(
-          `/api/ReportIndex/${userId}`
+          `/ReportIndex/${userId}`
         );
 
         const mappedReports: Report[] = res.data.map((r) => {
@@ -38,16 +38,14 @@ export function useReports(userId: number | null) {
 
           return {
             id: r.reportId,
-            key: key, // 🔥🔥🔥 FIX YAHI HAI
+            key: key, 
             name: r.reportName,
             description: r.description || "",
             category: "General",
-            api_endpoint: `/api/${r.url}`,
-            // ✅ ONLY SHOW IF CONFIG ME HAI
+            api_endpoint: `/${r.url}`,
             supports_excel_export: config?.supports_excel_export ?? false,
             supports_pdf_export: config?.supports_pdf_export ?? false,
-            //enableSchedule: config?.enableSchedule ?? false,
-            ...config, // 🔥 config merge
+            ...config, 
             filter_config: config?.filter_config || { filters: [] },
             columns: REPORT_COLUMN_MAP[columnMapKey] || [],
           };

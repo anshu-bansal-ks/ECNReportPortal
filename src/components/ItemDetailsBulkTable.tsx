@@ -26,14 +26,12 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
     { item_id: "", item_desc: "", price1: "", upc: "" }
   ]);
 
-  // ✅ Company change par table reset
   useEffect(() => {
     setData([{ item_id: "", item_desc: "", price1: "", upc: "" }]);
     setLoading(false);
     console.log("Company changed → table cleared");
   }, [compId]);
 
-  // Single item fetch on typing
   const afterChange = useCallback((changes: any, source: string) => {
     if (!changes || source === "loadData" || !compId) return;
 
@@ -59,7 +57,6 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
     });
   }, [compId, token]);
 
-  // Bulk fetch after paste
   const bulkFetch = useCallback(async () => {
     if (!compId) return;
 
@@ -94,7 +91,6 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
     }
   }, [compId, token]);
 
-  // Paste handler
   const beforePaste = useCallback((pasteData: any[][], coords: any[]) => {
     const hot = hotRef.current?.hotInstance;
     if (!hot) return;
@@ -133,7 +129,6 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
     setData([{ item_id: "", item_desc: "", price1: "", upc: "" }]);
   };
 
-  // Description renderer
   const descriptionRenderer = (
     instance: Handsontable.Core,
     td: HTMLTableCellElement,
@@ -151,7 +146,6 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
     }
   };
 
-  // Price renderer
   const priceRenderer = (
     instance: Handsontable.Core,
     td: HTMLTableCellElement,
@@ -173,8 +167,7 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
   };
 
   return (
-    <div>
-      {/* Clear Button */}
+    <div className="space-y-4 p-4 bg-[#111827] text-gray-200 text-xs font-sans min-h-screen">
       <div style={{ marginBottom: "12px" }}>
         <button
           onClick={clearTable}
@@ -187,12 +180,12 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
             cursor: "pointer",
             fontSize: "13px"
           }}
+          className="hover:bg-gray-600 transition-colors"
         >
           Clear Table
         </button>
       </div>
 
-      {/* ✅ Instruction Message */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
         <div style={{ width: "8.333%" }}></div>
         <span
@@ -200,15 +193,14 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
             fontSize: "15px",
             fontStyle: "italic",
             paddingLeft: "20px",
-            color: "red"
+            color: "#f87171"
           }}
         >
           Please paste list of Item Ids in box below.
         </span>
       </div>
 
-      {/* Table */}
-      <div style={{ height: "650px", position: "relative", overflow: "hidden" }}>
+      <div style={{ height: "650px", position: "relative", overflow: "hidden" }} className="border border-gray-700 bg-[#1F2937] rounded">
         {loading && (
           <div style={{
             position: "absolute",
@@ -216,7 +208,7 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
             left: 0,
             width: "100%",
             height: "100%",
-            background: "rgba(255,255,255,0.7)",
+            background: "rgba(17, 24, 39, 0.7)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -245,7 +237,7 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
           minRows={1}
           enterMoves={{ row: 1, col: 0 }}
           fixedRowsTop={1}
-          className="custom-handsontable"
+          className="custom-handsontable htThemeClassic"
           afterChange={afterChange}
           beforePaste={beforePaste}
           afterPaste={afterPaste}

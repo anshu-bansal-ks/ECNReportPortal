@@ -38,7 +38,6 @@ export default function ReportSubtitle({
     const value = filters[f.name];
     if (!value) return;
 
-    // 🔹 Company special label handling
     if (f.name === "company") {
       const label =
         companies.find((c) => c.value === value)?.label || value;
@@ -46,7 +45,6 @@ export default function ReportSubtitle({
       return;
     }
 
-    // 🔹 Vendor or any dropdown with dynamic options
     if (f.type === "select") {
       const option =
         dropdownOptions[f.name]?.find((o) => o.value === value);
@@ -54,19 +52,16 @@ export default function ReportSubtitle({
       return;
     }
 
-    // 🔹 Period formatting
     if (f.type === "period") {
       parts.push(formatPeriodOption(value));
       return;
     }
 
-    // 🔹 Date range handling
     if (f.type === "date") {
       parts.push(value);
       return;
     }
 
-    // 🔹 Default text/number
     parts.push(value);
   });
 
