@@ -9,6 +9,7 @@ import Handsontable from "handsontable";
 import { textRenderer } from "handsontable/renderers/textRenderer";
 
 import axios from "axios";
+import * as XLSX from "xlsx";
 import { buildApiUrl } from "../lib/supabase";
 
 registerAllModules();
@@ -128,6 +129,23 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
   const clearTable = () => {
     setData([{ item_id: "", item_desc: "", price1: "", upc: "" }]);
   };
+  const handleExportExcel = () => {
+    const hot = hotRef.current?.hotInstance;
+    if (!hot) return;
+
+    const rawData = hot.getData().filter((r: any[]) => r && r[0]);
+    if (!rawData.length) {
+      alert("No data available to export!");
+      return;
+    }
+
+    const colHeaders = ["Item Id", "Description", "Price ($)", "UPC"];
+    const exportRows = [colHeaders, ...rawData];
+    const ws = XLSX.utils.aoa_to_sheet(exportRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.writeFile(wb, "ItemDetailsBulk.xlsx");
+  };
 
   const descriptionRenderer = (
     instance: Handsontable.Core,
@@ -168,36 +186,52 @@ export default function ItemDetailsBulkTable({ compId }: Props) {
 
   return (
     <div className="space-y-4 p-4 bg-[#111827] text-gray-200 text-xs font-sans min-h-screen">
-      <div style={{ marginBottom: "12px" }}>
-        <button
-          onClick={clearTable}
-          style={{
-            padding: "8px 16px",
-            background: "#374151",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "13px"
-          }}
-          className="hover:bg-gray-600 transition-colors"
-        >
-          Clear Table
-        </button>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
-        <div style={{ width: "8.333%" }}></div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <span
           style={{
             fontSize: "15px",
             fontStyle: "italic",
-            paddingLeft: "20px",
             color: "#f87171"
           }}
         >
           Please paste list of Item Ids in box below.
         </span>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <button
+            type="button"
+            onClick={clearTable}
+            style={{
+              padding: "6px 14px",
+              backgroundColor: "#26304a",
+              color: "#e7ebf5",
+              border: "1px solid #323e5c",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Clear Table
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            style={{
+              padding: "6px 14px",
+              backgroundColor: "#26304a",
+              color: "#e7ebf5",
+              border: "1px solid #323e5c",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Export Excel
+          </button>
+        </div>
       </div>
 
       <div style={{ height: "650px", position: "relative", overflow: "hidden" }} className="border border-gray-700 bg-[#1F2937] rounded">

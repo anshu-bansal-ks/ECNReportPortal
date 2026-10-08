@@ -12,6 +12,17 @@ import { Report, buildApiUrl } from "../lib/supabase";
 import { useTableSorting } from "../hooks/useTableSorting";
 import CustomerInfo, { CustomerApiResponse } from "./CustomerInfo";
 import ItemDetailsBulkTable from "./ItemDetailsBulkTable"; 
+import CreditHoldsAllGrid from "./CreditHoldsAllGrid";
+import CustomerBreakdownGroupGrid from "./CustomerBreakdownGroupGrid";
+import GroupCodesGrid from "./GroupCodesGrid";
+import InvoiceDetailGrid from "./InvoiceDetailGrid";
+import InvoiceExport2Grid from "./InvoiceExport2Grid"; 
+import InvoiceExport3Grid from "./InvoiceExport3Grid"; 
+import ItemDetailsWithInventoryQuantitiesGrid from "./ItemDetailsWithInventoryQuantitiesGrid";
+import ListOfSkusUpcsPricesCostsGrid from "./ListOfSkusUpcsPricesCostsGrid";
+import AccountsSuppressedFromAgingGrid from "./AccountsSuppressedFromAgingGrid";
+import ArcallNotesGrid from "./ArcallNotesGrid";
+import CreditHoldsWithReleaseGrid from "./CreditHoldsWithReleaseGrid";
 import { REPORT_COLUMN_MAP, FOOTER_TOTAL_CONFIG, DRILL_DOWN_LINKS } from "../config/reportColumns";
 import ScheduleModal from "./ScheduleModal";
 import { showToast } from "../lib/toast";
@@ -93,6 +104,8 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   const [selectedPriceLibrary, setSelectedPriceLibrary] = useState<PriceLibraryOption | null>(null);
   const [rolesreports, setRolesReports] = useState<RolesReportsOption[]>([]);
   const [selectedRolesReports, setSelectedRolesReports] = useState<RolesReportsOption | null>(null);
+  const [creditHoldsData, setCreditHoldsData] = useState<Record<string, any[]> | null>(null);
+  const [arcallnotesSummary, setArcallnotesSummary] = useState<any[]>([]);
   const [brands, setBrands] = useState<BrandOption[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<BrandOption | null>(null);
   const [months, setMonths] = useState<any[]>([]);
@@ -102,7 +115,7 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   const stickyHeaderRef = useRef<HTMLElement>(null);
   const [stickyTopOffset, setStickyTopOffset] = useState(80);
   const [currYear, setCurrYear] = useState<number>(new Date().getFullYear());
-
+  //const [hasSearched, setHasSearched] = useState(false);
   useEffect(() => {
     const el = stickyHeaderRef.current;
     if (!el) return;
@@ -249,12 +262,19 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
 
   const reportKey = report.key || report.name?.toLowerCase().trim();
   const endpoint = report.api_endpoint?.toLowerCase() || "";
+  let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
+  if (reportKey === "binresizingreport") {
+    const comp = (filters.company || appliedFilters.company || "").toUpperCase();
+    if (comp !== "ECN") {
+      columns = columns.filter((col: any) => col.key?.toLowerCase() !== "scat");
+    }
+  }
   const isThirteenMonthReport = 
     endpoint.includes("thirteenmonthcustomersalesforvendor") || 
     endpoint.includes("thirteenmonthsales") || 
     endpoint.includes("thirteenmonthvendorsalesforcustomer");
     
-  let columns = REPORT_COLUMN_MAP[reportKey] || report?.columns || [];
+  
   if (reportKey === "inventorylocationsupplier") {
     const compId = (filters.company || "").toUpperCase();
     let dynamicLabel = "special_field";
@@ -270,6 +290,36 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
         return { ...col, label: dynamicLabel };
       }
       return col;
+    });
+  }
+  if (reportKey === "backorders") {
+    const compId = (filters.company || appliedFilters.company || "").toUpperCase();
+    columns = columns.filter((col: any) => {
+      const key = col.key?.toLowerCase();
+      
+      // Common columns jo sabhi companies mein dikhengi
+      const commonCols = [
+        "order_no", "order_date", "customer_id", "ship2_name", 
+        "salesrepname", "po_no", "item_id", "item_desc","default_source","order_source",
+        "qty_bo", "qty_on_hand"
+      ];
+      if (commonCols.includes(key)) return true;
+
+      if (compId === "ECN") {
+        return ["order_quantity", "qty_in_transit", "nj_qty", "fl_qty", "ca_qty"].includes(key);
+      } 
+      else if (compId === "IVD") {
+        return ["ship2_id", "source", "qty_allocated", "on_order", "nj_qty", "ca_qty"].includes(key);
+      } 
+      else if (compId === "ADV") {
+        return ["ship2_id", "source", "qty_allocated", "on_order", "nj_qty", "fl_qty", "ca_qty", "lv_qty"].includes(key);
+      } 
+      else if (compId === "XG") {
+        return ["ship2_id","salesrep_id", "source", "qty_allocated", "order_quantity", "qty_in_transit", "pa_qty"].includes(key);
+      } 
+      else {
+        return ["ship2_id", "source", "qty_allocated", "on_order", "disposition", "rep", "order_quantity", "qty_in_transit", "ca_qty"].includes(key);
+      }
     });
   }
   const comparison = appliedFilters["ytdcomparison"] || "YTD v LYTD";
@@ -419,10 +469,7 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
     let finalUrl =
       `${normalizedTarget}${separator}Comp_id=${encodeURIComponent(Comp_id)}` +
       `&${queryParam}=${encodeURIComponent(targetVal)}`;
-    // const separator = targetUrl.includes("?") ? "&" : "?";
-    // let finalUrl =
-    //   `${targetUrl}${separator}Comp_id=${encodeURIComponent(Comp_id)}` +
-    //   `&${queryParam}=${encodeURIComponent(targetVal)}`;
+   
 
     if (extraParams) {
       Object.entries(extraParams).forEach(([urlParam, rowField]) => {
@@ -517,10 +564,26 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
     }
     return col;
   });
-
+ 
+  const isCreditHoldsAll = report.api_endpoint?.toLowerCase().includes("creditholdsall"); 
   const isCustomerInfo = report.api_endpoint?.toLowerCase().includes("customerinfo");
-  const isItemDetailsReport = report.api_endpoint?.toLowerCase().includes("itemdetails"); 
-  
+  const isCustomerBreakdown = report.api_endpoint?.toLowerCase().includes("customerbreakdownmonthovermonthgroupcode"); 
+  const isGroupCodesReport = report.api_endpoint?.toLowerCase().includes("groupcodes"); 
+  const isInvoiceDetailReport = report.api_endpoint?.toLowerCase().includes("invoicedetail"); 
+  const isInvoiceExport2 = reportKey === "invoiceexport2" || endpoint.includes("invoiceexport2");
+  const isInvoiceExport3 = reportKey === "invoiceexport3" || endpoint.includes("invoiceexport3");
+  const isItemDetailsWithInventory = reportKey?.toLowerCase() === "itemdetailswithinventoryquantities" || endpoint?.toLowerCase().includes("itemdetailswithinventoryquantities");
+  const isArcallNotes = reportKey?.toLowerCase() === "arcallnotes" || endpoint?.toLowerCase().includes("arcallnotes");
+  const isListOfSkusPricesCosts = reportKey?.toLowerCase() === "listofskusupcspricescosts" || endpoint?.toLowerCase().includes("listofskusupcspricescosts") ||
+    report?.name?.toLowerCase().includes("skus upcs prices and costs") || report?.name?.toLowerCase().includes("skus upcs prices costs");
+  const isAccountsSuppressed = reportKey?.toLowerCase() === "accountssuppressedfromagingcollection" ||
+    endpoint?.toLowerCase().includes("accountssuppressedfromagingcollection") || report?.name?.toLowerCase().includes("accounts suppressed");
+  const isCreditHoldsWithRelease = reportKey?.toLowerCase() === "creditholdswithrelease" || endpoint?.toLowerCase().includes("creditholdswithrelease");
+
+const isItemDetailsReport = 
+!isItemDetailsWithInventory && 
+(reportKey?.toLowerCase() === "itemdetails" || endpoint?.toLowerCase().includes("itemdetails"));
+
   const tableData = isCustomerInfo ? [] : (Array.isArray(data) ? data : []);
   const visibleColumns = getVisibleColumns(modifiedColumns, filters);
   const { sortedData, sortConfig, handleSort } = useTableSorting(tableData, visibleColumns);
@@ -751,9 +814,14 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   }, [filters.company, token, report]);
 
   useEffect(() => {
-    if (!filters.company || !selectedSupplier) return;
-    fetchPricePages(token, filters.company, selectedSupplier.value).then(setPricePages).catch(() => setPricePages([]));
-  }, [selectedSupplier]);
+    if (!filters.company || !selectedSupplier || selectedSupplier.value === "ALL") {
+      setPricePages([]);
+      setSelectedPricePage(null);
+      return;
+    }
+    fetchPricePages(token, filters.company, selectedSupplier.value)
+    .then(setPricePages).catch(() => setPricePages([]));
+  }, [selectedSupplier, filters.company, token]);
 
   const salesRepFilter = report?.filter_config?.filters?.find((f: any) => f.name === "salesrep");
   const supplierFilter = report?.filter_config?.filters?.find((f: any) => f.name === "supplier");
@@ -764,6 +832,7 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   const buyerFilter = report?.filter_config?.filters?.find((f: any) => f.name === "buyer");
   const priceLibraryFilter = report?.filter_config?.filters?.find((f: any) => f.name === "pricelibrary");
   const rolesReportsFilter = report?.filter_config?.filters?.find((f: any) => f.name === "rolesreports");
+  const scatFilter = report?.filter_config?.filters?.find((f: any) => f.name === "scat");
 
   const allowSalesRepAll = salesRepFilter?.allowAll === true;
   const allowSupplierAll = supplierFilter?.allowAll === true;
@@ -774,12 +843,15 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
   const allowPriceLibraryAll = priceLibraryFilter?.allowAll === true;
   const allowRolesReportsAll = rolesReportsFilter?.allowAll === true;
   const allowRolesAll = rolesFilter?.allowAll === true;
+  const allowScatAll = scatFilter?.allowAll === true;
 
   const salesRepOptions = allowSalesRepAll ? [{ value: "ALL", label: "ALL" }, ...salesReps] : salesReps;
   const supplierOptions = allowSupplierAll ? [{ value: "ALL", label: "ALL" }, ...suppliers] : suppliers;
   const supplierOpOptions = allowSupplierOPAll ? [{ value: "ALL", label: "ALL" }, ...suppliersOp] : suppliersOp;
   const locationOptions = allowLocationAll ? [{ value: "ALL", label: "ALL" }, ...locations] : locations;
   const locationsupplierOptions = allowLocationSupplierAll ? [{ value: "ALL", label: "ALL" }, ...locationSuppliers] : locationSuppliers;
+  const scatOptions = allowScatAll || reportKey === "binresizingreport" ? [{ value: "ALL", label: "ALL" }, ...salsifyScats] : salsifyScats;
+
   const sortedRoles = [...roles].sort((a, b) => {
     if (String(a.label).toUpperCase() === "ALL") return -1;
     if (String(b.label).toUpperCase() === "ALL") return 1;
@@ -836,6 +908,7 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
     if (isInitial) {
       setLoading(true);
       setData([]);
+      setCreditHoldsData(null);
     }
 
     try {
@@ -861,12 +934,52 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
         setCustomerData(res.data);
         setData([]);
         setHasMore(false);
-      } else if (isThirteenMonthReport) {
+      } else if (isCreditHoldsAll) {
+        const raw = res.data?.groupedData || res.data?.GroupedData || res.data?.Data || res.data?.data || {};
+        const normalized: Record<string, any[]> = {};
+        Object.entries(raw).forEach(([k, v]) => {
+          if (Array.isArray(v)) {
+            normalized[k.toUpperCase()] = v;
+          }
+        });
+        setCreditHoldsData(normalized);
+        setData([]);
+        setHasMore(false);
+      }
+      else if (isCreditHoldsWithRelease) {
+        const raw = res.data?.groupedData || res.data?.GroupedData || res.data?.Data || {};
+        const normalized: Record<string, any[]> = {};
+        Object.entries(raw).forEach(([k, v]) => {
+          if (Array.isArray(v)) normalized[k.toUpperCase()] = v as any[];
+        });
+        setCreditHoldsData(normalized);
+        setData([]);
+        setHasMore(false);
+      }
+      else if (isCustomerBreakdown) {
+        const rawData = res.data?.data || res.data?.Data || [];
+        setData(rawData);
+        setHasMore(false);
+      }
+      else if (isGroupCodesReport) {
+        const raw = res.data?.groupedData || res.data?.GroupedData || res.data?.Data || res.data?.data || {};
+        setData(raw);
+        setHasMore(false);
+      }
+      else if (isThirteenMonthReport) {
         newItems = res.data.data || res.data.Data || [];
         setData(newItems);
         setHasMore(false);
         if (isInitial && res.data?.months) setMonths(res.data.months);
-      } else {
+      } 
+      else if (isArcallNotes) {
+        const rawItems = res.data?.data || res.data?.Data || [];
+        const rawSummary = res.data?.summaryData || res.data?.SummaryData || [];
+        setData(rawItems);
+        setArcallnotesSummary(rawSummary);
+        setHasMore(false);
+      }
+      else {
         newItems = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.Data || []);
         if ((reportKey === "fiveyearsalesbycustomer" || reportKey === "fiveyearsalesforgroupcode" || reportKey === "fiveyearsalesreportincludeprofit") && isInitial) {
           if (res.data?.curryear || res.data?.Curryear) {
@@ -1163,6 +1276,13 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
     loadingMessage: (base: any) => ({ ...base, backgroundColor: "#1e2739", color: "#6b7690" }),
   };
 
+  if (reportKey === "binresizingreport") {
+    const comp = (filters.company || appliedFilters.company || "").toUpperCase();
+    if (comp !== "ECN") {
+      columns = columns.filter((col: any) => col.key?.toLowerCase() !== "scat");
+    }
+  }
+
   return (
     <div className="max-h-screen overflow-auto flex flex-col">
       <header ref={stickyHeaderRef} className="sticky top-0 z-50 h-[80px] bg-[#111827]/95 backdrop-blur border-b border-[#26304a]">
@@ -1238,19 +1358,30 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {report.filter_config.filters.map((f) => {
-               if (
-                f.hideWhen &&
-                filters[f.hideWhen.filter] === f.hideWhen.value
-               ) {
+               if ( f.hideWhen && filters[f.hideWhen.filter] === f.hideWhen.value) 
+               {
                  return null;
                }
+               if (f.name.toLowerCase() === "scat") {
+                const currentReport = reportKey || "";
+                const currentComp = (filters["company"] || "").toUpperCase();
+                if (currentReport !== "binresizingreport" || currentComp !== "ECN") {
+                    return null; 
+                }
+              }
                if (f.name.toLowerCase() === "prefix") {
                 const currentSupplier = filters["supplier"] || "";
                 if (currentSupplier !== "ALL") {
-                    return null; // Text box hide ho jayega agar ALL select nahi hai
+                    return null; 
                 }
             }
-               // ================== MUTUAL DISABLE LOGIC ==================
+            if (reportKey === "binresizingreport" || reportKey === "forecastreportforxgen" && f.name.toLowerCase() === "bin") {
+              const currentSupplier = filters["supplier"] || "";
+              if (currentSupplier !== "ALL") {
+                  return null; 
+              }
+            }
+            
                let isDisabled = false;
                const shouldShowLabel = f.hideLabel === false ? true : false;
                const fName = f.name.toLowerCase();
@@ -1543,34 +1674,24 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
                     ))}
                     
                     </select>
-                ) : f.name==="scat" ? (
-                    
-                   <select
-                    value={selectedSalsifyScat?.value||""}
-                    onChange={(e)=>{
-                    
-                    const obj=salsifyScats.find(x=>x.value===e.target.value)||null;
-                    
-                    setSelectedSalsifyScat(obj);
-                    
-                    updateFilter("scat",obj?.value||"");
-                    
+                ) : f.name === "scat" ? (
+                  <select
+                    value={filters["scat"] || selectedSalsifyScat?.value || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const obj = scatOptions.find(x => x.value === val) || null;
+                      setSelectedSalsifyScat(obj);
+                      updateFilter("scat", val);
                     }}
                     className="w-full border border-gray-300 rounded px-3 py-2"
-                    >
-                    
+                  >
                     <option value="">Select SCAT</option>
-                    
-                    {salsifyScats.map((x, index) => (
-                      <option
-                        key={`${x.value}-${index}`}
-                        value={x.value}
-                      >
+                    {scatOptions.map((x, index) => (
+                      <option key={`${x.value}-${index}`} value={x.value}>
                         {x.label}
                       </option>
                     ))}
-                    
-                    </select>
+                  </select>
                 ) : f.name==="itemcategory" ? (
                     
                    <select
@@ -1984,15 +2105,89 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder={f.placeholder || ""}
                     />
-                ) : (
-                  <input
-                    type="text"
-                    value={filters[f.name] || ""}
-                    onChange={(e) => updateFilter(f.name, e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    // placeholder={shouldShowLabel ? (f.placeholder || "") : (f.label || f.placeholder || "")}
-                    placeholder={shouldShowLabel ? (f.placeholder || "") : ( f.placeholder || "")}
-                  />
+                    ) : (
+                      <input
+                        type="text"
+                        value={filters[f.name] || ""}
+                        onKeyDown={(e) => {
+                          if (reportKey === "adsorderlookup" && f.name === "pono") {
+                            const key = e.charCode || e.keyCode || 0;
+                            const target = e.currentTarget;
+                            const val = target.value;
+                    
+                            // Auto-insert hyphen after 4 digits when typing (same as old jQuery)
+                            if (key !== 8 && key !== 9 && key !== 17) {
+                              if (val.length === 4 && !val.includes("-")) {
+                                updateFilter(f.name, val + "-");
+                              }
+                            }
+                    
+                            // Allow numeric, backspace, tab, delete, Ctrl/Cmd+V
+                            const isValidKey =
+                              key === 8 ||
+                              key === 9 ||
+                              key === 46 ||
+                              (key >= 48 && key <= 57) ||
+                              (key >= 96 && key <= 105) ||
+                              (key === 86 && (e.ctrlKey === true || e.metaKey === true));
+                    
+                            if (!isValidKey) {
+                              e.preventDefault();
+                            }
+                          }
+                        }}
+                        onChange={(e) => {
+                          let val = e.target.value;
+                    
+                          if (reportKey === "adsorderlookup" && f.name === "pono") {
+                            // Preserve any already-valid 3-or-4 digit prefix format
+                            const validPattern = /^\d{3,4}-\d{1,7}$/;
+                            if (validPattern.test(val)) {
+                              // already good – keep as-is (this is the key fix)
+                              updateFilter(f.name, val);
+                              return;
+                            }
+                    
+                            // Otherwise strip non-digits and re-apply 4-digit prefix format
+                            let digits = val.replace(/\D/g, "");
+                            if (digits.length > 11) digits = digits.slice(0, 11);
+                    
+                            if (digits.length > 4) {
+                              val = digits.slice(0, 4) + "-" + digits.slice(4);
+                            } else {
+                              val = digits;
+                            }
+                          }
+                    
+                          updateFilter(f.name, val);
+                        }}
+                        onPaste={(e) => {
+                          if (reportKey === "adsorderlookup" && f.name === "pono") {
+                            e.preventDefault();
+                            const pastedText = e.clipboardData.getData("text").trim();
+                    
+                            // Accept already-valid formats (3 or 4 digits before the hyphen)
+                            const validPattern = /^\d{3,4}-\d{1,7}$/;
+                            let formatted = "";
+                    
+                            if (validPattern.test(pastedText)) {
+                              formatted = pastedText;               // keep 543-1076035 exactly
+                            } else {
+                              // plain digits (or other junk) → force 4-digit prefix
+                              const digits = pastedText.replace(/\D/g, "").slice(0, 11);
+                              formatted = digits;
+                              if (digits.length > 4) {
+                                formatted = digits.slice(0, 4) + "-" + digits.slice(4);
+                              }
+                            }
+                    
+                            updateFilter(f.name, formatted);
+                          }
+                        }}
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder={shouldShowLabel ? (f.placeholder || "") : (f.placeholder || "")}
+                        maxLength={reportKey === "adsorderlookup" && f.name === "pono" ? 12 : undefined}
+                      />
                 )}
               </div>
               );
@@ -2001,7 +2196,60 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
         </div>
 
         {/* REPORT CONTENT */}
-        {isCustomerInfo ? (
+        {isCreditHoldsAll ? (
+          <div className="bg-white rounded-xl shadow border">
+            {loading ? (
+              <div className="p-20 text-center">
+                <RefreshCw className="animate-spin mx-auto text-blue-600" size={32} />
+              </div>
+            ) : !creditHoldsData ? (
+              <div className="p-20 text-center text-gray-500">
+                Please click "Apply Filters" to view credit holds.
+              </div>
+            ) : (
+              <CreditHoldsAllGrid
+                data={creditHoldsData}
+              />
+            )}
+          </div>
+          ) : isCreditHoldsWithRelease ? (
+            <CreditHoldsWithReleaseGrid
+              data={creditHoldsData}
+              onRefresh={() => handleApplyFilters()}
+            />
+          ) : isCustomerBreakdown ? (
+            <div className="bg-white rounded-xl shadow border">
+            {loading ? (
+              <div className="p-20 text-center">
+                <RefreshCw className="animate-spin mx-auto text-blue-600" size={32} />
+              </div>
+            ) : !data || data.length === 0 ? (
+              <div className="p-20 text-center text-gray-500">
+                Please click "Apply Filters" to view credit holds.
+              </div>
+            ) : (
+              <CustomerBreakdownGroupGrid
+                data={data}
+              />
+            )}
+          </div>
+          ) : isGroupCodesReport ? (
+            <div className="bg-white rounded-xl shadow border">
+              {loading ? (
+                <div className="p-20 text-center">
+                  <RefreshCw className="animate-spin mx-auto text-blue-600" size={32} />
+                </div>
+              ) : !data || Object.keys(data).length === 0 ? (
+                <div className="p-20 text-center text-gray-500">
+                  Please select filters and click "Apply Filters" to view Group Codes.
+                </div>
+              ) : (
+                <GroupCodesGrid
+                  data={data as any}
+                />
+              )}
+            </div>
+        ) : isCustomerInfo ? (
           <div className="bg-white rounded-xl shadow p-6">
             {loading ? (
               <div className="p-20 text-center">
@@ -2015,6 +2263,8 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
               <CustomerInfo data={customerData} compId={filters.company} />
             )}
           </div>
+        ): isInvoiceDetailReport ? (
+          <InvoiceDetailGrid data={data} loading={loading} />
         ) : isItemDetailsReport ? (
           <div className="bg-white rounded-xl shadow p-4 overflow-hidden">
             {!filters.company ? (
@@ -2024,8 +2274,65 @@ export default function ReportViewer({ report, onBack, userEmail, onLogout }: Re
             ) : (
               <ItemDetailsBulkTable compId={filters.company} />
             )}
+            </div>
+            
+        ) :isItemDetailsWithInventory ? (
+          <div className="bg-white rounded-xl shadow p-4 overflow-hidden">
+            {!filters.company ? (
+              <div className="text-gray-500 text-center p-10 font-medium">
+                Please select company first to view inventory quantities.
+              </div>
+            ) : (
+              <ItemDetailsWithInventoryQuantitiesGrid compId={filters.company} />
+            )}
           </div>
-        
+        ) :isListOfSkusPricesCosts ? (
+            <div className="bg-[#0f172a]/40 border border-neutral-800 rounded-xl p-4 overflow-hidden">
+            {!filters.company ? (
+              <div className="text-gray-400 text-center p-10 font-medium">
+                Please select company first.
+              </div>
+            ) : (
+              <ListOfSkusUpcsPricesCostsGrid compId={filters.company} />
+            )}
+            </div> 
+            ) : isArcallNotes ? (
+              <div className="bg-white rounded-xl shadow p-4">
+                {loading ? (
+                  <div className="p-20 text-center">
+                    <RefreshCw className="animate-spin mx-auto text-blue-600" size={32} />
+                  </div>
+                ) : !data || data.length === 0 ? (
+                  <div className="p-20 text-center text-gray-500">
+                    Please select filters and click "Apply Filters" to view AR Call Notes.
+                  </div>
+                ) : (
+                  <ArcallNotesGrid
+                    data={data}
+                    summaryData={arcallnotesSummary}
+                    onRowClick={(customerId) => {
+                      window.open(`/ReportingPortal_v3/report/customerinfo?Comp_id=${encodeURIComponent(filters.company || "")}&custId=${encodeURIComponent(customerId)}`, "_blank", "noopener,noreferrer");
+                    }}
+                  />
+                )}
+              </div>
+            ) : isAccountsSuppressed ? (
+              <div className="bg-[#0f172a]/40 border border-neutral-800 rounded-xl p-4 overflow-hidden">
+                {!filters.company ? (
+                  <div className="text-gray-400 text-center p-10 font-medium">
+                    Please select company first.
+                  </div>
+                ) : (
+                  <AccountsSuppressedFromAgingGrid compId={filters.company} />
+                )}
+              </div>
+        ) : isInvoiceExport3 ? (
+            <InvoiceExport3Grid 
+              data={data} 
+              loading={loading} />
+        ) :
+        isInvoiceExport2 ? (
+          <InvoiceExport2Grid data={data} loading={loading} />
         ) : (
           <div className="bg-white rounded-xl shadow border flex flex-col">
             {loading ? (

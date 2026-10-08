@@ -592,10 +592,12 @@ export const fetchSupplierCustomerBrands = async (
 
   return Array.isArray(res.data)
     ? res.data.map((x: any) => ({
-        value: x.str_brandCode || x.value,
-        label: x.str_brandName
-          ? `${x.str_brandName} (${x.str_brandCode})`
-          : (x.str_brandCode || x.value),
+      value: x.Value || x.value || x.str_brandCode,
+      label: x.Label || x.label || x.str_brandName || x.Value || x.value,
+        // value: x.str_brandCode || x.value,
+        // label: x.str_brandName
+        //   ? `${x.str_brandName} (${x.str_brandCode})`
+        //   : (x.str_brandCode || x.value),
       }))
     : [];
 };

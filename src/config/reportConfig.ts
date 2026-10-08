@@ -470,6 +470,7 @@ export const REPORT_CONFIG: Record<string, Partial<Report>> = {
     key: "creditholds",
     enableSchedule: true,
     supports_excel_export: true,
+    enableHorizontalScroll: true,
     filter_config: {
       filters: [
         { type: "select", name: "company", label: "Company", apiParam: "compId" }
@@ -2869,6 +2870,7 @@ export const REPORT_CONFIG: Record<string, Partial<Report>> = {
   },
   "saleshistoryytd": {
     key: "saleshistoryytd",
+    name: "Sales History Year Till Date",
     supports_excel_export: true,
     filter_config: {
       filters: [
@@ -4339,8 +4341,9 @@ export const REPORT_CONFIG: Record<string, Partial<Report>> = {
   filter_config: {
     filters: [
       { "type": "select", "name": "company", "label": "Company", "apiParam": "compId", show:"ECN,XG" },
+      { type: "select", name: "location", label: "Location", apiParam: "locationId", required: true },
       { "type": "select", "name": "supplier", "label": "Supplier", "apiParam": "SupplierId", "allowAll": true },
-      { "type": "text", "name": "prefix", "label": "Primary Bin Prefix", "apiParam": "prefix", "placeholder": "Enter bin prefix..." }
+      { type: "text", name: "bin", label: "Bin", apiParam: "bin", placeholder: "Primary Bin No..." }
     ]
   }
 },
@@ -4372,6 +4375,210 @@ export const REPORT_CONFIG: Record<string, Partial<Report>> = {
         options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
       }
     ]
+  }
+},
+"salesbycustomerbrandwithout": {
+  key: "salesbycustomerbrandwithout",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId", show: "ECN" },
+      { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+      { type: "select", name: "brand", label: "Brand", apiParam: "brand_name", required: true },
+      { type: "date", name: "fromdate", label: "From Date" },
+      { type: "date", name: "tilldate", label: "Till Date" },
+      { type: "period", name: "timeperiod", label: "Time Period",
+        options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+      }
+    ]
+  }
+},
+"salesbycustomerbybrand": {
+  key: "salesbycustomerbybrand",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId", show: "ECN" },
+      { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", required: true },
+      { type: "select", name: "brand", label: "Brand", apiParam: "brand_name", required: true },
+      { type: "date", name: "fromdate", label: "From Date" },
+      { type: "date", name: "tilldate", label: "Till Date" },
+      { type: "period", name: "timeperiod", label: "Time Period",
+        options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+      }
+    ]
+  }
+},
+"creditholdsall": {
+  key: "creditholdsall",
+  supports_excel_export: true,
+  filter_config: {
+    filters: []
+  }
+},
+"customerbreakdownmonthovermonthgroupcode": {
+  key: "customerbreakdownmonthovermonthgroupcode",
+  enableSchedule: true,
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId" },
+      { type: "text", name: "group_code", label: "Group Code", apiParam: "group_code", placeholder: "Enter group code here...", required: true }
+     
+    ]
+  }
+},
+"groupcodes": {
+  key: "groupcodes",
+  enableSchedule: true,
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "text", name: "group_code", label: "Group Code", apiParam: "group_code", placeholder: "Enter group code here...", required: true }   
+    ]
+  }
+},
+"invoicedetail": {
+  key: "invoicedetail",
+  enableSchedule: true,
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId" },
+      { type: "text", name: "invoicenum", label: "Invoice No", apiParam: "invoicenum", placeholder: "Enter Invoice Number here..", required: true },
+    ]
+  }
+},
+"invoiceexport2": {
+  key: "invoiceexport2",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId" },
+      { type: "text", name: "invoice_no", label: "Invoice No", apiParam: "invoice_no", placeholder: "Enter Invoice Number here..", required: true },
+    ]
+  }
+},
+"invoiceexport3": {
+  key: "invoiceexport3",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId" },
+      { type: "text", name: "invoice_no", label: "Invoice No", apiParam: "invoice_no", placeholder: "Enter Invoice Number here..", required: true },
+    ]
+  }
+},
+"itemdetailswithinventoryquantities": {
+  key: "itemdetailswithinventoryquantities",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId" }
+    ]
+  }
+},
+"listofskusupcspricescosts": {
+  key: "listofskusupcspricescosts",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "CompId", required: true }
+    ]
+  }
+},
+"accountssuppressedfromagingcollection": {
+  key: "accountssuppressedfromagingcollection",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      {
+        type: "select", name: "company", label: "Company", apiParam: "CompId", required: true }
+    ]
+  }
+},
+"saleshistoryitemtotalsforitems": {
+  key: "saleshistoryitemtotalsforitems",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "CompId", required: true },
+      { type: "date", name: "fromdate", label: "From Date" },
+      { type: "date", name: "tilldate", label: "Till Date" },
+      { type: "period", name: "timeperiod", label: "Time Period",
+        options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+      }
+    ]
+  }
+},
+"backorders": {
+  key: "backorders",
+  enableSchedule: true,
+  supports_excel_export: true,
+  enableHorizontalScroll: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId", required: true },
+      { type: "select", name: "salesrep", label: "Sales Rep", apiParam: "repId", allowAll: true, required: true },
+      { type: "checkbox", name: "checkedStatus", label: "Include Out of Stock Item"  }
+    ]
+  }
+},
+"binresizingreport": {
+  key: "binresizingreport",
+  supports_excel_export: true,
+  enableHorizontalScroll: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId", show:"ADV,ECN,XG" },
+      { type: "select", name: "location", label: "Location", apiParam: "locationId", required: true },
+      { type: "select", name: "supplier", label: "Supplier", apiParam: "supplierId", allowAll: true, required: true },
+      { type: "text", name: "bin", label: "Bin", apiParam: "bin", placeholder: "Primary Bin No..." },
+      { type: "select", name: "scat", label: "Scat", apiParam: "scat", allowAll:true },
+      { type: "checkbox", name: "checkedStatus", label: "Disc Only"  }
+    ]
+  }
+},
+"itemtodiscontinuereport": {
+  key: "itemtodiscontinuereport",
+  supports_excel_export: true,
+  enableHorizontalScroll: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId", required: true, show:"ECN" }
+    ]
+  }
+},
+"adsorderlookup": {
+  key: "adsorderlookup",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "text", name: "pono", label: "Po No", apiParam: "pono", formatter: "po_number", placeholder: "0000-0000000", required: true }
+    ]
+  }
+},
+"arcallnotes": {
+  key: "arcallnotes",
+  supports_excel_export: true,
+  filter_config: {
+    filters: [
+      { type: "select", name: "company", label: "Company", apiParam: "compId", required: true },
+      { type: "date", name: "fromdate", label: "From Date" },
+      { type: "date", name: "tilldate", label: "Till Date" },
+      { type: "period", name: "timeperiod", label: "Time Period",
+        options: ["Today", "Yesterday", "Month To Date", "Last Month", "Year To Date", "Last Year"]
+      }
+    ]
+  }
+},
+"creditholdswithrelease": {
+  key: "creditholdswithrelease",
+  enableSchedule: true,
+  supports_excel_export: true,
+  enableHorizontalScroll: true,
+  filter_config: {
+    filters: []
   }
 },
 

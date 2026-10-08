@@ -10,6 +10,7 @@ export type FilterType =
   | "checkbox"
   | "radio"
   | "periodStart" 
+  | "formatter" 
   | "periodEnd";
 
 export interface Column {
@@ -52,6 +53,7 @@ export interface FilterConfig {
     value: any;
   };
   showSelectOption?: boolean;
+  formatter?:string;
 
 }
 
